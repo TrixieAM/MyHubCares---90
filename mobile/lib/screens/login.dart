@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:io';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key); // <- const constructor
@@ -295,22 +297,50 @@ class _LoginState extends State<Login> {
   }
 
   void _handleLogin() {
-    if (_formKey.currentState!.validate()) {
-      final username = _usernameController.text.trim();
-      final password = _passwordController.text;
+    if (!(_formKey.currentState!.validate())) return;
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+    setState(() => _errorMessage = null);
 
-      // TODO: Replace with your real authentication logic
-      if (username == 'patient' && password == 'pat123') {
-        setState(() {
-          _errorMessage = null;
-        });
-        // Navigate to dashboard
+    // Simple API call to backend auth
+    _login(username, password);
+  }
+
+  Future<void> _login(String username, String password) async {
+    try {
+      final uri = Uri.parse('http://10.0.2.2:5000/api/auth/login'); // Android emulator localhost
+      final res = await Future.any([
+        Future.delayed(const Duration(seconds: 12), () => throw Exception('Timeout')),
+        _postJson(uri, {
+          'role': 'patient',
+          'username': username,
+          'password': password,
+        })
+      ]);
+
+      if (res['success'] == true && res['token'] != null) {
+        // TODO: persist token securely (e.g., flutter_secure_storage)
+        if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
-        setState(() {
-          _errorMessage = '❌ Invalid username or password';
-        });
+        setState(() => _errorMessage = (res['message'] as String?) ?? '❌ Invalid username or password');
       }
+    } catch (e) {
+      setState(() => _errorMessage = '⚠️ Unable to connect. Please try again.');
+    }
+  }
+
+  Future<Map<String, dynamic>> _postJson(Uri uri, Map<String, dynamic> body) async {
+    final client = HttpClient();
+    try {
+      final req = await client.postUrl(uri);
+      req.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
+      req.add(utf8.encode(const JsonEncoder().convert(body)));
+      final res = await req.close();
+      final text = await res.transform(utf8.decoder).join();
+      return (const JsonDecoder().convert(text) as Map<String, dynamic>);
+    } finally {
+      client.close(force: true);
     }
   }
 }
