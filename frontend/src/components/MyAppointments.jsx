@@ -669,16 +669,16 @@ const MyAppointments = ({ socket }) => {
             const availability = dayAvailability[dateStr];
             
             // Determine background color based on availability (not border)
-            let backgroundColor = isSelected ? '#e7f3ff' : 'white';
+            let backgroundColor = isSelected ? '#F8F2DE' : 'white';
             let borderColor = '#e9ecef';
             
             if (isToday) {
-                borderColor = '#007bff';
+                borderColor = '#D84040';
             } else if (availability === 'unavailable') {
-                backgroundColor = '#fee2e2'; // Light red background for unavailable
+                backgroundColor = '#F8F2DE'; // Light beige background for unavailable
                 borderColor = '#dc3545'; // Red border
             } else if (availability === 'available') {
-                backgroundColor = '#dcfce7'; // Light green background for available
+                backgroundColor = '#F8F2DE'; // Light beige background for available
                 borderColor = '#28a745'; // Green border
             }
             
@@ -715,7 +715,7 @@ const MyAppointments = ({ socket }) => {
                     }}
                     onMouseEnter={(e) => {
                         if (!isSelected) {
-                            e.currentTarget.style.backgroundColor = availability === 'unavailable' ? '#fecaca' : availability === 'available' ? '#bbf7d0' : '#f8f9fa';
+                            e.currentTarget.style.backgroundColor = '#F8F2DE';
                         }
                     }}
                     onMouseLeave={(e) => {
@@ -725,7 +725,7 @@ const MyAppointments = ({ socket }) => {
                 >
                     <div style={{
                         fontWeight: isToday ? 'bold' : 'normal',
-                        color: isToday ? '#007bff' : '#333',
+                        color: isToday ? '#D84040' : '#A31D1D',
                         marginBottom: '5px'
                     }}>
                         {day}
@@ -733,7 +733,7 @@ const MyAppointments = ({ socket }) => {
                     {dayAppointments.length > 0 && (
                         <div style={{
                             fontSize: '11px',
-                            color: '#6c757d',
+                            color: '#A31D1D',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap'
@@ -800,10 +800,10 @@ const MyAppointments = ({ socket }) => {
                         <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>
                             {apt.patient_name || 'N/A'}
                         </h3>
-                        <strong style={{ color: '#007bff' }}>
+                        <strong style={{ color: '#D84040' }}>
                             {startDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                         </strong>
-                        <div style={{ marginTop: '8px', color: '#6c757d' }}>
+                        <div style={{ marginTop: '8px', color: '#A31D1D' }}>
                             <span style={{ marginRight: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <AccessTime fontSize="small" /> {startDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} - {endDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                             </span>
@@ -816,7 +816,7 @@ const MyAppointments = ({ socket }) => {
                             <span style={{
                                 padding: '4px 8px',
                                 borderRadius: '4px',
-                                background: '#17a2b8',
+                                background: '#D84040',
                                 color: 'white',
                                 fontSize: '12px',
                                 marginRight: '8px'
@@ -826,7 +826,7 @@ const MyAppointments = ({ socket }) => {
                             <span style={{
                                 padding: '4px 8px',
                                 borderRadius: '4px',
-                                background: apt.status === 'scheduled' || apt.status === 'confirmed' ? '#007bff' : 
+                                background: apt.status === 'scheduled' || apt.status === 'confirmed' ? '#28a745' : 
                                           apt.status === 'completed' ? '#28a745' : 
                                           apt.status === 'cancelled' ? '#dc3545' : '#6c757d',
                                 color: 'white',
@@ -836,7 +836,7 @@ const MyAppointments = ({ socket }) => {
                             </span>
                         </div>
                         {apt.notes && (
-                            <div style={{ marginTop: '10px', color: '#6c757d', fontSize: '14px' }}>
+                            <div style={{ marginTop: '10px', color: '#A31D1D', fontSize: '14px' }}>
                                 <strong>Notes:</strong> {apt.notes}
                             </div>
                         )}
@@ -849,7 +849,7 @@ const MyAppointments = ({ socket }) => {
                                     style={{
                                         padding: '8px 16px',
                                         marginRight: '8px',
-                                        background: '#007bff',
+                                        background: '#D84040',
                                         color: 'white',
                                         border: 'none',
                                         borderRadius: '4px',
@@ -914,8 +914,8 @@ const MyAppointments = ({ socket }) => {
                 gap: '10px'
             }}>
                 <div>
-                    <h2 style={{ margin: 0, color: '#333', fontSize: 'clamp(20px, 4vw, 28px)' }}>My Appointments</h2>
-                    <p style={{ margin: '5px 0 0 0', color: '#6c757d', fontSize: 'clamp(12px, 2vw, 14px)' }}>View and manage your appointments</p>
+                    <h2 style={{ margin: 0, color: '#A31D1D', fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 'bold' }}>My Appointments</h2>
+                    <p style={{ margin: '5px 0 0 0', color: '#A31D1D', fontSize: 'clamp(12px, 2vw, 14px)' }}>View and manage your appointments</p>
                 </div>
                 <div className="notification-container" style={{ position: 'relative' }}>
                     <button
@@ -937,17 +937,17 @@ const MyAppointments = ({ socket }) => {
                             justifyContent: 'center',
                             transition: 'background 0.2s ease'
                         }}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#F8F2DE'}
                         onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                     >
-                        <Bell size={24} color="#B82132" />
+                        <Bell size={24} color="#D84040" />
                         {unreadCount > 0 && (
                             <span
                                 style={{
                                     position: 'absolute',
                                     top: '4px',
                                     right: '4px',
-                                    background: '#EF4444',
+                                    background: '#D84040',
                                     color: 'white',
                                     borderRadius: '50%',
                                     width: '18px',
@@ -986,7 +986,7 @@ const MyAppointments = ({ socket }) => {
                                 justifyContent: 'space-between',
                                 alignItems: 'center'
                             }}>
-                                <h3 style={{ margin: 0, fontSize: '16px', color: '#333' }}>Notifications</h3>
+                                <h3 style={{ margin: 0, fontSize: '16px', color: '#A31D1D', fontWeight: 'bold' }}>Notifications</h3>
                                 <button
                                     onClick={() => setShowNotificationDropdown(false)}
                                     style={{
@@ -997,12 +997,12 @@ const MyAppointments = ({ socket }) => {
                                         borderRadius: '4px'
                                     }}
                                 >
-                                    <X size={18} color="#6c757d" />
+                                    <X size={18} color="#A31D1D" />
                                 </button>
                             </div>
                             <div>
                                 {notifications.length === 0 ? (
-                                    <div style={{ padding: '40px 20px', textAlign: 'center', color: '#6c757d' }}>
+                                    <div style={{ padding: '40px 20px', textAlign: 'center', color: '#A31D1D' }}>
                                         <p>No notifications</p>
                                     </div>
                                 ) : (
@@ -1014,7 +1014,7 @@ const MyAppointments = ({ socket }) => {
                                                 style={{
                                                     padding: '16px',
                                                     borderBottom: '1px solid #f3f4f6',
-                                                    background: isRead ? 'white' : '#eff6ff',
+                                                    background: isRead ? 'white' : '#F8F2DE',
                                                     cursor: 'pointer',
                                                     transition: 'background 0.2s',
                                                 }}
@@ -1036,10 +1036,10 @@ const MyAppointments = ({ socket }) => {
                                                     }
                                                 }}
                                                 onMouseEnter={(e) => {
-                                                    e.currentTarget.style.background = '#f9fafb';
+                                                    e.currentTarget.style.background = '#F8F2DE';
                                                 }}
                                                 onMouseLeave={(e) => {
-                                                    e.currentTarget.style.background = isRead ? 'white' : '#eff6ff';
+                                                    e.currentTarget.style.background = isRead ? 'white' : '#F8F2DE';
                                                 }}
                                             >
                                                 <div style={{
@@ -1051,14 +1051,14 @@ const MyAppointments = ({ socket }) => {
                                                         width: '8px',
                                                         height: '8px',
                                                         borderRadius: '50%',
-                                                        background: isRead ? 'transparent' : '#2563EB',
+                                                        background: isRead ? 'transparent' : '#D84040',
                                                         marginTop: '6px',
                                                         flexShrink: 0
                                                     }} />
                                                     <div style={{ flex: 1 }}>
                                                         <strong style={{
                                                             fontSize: '14px',
-                                                            color: '#1f2937',
+                                                            color: '#A31D1D',
                                                             display: 'block',
                                                             marginBottom: '4px'
                                                         }}>
@@ -1066,7 +1066,7 @@ const MyAppointments = ({ socket }) => {
                                                         </strong>
                                                         <p style={{
                                                             fontSize: '13px',
-                                                            color: '#6b7280',
+                                                            color: '#A31D1D',
                                                             margin: '4px 0',
                                                             lineHeight: '1.5',
                                                         }}>
@@ -1092,7 +1092,7 @@ const MyAppointments = ({ socket }) => {
                                                                 background: '#f9fafb',
                                                                 borderRadius: '6px',
                                                                 fontSize: '12px',
-                                                                color: '#6b7280',
+                                                                color: '#A31D1D',
                                                             }}>
                                                                 <div>Type: {notification.appointment.appointment_type?.replace('_', ' ').toUpperCase()}</div>
                                                                 <div>Date: {new Date(notification.appointment.scheduled_start).toLocaleDateString()}</div>

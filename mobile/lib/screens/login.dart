@@ -26,9 +26,15 @@ class _LoginState extends State<Login> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFB82132), Color(0xFFD2665A)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFF8F2DE),
+              Color(0xFFECDCBF),
+              Color(0xFFD84040),
+              Color(0xFFA31D1D),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: [0.0, 0.3, 0.7, 1.0],
           ),
         ),
         padding: const EdgeInsets.all(20),
@@ -38,9 +44,11 @@ class _LoginState extends State<Login> {
               const SizedBox(height: 60),
               Column(
                 children: [
-                  const Text(
-                    '🏠',
-                    style: TextStyle(fontSize: 64),
+                  Image.asset(
+                    'assets/logo.png',
+                    height: 80,
+                    width: 80,
+                    fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 15),
                   const Text(
@@ -48,7 +56,7 @@ class _LoginState extends State<Login> {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Color(0xFFA31D1D),
                     ),
                   ),
                   SizedBox(height: 5),
@@ -56,7 +64,7 @@ class _LoginState extends State<Login> {
                     "It's my hub, and it's yours.",
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white70,
+                      color: Color(0xFFA31D1D).withOpacity(0.7),
                     ),
                   ),
                   SizedBox(height: 5),
@@ -65,7 +73,7 @@ class _LoginState extends State<Login> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: Color(0xFFA31D1D),
                     ),
                   ),
                 ],
@@ -200,8 +208,9 @@ class _LoginState extends State<Login> {
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
-                            backgroundColor: const Color(0xFFB82132),
-                            shadowColor: const Color(0xFFB82132).withOpacity(0.4),
+                            backgroundColor: const Color(0xFFA31D1D),
+                            foregroundColor: Colors.white,
+                            shadowColor: const Color(0xFFA31D1D).withOpacity(0.4),
                             elevation: 4,
                           ),
                           onPressed: _isLoading ? null : _handleLogin,
@@ -214,12 +223,20 @@ class _LoginState extends State<Login> {
                                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                   ),
                                 )
-                              : const Text(
-                                  '🚀 Login to My Hub Cares',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.login, size: 20),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Login to My Hub Cares',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                         ),
                       ),
@@ -256,19 +273,26 @@ class _LoginState extends State<Login> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            side: const BorderSide(color: Color(0xFFB82132), width: 2),
+                            side: const BorderSide(color: Color(0xFFA31D1D), width: 2),
                             backgroundColor: Colors.white,
                           ),
                           onPressed: () {
                             Navigator.pushNamed(context, '/register');
                           },
-                          child: const Text(
-                            '📝 Create Patient Account',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFFB82132),
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(Icons.person_add, size: 20, color: Color(0xFFA31D1D)),
+                              SizedBox(width: 8),
+                              Text(
+                                'Create Patient Account',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFA31D1D),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -278,20 +302,26 @@ class _LoginState extends State<Login> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
-                          border: Border.all(color: const Color(0xFFBFDBFE)),
+                          color: const Color(0xFFF8F2DE),
+                          border: Border.all(color: const Color(0xFFECDCBF)),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              '📱 Demo Patient Account:',
-                              style: TextStyle(
-                                  color: Color(0xFFB82132), fontWeight: FontWeight.bold),
+                          children: [
+                            Row(
+                              children: const [
+                                Icon(Icons.info_outline, color: Color(0xFFA31D1D), size: 20),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Demo Patient Account:',
+                                  style: TextStyle(
+                                      color: Color(0xFFA31D1D), fontWeight: FontWeight.bold),
+                                ),
+                              ],
                             ),
-                            SizedBox(height: 8),
-                            DemoCredentials(),
+                            const SizedBox(height: 8),
+                            const DemoCredentials(),
                           ],
                         ),
                       ),
@@ -338,13 +368,13 @@ class _LoginState extends State<Login> {
           MaterialPageRoute(builder: (context) => Dashboard()),
         );
       } else {
-        setState(() => _errorMessage = result['message'] ?? '❌ Invalid username or password');
+        setState(() => _errorMessage = result['message'] ?? 'Invalid username or password');
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = '⚠️ Unable to connect. Please check your connection and try again.';
+        _errorMessage = 'Unable to connect. Please check your connection and try again.';
       });
     }
   }

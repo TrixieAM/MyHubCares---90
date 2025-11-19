@@ -3,7 +3,11 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
+import '../services/socket_service.dart';
 import '../widgets/appointment_reminder_card.dart';
+
+// Optional: Uncomment to enable sound notifications (requires audioplayers package)
+// import 'package:audioplayers/audioplayers.dart';
 
 class AppointmentsScreen extends StatefulWidget {
   const AppointmentsScreen({Key? key}) : super(key: key);
@@ -18,31 +22,205 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   List<dynamic> _patients = [];
   List<dynamic> _facilities = [];
   List<dynamic> _providers = [];
+  String? _currentUserId;
+  String? _currentPatientId;
+  String? _currentUserRole;
 
   @override
   void initState() {
     super.initState();
+    _initializeSocket();
+    _loadCurrentUser();
     _loadAppointments();
     _loadFormData();
+    _startPeriodicRefresh();
+  }
+
+  @override
+  void dispose() {
+    // Audio player cleanup handled by static variable
+    super.dispose();
+  }
+
+  // Start periodic refresh every 30 seconds (like web version)
+  void _startPeriodicRefresh() {
+    Future.delayed(Duration(seconds: 30), () {
+      if (mounted) {
+        _loadAppointments();
+        _startPeriodicRefresh(); // Schedule next refresh
+      }
+    });
+  }
+
+  Future<void> _initializeSocket() async {
+    try {
+      await SocketService.initialize();
+      
+      // Wait a bit for connection
+      await Future.delayed(Duration(milliseconds: 500));
+      
+      // Set up listeners
+      SocketService.onNotification((data) {
+        _playNotificationSound();
+        _loadAppointments(); // Refresh appointments
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(data['message'] ?? 'New notification'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      });
+
+      SocketService.onNewAppointment((data) {
+        _playNotificationSound();
+        _loadAppointments(); // Refresh appointments
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(data['message'] ?? 'New appointment notification'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      });
+
+      SocketService.onAppointmentNotification((data) {
+        _playNotificationSound();
+        _loadAppointments(); // Refresh appointments
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(data['message'] ?? 'Appointment notification'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      });
+    } catch (e) {
+      print('Error initializing socket: $e');
+    }
+  }
+
+  void _playNotificationSound() {
+    // Sound notifications are optional
+    // To enable: 
+    // 1. Uncomment the audioplayers import at the top
+    // 2. Add: final AudioPlayer _audioPlayer = AudioPlayer(); to state variables
+    // 3. Uncomment the code below
+    // 4. Run: flutter pub get
+    
+    // Uncomment when audioplayers is installed:
+    /*
+    try {
+      _audioPlayer.play(AssetSource('notification.mp3')).catchError((e) {
+        print('Could not play notification sound: $e');
+      });
+    } catch (e) {
+      print('Audio player error: $e');
+    }
+    */
+    
+    // For now, just log that notification sound would play
+    print('📢 Notification sound (enable by installing audioplayers package)');
+  }
+
+  Future<void> _loadCurrentUser() async {
+    try {
+      final result = await ApiService.getCurrentUser();
+      if (result['success'] == true && result['user'] != null) {
+        final user = result['user'];
+        setState(() {
+          _currentUserId = user['user_id']?.toString();
+          _currentUserRole = user['role']?.toLowerCase();
+        });
+
+        // If user is a patient, get their patient_id
+        if (_currentUserRole == 'patient') {
+          String? patientId = user['patient']?['patient_id']?.toString() ?? 
+                              user['patient_id']?.toString();
+          
+          if (patientId == null) {
+            // Try to fetch from profile
+            final profileResult = await ApiService.getPatientProfile();
+            if (profileResult['success'] == true && profileResult['patient'] != null) {
+              patientId = profileResult['patient']['patient_id']?.toString();
+            }
+          }
+
+          if (patientId != null) {
+            setState(() => _currentPatientId = patientId);
+            // Join patient room for real-time notifications
+            SocketService.joinPatientRoom(patientId);
+          }
+        }
+
+        // Join user room for real-time notifications
+        if (_currentUserId != null) {
+          SocketService.joinUserRoom(_currentUserId!);
+        }
+      }
+    } catch (e) {
+      print('Error loading current user: $e');
+    }
   }
 
   Future<void> _loadFormData() async {
     try {
+      // Load patients
       final patientsResult = await ApiService.getPatients();
-      final facilitiesResult = await ApiService.getFacilities();
-      final providersResult = await ApiService.getProviders();
-      
       if (patientsResult['success'] == true) {
         setState(() => _patients = patientsResult['data'] ?? []);
+      } else {
+        print('Failed to load patients: ${patientsResult['message']}');
       }
+
+      // Load facilities with better error handling
+      final facilitiesResult = await ApiService.getFacilities();
       if (facilitiesResult['success'] == true) {
-        setState(() => _facilities = facilitiesResult['data'] ?? []);
+        final facilitiesData = facilitiesResult['data'];
+        if (facilitiesData is List) {
+          setState(() => _facilities = facilitiesData);
+          print('Loaded ${facilitiesData.length} facilities');
+        } else {
+          print('Facilities data is not a list: $facilitiesData');
+          setState(() => _facilities = []);
+        }
+      } else {
+        print('Failed to load facilities: ${facilitiesResult['message']}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to load facilities: ${facilitiesResult['message'] ?? 'Unknown error'}'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
+
+      // Load providers
+      final providersResult = await ApiService.getProviders();
       if (providersResult['success'] == true) {
         setState(() => _providers = providersResult['data'] ?? []);
+      } else {
+        print('Failed to load providers: ${providersResult['message']}');
       }
     } catch (e) {
-      // Handle error
+      print('Error loading form data: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading form data: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -82,156 +260,121 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('My Appointments'),
-        backgroundColor: Color(0xFFB82132),
+        title: Text(
+          'Appointments',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1A1A1A),
+            letterSpacing: -0.5,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: Colors.grey[200],
+          ),
+        ),
+        iconTheme: IconThemeData(color: Color(0xFF1A1A1A)),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFA31D1D)),
+              ),
+            )
           : _appointments.isEmpty
               ? _buildEmptyState()
               : RefreshIndicator(
                   onRefresh: _loadAppointments,
+                  color: Color(0xFFA31D1D),
                   child: ListView.builder(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     itemCount: _appointments.length,
                     itemBuilder: (context, index) {
-                      return _buildAppointmentCard(_appointments[index]);
+                      final appointment = _appointments[index];
+                      final appointmentId = appointment['appointment_id']?.toString() ?? 'appt_$index';
+                      return _buildAppointmentCard(appointment);
                     },
                   ),
                 ),
       floatingActionButton: FloatingActionButton(
         heroTag: "appointments_fab",
         onPressed: () => _showBookAppointmentModal(),
-        backgroundColor: Color(0xFFB82132),
-        child: Icon(Icons.add),
+        backgroundColor: Color(0xFFA31D1D),
+        elevation: 2,
+        child: Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('📅', style: TextStyle(fontSize: 64)),
-          SizedBox(height: 20),
-          Text(
-            'No appointments scheduled',
-            style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-          ),
-          SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () => _showBookAppointmentModal(),
-            child: Text('Book Appointment'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppointmentCard(Map<String, dynamic> apt) {
-    final date = DateTime.parse(apt['scheduled_start']);
-    final endDate = DateTime.parse(apt['scheduled_end']);
-
-    return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () => _showAppointmentDetails(apt),
-        child: Row(
+      child: Padding(
+        padding: EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 60,
-              padding: EdgeInsets.all(10),
+              width: 120,
+              height: 120,
               decoration: BoxDecoration(
-                color: Color(0xFFB82132),
-                borderRadius: BorderRadius.circular(12),
+                color: Color(0xFFF5F5F5),
+                shape: BoxShape.circle,
               ),
-              child: Column(
-                children: [
-                  Text(
-                    '${date.day}',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    DateFormat('MMM').format(date),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
+              child: Icon(
+                Icons.calendar_today_outlined,
+                size: 56,
+                color: Colors.grey[400],
               ),
             ),
-            SizedBox(width: 15),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            SizedBox(height: 32),
+            Text(
+              'No Appointments',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1A1A1A),
+                letterSpacing: -0.5,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Schedule your first appointment to get started',
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.grey[600],
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () => _showBookAppointmentModal(),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                backgroundColor: Color(0xFFA31D1D),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Icon(Icons.add, size: 20),
+                  SizedBox(width: 8),
                   Text(
-                    _formatAppointmentType(apt['appointment_type'] ?? ''),
+                    'Book Appointment',
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    '🕐 ${DateFormat('HH:mm').format(date)} - ${DateFormat('HH:mm').format(endDate)}',
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    '🏥 ${apt['facility_name'] ?? 'N/A'}',
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (apt['provider_name'] != null) ...[
-                    SizedBox(height: 4),
-                    Text(
-                      '👨‍⚕️ ${apt['provider_name']}',
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  SizedBox(height: 8),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(apt['status'] ?? 'scheduled'),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      (apt['status'] ?? 'scheduled').toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -243,15 +386,203 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     );
   }
 
+  Widget _buildAppointmentCard(Map<String, dynamic> apt) {
+    final date = DateTime.parse(apt['scheduled_start']);
+    final endDate = DateTime.parse(apt['scheduled_end']);
+    final status = (apt['status'] ?? 'scheduled').toLowerCase();
+    final appointmentId = apt['appointment_id']?.toString() ?? '';
+
+    return Container(
+      key: appointmentId.isNotEmpty ? ValueKey(appointmentId) : null,
+      margin: EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        elevation: 0,
+        child: InkWell(
+          onTap: () => _showAppointmentDetails(apt),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.grey[200]!,
+                width: 1,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Date indicator
+                Container(
+                  width: 56,
+                  child: Column(
+                    children: [
+                      Text(
+                        DateFormat('MMM').format(date).toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFA31D1D),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        '${date.day}',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1A1A1A),
+                          height: 1,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        DateFormat('EEE').format(date),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 20),
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title and status
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _formatAppointmentType(apt['appointment_type'] ?? ''),
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1A1A1A),
+                                letterSpacing: -0.3,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          _buildStatusChip(status),
+                        ],
+                      ),
+                      SizedBox(height: 16),
+                      // Time
+                      _buildInfoRow(
+                        Icons.access_time,
+                        '${DateFormat('h:mm a').format(date)} - ${DateFormat('h:mm a').format(endDate)}',
+                      ),
+                      SizedBox(height: 10),
+                      // Facility
+                      _buildInfoRow(
+                        Icons.local_hospital_outlined,
+                        apt['facility_name'] ?? 'N/A',
+                      ),
+                      if (apt['provider_name'] != null) ...[
+                        SizedBox(height: 10),
+                        _buildInfoRow(
+                          Icons.person_outline,
+                          apt['provider_name'],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: Colors.grey[600],
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[700],
+              height: 1.4,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusChip(String status) {
+    Color bgColor;
+    Color textColor;
+    
+    switch (status) {
+      case 'scheduled':
+      case 'confirmed':
+        bgColor = Color(0xFFFEF3F2);
+        textColor = Color(0xFFD84040);
+        break;
+      case 'completed':
+        bgColor = Color(0xFFF0FDF4);
+        textColor = Color(0xFF10B981);
+        break;
+      case 'cancelled':
+        bgColor = Color(0xFFF5F5F5);
+        textColor = Color(0xFF6B7280);
+        break;
+      default:
+        bgColor = Color(0xFFF5F5F5);
+        textColor = Color(0xFF6B7280);
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        status.toUpperCase(),
+        style: TextStyle(
+          fontSize: 10,
+          color: textColor,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'scheduled':
       case 'confirmed':
-        return Color(0xFF2563EB);
+        return Color(0xFFD84040);
       case 'completed':
         return Color(0xFF10B981);
       case 'cancelled':
-        return Color(0xFFEF4444);
+        return Color(0xFFA31D1D);
       default:
         return Colors.grey;
     }
@@ -517,7 +848,13 @@ class __BookAppointmentModalState extends State<_BookAppointmentModal> {
       if (result['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ Appointment booked successfully!'),
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Appointment booked successfully!'),
+              ],
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -573,10 +910,12 @@ class __BookAppointmentModalState extends State<_BookAppointmentModal> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '📅 Book Appointment',
+                  'Book Appointment',
                   style: TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A1A),
+                    letterSpacing: -0.5,
                   ),
                 ),
                 IconButton(
@@ -586,7 +925,7 @@ class __BookAppointmentModalState extends State<_BookAppointmentModal> {
               ],
             ),
           ),
-          Divider(),
+          Divider(height: 1, color: Colors.grey[200]),
           // Form
           Expanded(
             child: Form(
@@ -773,7 +1112,12 @@ class __BookAppointmentModalState extends State<_BookAppointmentModal> {
                       onPressed: _isSubmitting ? null : _submitAppointment,
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Color(0xFF2563EB),
+                        backgroundColor: Color(0xFFA31D1D),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: _isSubmitting
                           ? SizedBox(
@@ -784,7 +1128,13 @@ class __BookAppointmentModalState extends State<_BookAppointmentModal> {
                                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
-                          : Text('Book Appointment'),
+                          : Text(
+                              'Book Appointment',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
                 ],

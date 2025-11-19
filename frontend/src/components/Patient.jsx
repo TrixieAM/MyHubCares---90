@@ -371,7 +371,7 @@ const Patients = () => {
               display: 'inline-block',
               padding: '15px',
               borderRadius: '50%',
-              background: '#f5f5f5',
+              background: 'white',
             }}
           >
             <div
@@ -385,7 +385,7 @@ const Patients = () => {
               }}
             ></div>
           </div>
-          <p style={{ color: '#6c757d', marginTop: '15px' }}>
+          <p style={{ color: '#A31D1D', marginTop: '15px' }}>
             Loading patients...
           </p>
         </div>
@@ -400,13 +400,13 @@ const Patients = () => {
               display: 'inline-block',
               padding: '15px',
               borderRadius: '50%',
-              background: '#f5f5f5',
+              background: 'white',
               marginBottom: '15px',
             }}
           >
             <User size={40} color="#A31D1D" />
           </div>
-          <p style={{ color: '#6c757d' }}>No patients found</p>
+          <p style={{ color: '#A31D1D' }}>No patients found</p>
         </div>
       );
     }
@@ -452,7 +452,7 @@ const Patients = () => {
                     width: '50px',
                     height: '50px',
                     borderRadius: '50%',
-                    background: '#f8f9fa',
+                    background: '#F8F2DE',
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
@@ -465,7 +465,7 @@ const Patients = () => {
                   <h3
                     style={{
                       margin: 0,
-                      color: '#333',
+                      color: '#A31D1D',
                       fontSize: '16px',
                       fontWeight: '600',
                     }}
@@ -475,7 +475,7 @@ const Patients = () => {
                   <p
                     style={{
                       margin: '3px 0 0 0',
-                      color: '#6c757d',
+                      color: '#A31D1D',
                       fontSize: '14px',
                     }}
                   >
@@ -509,7 +509,7 @@ const Patients = () => {
                     color="#A31D1D"
                     style={{ marginRight: '8px' }}
                   />
-                  <span style={{ fontSize: '14px', color: '#555' }}>
+                  <span style={{ fontSize: '14px', color: '#A31D1D' }}>
                     {patient.phone}
                   </span>
                 </div>
@@ -525,7 +525,7 @@ const Patients = () => {
                     color="#A31D1D"
                     style={{ marginRight: '8px' }}
                   />
-                  <span style={{ fontSize: '14px', color: '#555' }}>
+                  <span style={{ fontSize: '14px', color: '#A31D1D' }}>
                     {patient.email}
                   </span>
                 </div>
@@ -535,7 +535,7 @@ const Patients = () => {
                     color="#A31D1D"
                     style={{ marginRight: '8px' }}
                   />
-                  <span style={{ fontSize: '14px', color: '#555' }}>
+                  <span style={{ fontSize: '14px', color: '#A31D1D' }}>
                     {patient.city}
                   </span>
                 </div>
@@ -547,7 +547,7 @@ const Patients = () => {
                     onClick={() => handleViewPatient(patient)}
                     style={{
                       padding: '8px',
-                      background: '#f8f9fa',
+                      background: '#F8F2DE',
                       color: '#A31D1D',
                       border: 'none',
                       borderRadius: '8px',
@@ -559,10 +559,10 @@ const Patients = () => {
                     }}
                     title="View"
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#e9ecef';
+                      e.currentTarget.style.background = '#F8F2DE';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#f8f9fa';
+                      e.currentTarget.style.background = '#F8F2DE';
                     }}
                   >
                     <Eye size={16} />
@@ -571,7 +571,7 @@ const Patients = () => {
                     onClick={() => handleArpaAssessment(patient)}
                     style={{
                       padding: '8px',
-                      background: '#f8f9fa',
+                      background: '#F8F2DE',
                       color: '#A31D1D',
                       border: 'none',
                       borderRadius: '8px',
@@ -583,10 +583,10 @@ const Patients = () => {
                     }}
                     title="ARPA Assessment"
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#e9ecef';
+                      e.currentTarget.style.background = '#F8F2DE';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#f8f9fa';
+                      e.currentTarget.style.background = '#F8F2DE';
                     }}
                   >
                     <Activity size={16} />
@@ -595,7 +595,7 @@ const Patients = () => {
                     onClick={() => handleEditPatient(patient)}
                     style={{
                       padding: '8px',
-                      background: '#f8f9fa',
+                      background: '#F8F2DE',
                       color: '#A31D1D',
                       border: 'none',
                       borderRadius: '8px',
@@ -607,10 +607,10 @@ const Patients = () => {
                     }}
                     title="Edit"
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#e9ecef';
+                      e.currentTarget.style.background = '#F8F2DE';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#f8f9fa';
+                      e.currentTarget.style.background = '#F8F2DE';
                     }}
                   >
                     <Edit size={16} />
@@ -619,7 +619,7 @@ const Patients = () => {
                     onClick={() => handleDeletePatient(patient)}
                     style={{
                       padding: '8px',
-                      background: '#f8f9fa',
+                      background: '#F8F2DE',
                       color: '#A31D1D',
                       border: 'none',
                       borderRadius: '8px',
@@ -631,10 +631,10 @@ const Patients = () => {
                     }}
                     title="Delete"
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#e9ecef';
+                      e.currentTarget.style.background = '#F8F2DE';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#f8f9fa';
+                      e.currentTarget.style.background = '#F8F2DE';
                     }}
                   >
                     <Trash2 size={16} />
@@ -659,7 +659,7 @@ const Patients = () => {
               display: 'inline-block',
               padding: '15px',
               borderRadius: '50%',
-              background: '#f5f5f5',
+              background: 'white',
             }}
           >
             <div
@@ -673,7 +673,7 @@ const Patients = () => {
               }}
             ></div>
           </div>
-          <p style={{ color: '#6c757d', marginTop: '15px' }}>
+          <p style={{ color: '#A31D1D', marginTop: '15px' }}>
             Loading patients...
           </p>
         </div>
@@ -688,13 +688,13 @@ const Patients = () => {
               display: 'inline-block',
               padding: '15px',
               borderRadius: '50%',
-              background: '#f5f5f5',
+              background: 'white',
               marginBottom: '15px',
             }}
           >
             <User size={40} color="#A31D1D" />
           </div>
-          <p style={{ color: '#6c757d' }}>No patients found</p>
+          <p style={{ color: '#A31D1D' }}>No patients found</p>
         </div>
       );
     }
@@ -712,8 +712,8 @@ const Patients = () => {
           <thead>
             <tr
               style={{
-                background: '#f8f9fa',
-                borderBottom: '1px solid #e9ecef',
+                background: '#F8F2DE',
+                borderBottom: '2px solid #ECDCBF',
               }}
             >
               <th
@@ -722,7 +722,7 @@ const Patients = () => {
                   textAlign: 'left',
                   fontSize: '14px',
                   fontWeight: '600',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Patient
@@ -733,7 +733,7 @@ const Patients = () => {
                   textAlign: 'left',
                   fontSize: '14px',
                   fontWeight: '600',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Contact
@@ -744,7 +744,7 @@ const Patients = () => {
                   textAlign: 'left',
                   fontSize: '14px',
                   fontWeight: '600',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Location
@@ -755,7 +755,7 @@ const Patients = () => {
                   textAlign: 'left',
                   fontSize: '14px',
                   fontWeight: '600',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Risk Level
@@ -766,7 +766,7 @@ const Patients = () => {
                   textAlign: 'center',
                   fontSize: '14px',
                   fontWeight: '600',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Actions
@@ -785,7 +785,7 @@ const Patients = () => {
                   transition: 'background 0.2s',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#f8f9fa';
+                  e.currentTarget.style.background = '#F8F2DE';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'white';
@@ -798,7 +798,7 @@ const Patients = () => {
                         width: '40px',
                         height: '40px',
                         borderRadius: '50%',
-                        background: '#f8f9fa',
+                        background: '#F8F2DE',
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
@@ -812,12 +812,12 @@ const Patients = () => {
                         style={{
                           fontSize: '14px',
                           fontWeight: '600',
-                          color: '#333',
+                          color: '#A31D1D',
                         }}
                       >
                         {patient.firstName} {patient.lastName}
                       </div>
-                      <div style={{ fontSize: '12px', color: '#6c757d' }}>
+                      <div style={{ fontSize: '12px', color: '#A31D1D' }}>
                         {patient.gender}, {patient.age} years
                       </div>
                     </div>
@@ -827,7 +827,7 @@ const Patients = () => {
                   <div
                     style={{
                       fontSize: '14px',
-                      color: '#555',
+                      color: '#A31D1D',
                       marginBottom: '4px',
                     }}
                   >
@@ -896,7 +896,7 @@ const Patients = () => {
                       onClick={() => handleViewPatient(patient)}
                       style={{
                         padding: '6px',
-                        background: '#f8f9fa',
+                        background: '#F8F2DE',
                         color: '#A31D1D',
                         border: 'none',
                         borderRadius: '4px',
@@ -908,10 +908,10 @@ const Patients = () => {
                       }}
                       title="View"
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#e9ecef';
+                        e.currentTarget.style.background = '#F8F2DE';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#f8f9fa';
+                        e.currentTarget.style.background = '#F8F2DE';
                       }}
                     >
                       <Eye size={14} />
@@ -920,7 +920,7 @@ const Patients = () => {
                       onClick={() => handleArpaAssessment(patient)}
                       style={{
                         padding: '6px',
-                        background: '#f8f9fa',
+                        background: '#F8F2DE',
                         color: '#A31D1D',
                         border: 'none',
                         borderRadius: '4px',
@@ -932,10 +932,10 @@ const Patients = () => {
                       }}
                       title="ARPA Assessment"
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#e9ecef';
+                        e.currentTarget.style.background = '#F8F2DE';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#f8f9fa';
+                        e.currentTarget.style.background = '#F8F2DE';
                       }}
                     >
                       <Activity size={14} />
@@ -944,7 +944,7 @@ const Patients = () => {
                       onClick={() => handleEditPatient(patient)}
                       style={{
                         padding: '6px',
-                        background: '#f8f9fa',
+                        background: '#F8F2DE',
                         color: '#A31D1D',
                         border: 'none',
                         borderRadius: '4px',
@@ -956,10 +956,10 @@ const Patients = () => {
                       }}
                       title="Edit"
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#e9ecef';
+                        e.currentTarget.style.background = '#F8F2DE';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#f8f9fa';
+                        e.currentTarget.style.background = '#F8F2DE';
                       }}
                     >
                       <Edit size={14} />
@@ -968,7 +968,7 @@ const Patients = () => {
                       onClick={() => handleDeletePatient(patient)}
                       style={{
                         padding: '6px',
-                        background: '#f8f9fa',
+                        background: '#F8F2DE',
                         color: '#A31D1D',
                         border: 'none',
                         borderRadius: '4px',
@@ -980,10 +980,10 @@ const Patients = () => {
                       }}
                       title="Delete"
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#e9ecef';
+                        e.currentTarget.style.background = '#F8F2DE';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#f8f9fa';
+                        e.currentTarget.style.background = '#F8F2DE';
                       }}
                     >
                       <Trash2 size={14} />
@@ -1046,7 +1046,7 @@ const Patients = () => {
               paddingBottom: '15px',
             }}
           >
-            <h2 style={{ margin: 0, color: '#333' }}>
+            <h2 style={{ margin: 0, color: '#A31D1D', fontWeight: 'bold' }}>
               {modalType === 'view' ? 'Patient Details' : 'Edit Patient'}
             </h2>
             <button
@@ -1087,7 +1087,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 First Name
@@ -1104,7 +1104,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: modalType === 'view' ? '#f8f9fa' : 'white',
+                  background: modalType === 'view' ? '#F8F2DE' : 'white',
                 }}
               />
             </div>
@@ -1115,7 +1115,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Middle Name
@@ -1132,7 +1132,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: modalType === 'view' ? '#f8f9fa' : 'white',
+                  background: modalType === 'view' ? '#F8F2DE' : 'white',
                 }}
               />
             </div>
@@ -1143,7 +1143,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Last Name
@@ -1160,7 +1160,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: modalType === 'view' ? '#f8f9fa' : 'white',
+                  background: modalType === 'view' ? '#F8F2DE' : 'white',
                 }}
               />
             </div>
@@ -1171,7 +1171,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Suffix
@@ -1188,7 +1188,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: modalType === 'view' ? '#f8f9fa' : 'white',
+                  background: modalType === 'view' ? '#F8F2DE' : 'white',
                 }}
               />
             </div>
@@ -1199,7 +1199,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Date of Birth
@@ -1216,7 +1216,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: modalType === 'view' ? '#f8f9fa' : 'white',
+                  background: modalType === 'view' ? '#F8F2DE' : 'white',
                 }}
               />
             </div>
@@ -1227,7 +1227,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Sex
@@ -1243,7 +1243,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: modalType === 'view' ? '#f8f9fa' : 'white',
+                  background: modalType === 'view' ? '#F8F2DE' : 'white',
                 }}
               >
                 <option value="Male">Male</option>
@@ -1258,7 +1258,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Civil Status
@@ -1274,7 +1274,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: modalType === 'view' ? '#f8f9fa' : 'white',
+                  background: modalType === 'view' ? '#F8F2DE' : 'white',
                 }}
               >
                 <option value="Single">Single</option>
@@ -1291,7 +1291,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Nationality
@@ -1308,7 +1308,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: modalType === 'view' ? '#f8f9fa' : 'white',
+                  background: modalType === 'view' ? '#F8F2DE' : 'white',
                 }}
               />
             </div>
@@ -1319,7 +1319,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Phone Number{' '}
@@ -1339,7 +1339,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: modalType === 'view' ? '#f8f9fa' : 'white',
+                  background: modalType === 'view' ? '#F8F2DE' : 'white',
                 }}
               />
             </div>
@@ -1350,7 +1350,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Email{' '}
@@ -1370,7 +1370,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: modalType === 'view' ? '#f8f9fa' : 'white',
+                  background: modalType === 'view' ? '#F8F2DE' : 'white',
                 }}
               />
             </div>
@@ -1381,7 +1381,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Current City
@@ -1398,7 +1398,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: modalType === 'view' ? '#f8f9fa' : 'white',
+                  background: modalType === 'view' ? '#F8F2DE' : 'white',
                 }}
               />
             </div>
@@ -1409,7 +1409,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Province
@@ -1434,7 +1434,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: modalType === 'view' ? '#f8f9fa' : 'white',
+                  background: modalType === 'view' ? '#F8F2DE' : 'white',
                 }}
               />
             </div>
@@ -1445,7 +1445,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 UIC
@@ -1460,7 +1460,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: '#f8f9fa',
+                  background: '#F8F2DE',
                 }}
               />
             </div>
@@ -1471,7 +1471,7 @@ const Patients = () => {
                   marginBottom: '5px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 PhilHealth No.
@@ -1488,7 +1488,7 @@ const Patients = () => {
                   borderRadius: '4px',
                   width: '100%',
                   fontSize: '14px',
-                  background: modalType === 'view' ? '#f8f9fa' : 'white',
+                  background: modalType === 'view' ? '#F8F2DE' : 'white',
                 }}
               />
             </div>
@@ -1500,7 +1500,7 @@ const Patients = () => {
                 style={{
                   margin: '0 0 10px 0',
                   fontSize: '16px',
-                  color: '#333',
+                  color: '#A31D1D',
                 }}
               >
                 Medical Information
@@ -1519,7 +1519,7 @@ const Patients = () => {
                       marginBottom: '5px',
                       fontSize: '14px',
                       fontWeight: '500',
-                      color: '#333',
+                      color: '#A31D1D',
                     }}
                   >
                     Risk Level
@@ -1529,7 +1529,7 @@ const Patients = () => {
                       padding: '8px 12px',
                       border: '1px solid #ced4da',
                       borderRadius: '4px',
-                      background: '#f8f9fa',
+                      background: '#F8F2DE',
                       fontSize: '14px',
                     }}
                   >
@@ -1556,7 +1556,7 @@ const Patients = () => {
                       marginBottom: '5px',
                       fontSize: '14px',
                       fontWeight: '500',
-                      color: '#333',
+                      color: '#A31D1D',
                     }}
                   >
                     Last Visit
@@ -1566,7 +1566,7 @@ const Patients = () => {
                       padding: '8px 12px',
                       border: '1px solid #ced4da',
                       borderRadius: '4px',
-                      background: '#f8f9fa',
+                      background: '#F8F2DE',
                       fontSize: '14px',
                     }}
                   >
@@ -1580,7 +1580,7 @@ const Patients = () => {
                       marginBottom: '5px',
                       fontSize: '14px',
                       fontWeight: '500',
-                      color: '#333',
+                      color: '#A31D1D',
                     }}
                   >
                     Facility
@@ -1590,7 +1590,7 @@ const Patients = () => {
                       padding: '8px 12px',
                       border: '1px solid #ced4da',
                       borderRadius: '4px',
-                      background: '#f8f9fa',
+                      background: '#F8F2DE',
                       fontSize: '14px',
                     }}
                   >
@@ -1619,7 +1619,7 @@ const Patients = () => {
                   }}
                   style={{
                     padding: '8px 16px',
-                    background: '#f8f9fa',
+                    background: '#F8F2DE',
                     color: '#A31D1D',
                     border: 'none',
                     borderRadius: '4px',
@@ -1654,7 +1654,7 @@ const Patients = () => {
                   onClick={() => setShowModal(false)}
                   style={{
                     padding: '8px 16px',
-                    background: '#f8f9fa',
+                    background: '#F8F2DE',
                     color: '#A31D1D',
                     border: 'none',
                     borderRadius: '4px',
@@ -1728,7 +1728,7 @@ const Patients = () => {
               paddingBottom: '15px',
             }}
           >
-            <h2 style={{ margin: 0, color: '#333' }}>
+            <h2 style={{ margin: 0, color: '#A31D1D', fontWeight: 'bold' }}>
               ARPA Risk Assessment - {selectedPatient.firstName}{' '}
               {selectedPatient.lastName}
             </h2>
@@ -1781,12 +1781,12 @@ const Patients = () => {
                   style={{
                     fontSize: '24px',
                     fontWeight: 'bold',
-                    color: '#333',
+                    color: '#A31D1D',
                   }}
                 >
                   {arpaData.compliancePercentage}%
                 </span>
-                <span style={{ marginLeft: '10px', color: '#6c757d' }}>
+                <span style={{ marginLeft: '10px', color: '#A31D1D' }}>
                   Compliance Rate
                 </span>
               </div>
@@ -1826,7 +1826,7 @@ const Patients = () => {
           </div>
 
           <div style={{ marginBottom: '30px' }}>
-            <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>
+            <h3 style={{ margin: '0 0 15px 0', color: '#A31D1D', fontWeight: 'bold' }}>
               Risk Components
             </h3>
             <div
@@ -1844,10 +1844,10 @@ const Patients = () => {
                     marginBottom: '5px',
                   }}
                 >
-                  <span style={{ fontSize: '14px', color: '#333' }}>
+                  <span style={{ fontSize: '14px', color: '#A31D1D' }}>
                     Missed Medications
                   </span>
-                  <span style={{ fontSize: '14px', color: '#333' }}>
+                  <span style={{ fontSize: '14px', color: '#A31D1D' }}>
                     {arpaData.riskComponents.missedMedications}/100
                   </span>
                 </div>
@@ -1876,10 +1876,10 @@ const Patients = () => {
                     marginBottom: '5px',
                   }}
                 >
-                  <span style={{ fontSize: '14px', color: '#333' }}>
+                  <span style={{ fontSize: '14px', color: '#A31D1D' }}>
                     Missed Appointments
                   </span>
-                  <span style={{ fontSize: '14px', color: '#333' }}>
+                  <span style={{ fontSize: '14px', color: '#A31D1D' }}>
                     {arpaData.riskComponents.missedAppointments}/100
                   </span>
                 </div>
@@ -1908,10 +1908,10 @@ const Patients = () => {
                     marginBottom: '5px',
                   }}
                 >
-                  <span style={{ fontSize: '14px', color: '#333' }}>
+                  <span style={{ fontSize: '14px', color: '#A31D1D' }}>
                     Lab Compliance
                   </span>
-                  <span style={{ fontSize: '14px', color: '#333' }}>
+                  <span style={{ fontSize: '14px', color: '#A31D1D' }}>
                     {arpaData.riskComponents.labCompliance}/100
                   </span>
                 </div>
@@ -1940,10 +1940,10 @@ const Patients = () => {
                     marginBottom: '5px',
                   }}
                 >
-                  <span style={{ fontSize: '14px', color: '#333' }}>
+                  <span style={{ fontSize: '14px', color: '#A31D1D' }}>
                     Time Since Last Visit
                   </span>
-                  <span style={{ fontSize: '14px', color: '#333' }}>
+                  <span style={{ fontSize: '14px', color: '#A31D1D' }}>
                     {arpaData.riskComponents.timeSinceLastVisit}/100
                   </span>
                 </div>
@@ -1968,16 +1968,16 @@ const Patients = () => {
           </div>
 
           <div style={{ marginBottom: '30px' }}>
-            <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>
+            <h3 style={{ margin: '0 0 15px 0', color: '#A31D1D', fontWeight: 'bold' }}>
               Recommendations
             </h3>
             <div
               style={{
                 padding: '15px',
-                background: '#f8f9fa',
+                background: '#F8F2DE',
                 borderRadius: '4px',
                 fontSize: '14px',
-                color: '#333',
+                color: '#A31D1D',
               }}
             >
               {arpaData.recommendations}
@@ -1985,16 +1985,16 @@ const Patients = () => {
           </div>
 
           <div style={{ marginBottom: '30px' }}>
-            <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>
+            <h3 style={{ margin: '0 0 15px 0', color: '#A31D1D', fontWeight: 'bold' }}>
               Risk Trend (Last 6 Months)
             </h3>
             <div
               style={{
                 height: '200px',
                 position: 'relative',
-                background: '#f8f9fa',
-                borderRadius: '8px',
-                padding: '10px',
+                  background: '#F8F2DE',
+                  borderRadius: '8px',
+                  padding: '10px',
               }}
             >
               <div
@@ -2051,7 +2051,7 @@ const Patients = () => {
                     display: 'flex',
                     justifyContent: 'space-between',
                     fontSize: '12px',
-                    color: '#6c757d',
+                    color: '#A31D1D',
                   }}
                 >
                   {arpaData.riskTrend.map((item, index) => (
@@ -2081,8 +2081,8 @@ const Patients = () => {
               onClick={() => setShowArpaModal(false)}
               style={{
                 padding: '8px 16px',
-                background: '#f8f9fa',
-                color: '#A31D1D',
+                    background: '#ECDCBF',
+                    color: '#A31D1D',
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
@@ -2118,55 +2118,54 @@ const Patients = () => {
     <div
       style={{
         padding: '20px',
-        paddingTop: '80px',
-        background: 'white',
+        backgroundColor: 'white',
         minHeight: '100vh',
+        paddingTop: '100px',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '30px',
-        }}
-      >
-        <div>
-          <h2
-            style={{
-              margin: 0,
-              color: '#333',
-              fontSize: '24px',
-              fontWeight: '600',
-            }}
-          >
-            Patient Management
-          </h2>
-          <p
-            style={{ margin: '5px 0 0 0', color: '#6c757d', fontSize: '14px' }}
-          >
-            Manage patient records and information
-          </p>
+      {/* Header with Title */}
+      <div style={{ 
+        marginBottom: '30px', 
+        background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+        padding: '30px', 
+        borderRadius: '12px', 
+        boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>Patient Management</h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>Manage patient records and information</p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={handleAddPatient}
+              style={{
+                padding: '10px 16px',
+                background: '#ECDCBF',
+                color: '#A31D1D',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#F8F2DE';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#ECDCBF';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              <Plus size={16} />
+              Add New Patient
+            </button>
+          </div>
         </div>
-        <button
-          onClick={handleAddPatient}
-          style={{
-            padding: '10px 16px',
-            background: '#D84040',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontWeight: '500',
-          }}
-        >
-          <Plus size={16} />
-          Add New Patient
-        </button>
       </div>
 
       <div style={{ display: 'flex', gap: '15px', marginBottom: '30px' }}>
@@ -2229,7 +2228,7 @@ const Patients = () => {
         <div
           style={{
             display: 'flex',
-            background: '#f8f9fa',
+            background: '#ECDCBF',
             borderRadius: '4px',
             padding: '2px',
           }}

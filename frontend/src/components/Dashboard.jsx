@@ -289,7 +289,7 @@ const Dashboard = ({ socket }) => {
         sx={{
           flexGrow: 1,
           p: { xs: 2, sm: 3 },
-          backgroundColor: '#F5F5F5',
+          backgroundColor: 'white',
           minHeight: '100vh',
           width: '100%',
         }}
@@ -298,13 +298,13 @@ const Dashboard = ({ socket }) => {
         <Box sx={{ mb: { xs: 3, sm: 4 } }}>
           <Typography
             variant="h4"
-            sx={{ fontWeight: 700, color: '#333', mb: 1 }}
+            sx={{ fontWeight: 700, color: '#A31D1D', mb: 1 }}
           >
             Welcome back, {userName.split(' ')[0]}!
           </Typography>
           <Typography
             variant="body1"
-            sx={{ color: '#666', fontSize: '1.1rem' }}
+            sx={{ color: '#A31D1D', fontSize: '1.1rem' }}
           >
             Here's your health summary
           </Typography>
@@ -339,7 +339,7 @@ const Dashboard = ({ socket }) => {
                 <Box>
                   <Typography
                     variant="h3"
-                    sx={{ fontWeight: 700, color: '#333', mb: 1 }}
+                    sx={{ fontWeight: 700, color: '#A31D1D', mb: 1 }}
                   >
                     {upcomingCount}
                   </Typography>
@@ -388,7 +388,7 @@ const Dashboard = ({ socket }) => {
                 <Box>
                   <Typography
                     variant="h3"
-                    sx={{ fontWeight: 700, color: '#333', mb: 1 }}
+                    sx={{ fontWeight: 700, color: '#A31D1D', mb: 1 }}
                   >
                     {remindersCount}
                   </Typography>
@@ -437,7 +437,7 @@ const Dashboard = ({ socket }) => {
                 <Box>
                   <Typography
                     variant="h3"
-                    sx={{ fontWeight: 700, color: '#333', mb: 1 }}
+                    sx={{ fontWeight: 700, color: '#A31D1D', mb: 1 }}
                   >
                     {prescriptionsCount}
                   </Typography>
@@ -571,7 +571,7 @@ const Dashboard = ({ socket }) => {
             >
               <Typography
                 variant="h6"
-                sx={{ fontWeight: 700, color: '#333', mb: 2 }}
+                sx={{ fontWeight: 700, color: '#A31D1D', mb: 2 }}
               >
                 Today's Medications
               </Typography>

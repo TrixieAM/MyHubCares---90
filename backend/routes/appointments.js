@@ -215,9 +215,19 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // GET /api/appointments/availability/check - Check availability for a specific time slot
 router.get('/availability/check', authenticateToken, async (req, res) => {
   try {
+    console.log('=== GET /api/appointments/availability/check ===');
     const { provider_id, facility_id, scheduled_start, scheduled_end, duration_minutes = 30 } = req.query;
+    
+    console.log('Availability check params:', {
+      provider_id,
+      facility_id,
+      scheduled_start,
+      scheduled_end,
+      duration_minutes
+    });
 
     if (!facility_id || !scheduled_start || !scheduled_end) {
+      console.error('❌ Missing required fields');
       return res.status(400).json({
         success: false,
         message: 'Missing required fields: facility_id, scheduled_start, scheduled_end'
@@ -230,24 +240,13 @@ router.get('/availability/check', authenticateToken, async (req, res) => {
     const startTime = startDate.toTimeString().slice(0, 8);
     const endTime = endDate.toTimeString().slice(0, 8);
 
-    // Check availability slots
-    let availabilityQuery = `
-      SELECT slot_id, slot_status, appointment_id
-      FROM availability_slots
-      WHERE facility_id = ? 
-        AND slot_date = ?
-        AND start_time <= ?
-        AND end_time >= ?
-        AND slot_status = 'available'
-    `;
-    const availabilityParams = [facility_id, slotDate, endTime, startTime];
-
-    if (provider_id) {
-      availabilityQuery += ' AND provider_id = ?';
-      availabilityParams.push(provider_id);
-    }
-
-    const [availableSlots] = await db.query(availabilityQuery, availabilityParams);
+    console.log('Parsed dates:', {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      slotDate,
+      startTime,
+      endTime
+    });
 
     // Check if any slots exist for this facility/provider (to determine if slot system is in use)
     let slotCheckQuery = `
@@ -262,12 +261,50 @@ router.get('/availability/check', authenticateToken, async (req, res) => {
       slotCheckParams.push(provider_id);
     }
     
+    console.log('Checking if slots are defined...');
+    console.log('Query:', slotCheckQuery);
+    console.log('Params:', slotCheckParams);
+    
     const [slotCountResult] = await db.query(slotCheckQuery, slotCheckParams);
     const hasSlotsDefined = slotCountResult[0].slot_count > 0;
+    
+    console.log('Slots defined:', hasSlotsDefined, 'Count:', slotCountResult[0].slot_count);
+
+    // Check availability slots only if slots are defined
+    let availableSlots = [];
+    if (hasSlotsDefined) {
+      console.log('Slots are defined, checking for available slots...');
+      let availabilityQuery = `
+        SELECT slot_id, slot_status, appointment_id
+        FROM availability_slots
+        WHERE facility_id = ? 
+          AND slot_date = ?
+          AND start_time <= ?
+          AND end_time >= ?
+          AND slot_status = 'available'
+      `;
+      const availabilityParams = [facility_id, slotDate, endTime, startTime];
+
+      if (provider_id) {
+        availabilityQuery += ' AND provider_id = ?';
+        availabilityParams.push(provider_id);
+      }
+
+      console.log('Availability query:', availabilityQuery);
+      console.log('Availability params:', availabilityParams);
+
+      const [slots] = await db.query(availabilityQuery, availabilityParams);
+      availableSlots = slots;
+      
+      console.log('Available slots found:', availableSlots.length);
+    } else {
+      console.log('No slots defined for this facility/provider - allowing booking without slot check');
+    }
 
     // Check for conflicting appointments
+    console.log('Checking for conflicting appointments...');
     let conflictQuery = `
-      SELECT appointment_id
+      SELECT appointment_id, scheduled_start, scheduled_end, status
       FROM appointments
       WHERE facility_id = ?
         AND status NOT IN ('cancelled', 'no_show')
@@ -279,8 +316,8 @@ router.get('/availability/check', authenticateToken, async (req, res) => {
     `;
     const conflictParams = [
       facility_id,
-      scheduled_start, scheduled_start,
-      scheduled_end, scheduled_end,
+      scheduled_end, scheduled_start,
+      scheduled_start, scheduled_end,
       scheduled_start, scheduled_end
     ];
 
@@ -289,10 +326,26 @@ router.get('/availability/check', authenticateToken, async (req, res) => {
       conflictParams.push(provider_id);
     }
 
+    console.log('Conflict query:', conflictQuery);
+    console.log('Conflict params:', conflictParams);
+
     const [conflicts] = await db.query(conflictQuery, conflictParams);
+    
+    console.log('Conflicts found:', conflicts.length);
+    if (conflicts.length > 0) {
+      console.log('Conflicting appointments:', conflicts);
+    }
 
     // If slots are defined, require an available slot. If no slots exist, allow booking (slots not set up yet)
+    // Only block if there are conflicts OR if slots are defined but none are available
     const isAvailable = conflicts.length === 0 && (!hasSlotsDefined || availableSlots.length > 0);
+
+    console.log('Final availability result:', {
+      isAvailable,
+      hasSlotsDefined,
+      availableSlotsCount: availableSlots.length,
+      conflictsCount: conflicts.length
+    });
 
     res.json({
       success: true,
@@ -300,11 +353,13 @@ router.get('/availability/check', authenticateToken, async (req, res) => {
         available: isAvailable,
         available_slots: availableSlots,
         conflicts: conflicts,
-        slot_id: isAvailable ? availableSlots[0].slot_id : null
+        slot_id: isAvailable && availableSlots.length > 0 ? availableSlots[0].slot_id : null,
+        hasSlotsDefined: hasSlotsDefined
       }
     });
   } catch (error) {
-    console.error('Error checking availability:', error);
+    console.error('❌ Error checking availability:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Failed to check availability',
@@ -453,8 +508,9 @@ router.post('/', authenticateToken, async (req, res) => {
     const endTime = endDate.toTimeString().slice(0, 8);
 
     // Check for conflicting appointments
+    console.log('🔍 Checking for conflicting appointments...');
     let conflictQuery = `
-      SELECT appointment_id
+      SELECT appointment_id, scheduled_start, scheduled_end, status
       FROM appointments
       WHERE facility_id = ?
         AND status NOT IN ('cancelled', 'no_show')
@@ -466,8 +522,8 @@ router.post('/', authenticateToken, async (req, res) => {
     `;
     const conflictParams = [
       facility_id,
-      scheduled_start, scheduled_start,
-      scheduled_end, scheduled_end,
+      scheduled_end, scheduled_start,
+      scheduled_start, scheduled_end,
       scheduled_start, scheduled_end
     ];
 
@@ -476,14 +532,20 @@ router.post('/', authenticateToken, async (req, res) => {
       conflictParams.push(provider_id);
     }
 
-    const [conflicts] = await db.query(conflictQuery, conflictParams);
+    console.log('Conflict query:', conflictQuery);
+    console.log('Conflict params:', conflictParams);
 
+    const [conflicts] = await db.query(conflictQuery, conflictParams);
+    
+    console.log('Conflicts found:', conflicts.length);
     if (conflicts.length > 0) {
+      console.log('Conflicting appointments:', conflicts);
       return res.status(400).json({
         success: false,
         message: 'Time slot is not available. There is a conflicting appointment.'
       });
     }
+    console.log('✅ No conflicts found');
 
     // Check if availability slots system is in use for this facility/provider
     let slotCheckQuery = `

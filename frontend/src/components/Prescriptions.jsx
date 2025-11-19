@@ -1029,7 +1029,7 @@ const Prescriptions = () => {
 
     if (loading) {
       return (
-        <p style={{ color: '#6c757d', textAlign: 'center', padding: '20px' }}>
+        <p style={{ color: '#A31D1D', textAlign: 'center', padding: '20px' }}>
           Loading prescriptions...
         </p>
       );
@@ -1037,7 +1037,7 @@ const Prescriptions = () => {
 
     if (filteredPrescriptions.length === 0) {
       return (
-        <p style={{ color: '#6c757d', textAlign: 'center', padding: '20px' }}>
+        <p style={{ color: '#A31D1D', textAlign: 'center', padding: '20px' }}>
           No prescriptions found
         </p>
       );
@@ -1053,7 +1053,12 @@ const Prescriptions = () => {
             borderRadius: '8px',
             marginBottom: '15px',
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            border: '1px solid #e9ecef',
+            transition: 'background-color 0.2s',
+            cursor: 'pointer',
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#F8F2DE')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}
         >
           <div
             style={{
@@ -1064,16 +1069,16 @@ const Prescriptions = () => {
             }}
           >
             <div>
-              <h3 style={{ margin: 0, color: '#333', fontSize: '16px' }}>
+              <h3 style={{ margin: 0, color: '#A31D1D', fontSize: '16px' }}>
                 {prescription.patientName}
               </h3>
               <p
-                style={{ margin: '5px 0', color: '#6c757d', fontSize: '14px' }}
+                style={{ margin: '5px 0', color: '#A31D1D', fontSize: '14px' }}
               >
                 Prescribed by: {prescription.physicianName}
               </p>
               <p
-                style={{ margin: '5px 0', color: '#6c757d', fontSize: '14px' }}
+                style={{ margin: '5px 0', color: '#D84040', fontSize: '14px' }}
               >
                 Date: {prescription.prescriptionDate}
               </p>
@@ -1083,7 +1088,7 @@ const Prescriptions = () => {
                 onClick={() => handleViewPrescription(prescription)}
                 style={{
                   padding: '6px 12px',
-                  background: '#007bff',
+                  background: '#D84040',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
@@ -1092,7 +1097,10 @@ const Prescriptions = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
+                  transition: 'background-color 0.2s',
                 }}
+                onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
+                onMouseLeave={(e) => (e.target.style.background = '#D84040')}
               >
                 <FileText size={14} />
                 View
@@ -1102,8 +1110,8 @@ const Prescriptions = () => {
                   onClick={() => handleDispensePrescription(prescription)}
                   style={{
                     padding: '6px 12px',
-                    background: '#17a2b8',
-                    color: 'white',
+                    background: '#ECDCBF',
+                    color: '#A31D1D',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
@@ -1111,7 +1119,10 @@ const Prescriptions = () => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
+                    transition: 'background-color 0.2s',
                   }}
+                  onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                  onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
                 >
                   <Package size={14} />
                   Dispense
@@ -1121,16 +1132,19 @@ const Prescriptions = () => {
                 onClick={() => handlePrintPrescription(prescription)}
                 style={{
                   padding: '6px 12px',
-                  background: 'white',
-                  color: '#007bff',
-                  border: '1px solid #007bff',
+                  background: '#ECDCBF',
+                  color: '#A31D1D',
+                  border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
                   fontSize: '14px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
+                  transition: 'background-color 0.2s',
                 }}
+                onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
               >
                 <Printer size={14} />
                 Print
@@ -1139,8 +1153,8 @@ const Prescriptions = () => {
                 onClick={() => handleExportPDF(prescription)}
                 style={{
                   padding: '6px 12px',
-                  background: '#28a745',
-                  color: 'white',
+                  background: '#ECDCBF',
+                  color: '#A31D1D',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
@@ -1148,7 +1162,10 @@ const Prescriptions = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
+                  transition: 'background-color 0.2s',
                 }}
+                onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
               >
                 <Download size={14} />
                 Export PDF
@@ -1157,12 +1174,12 @@ const Prescriptions = () => {
           </div>
 
           <div style={{ marginBottom: '10px' }}>
-            <strong>Medications:</strong>
+            <strong style={{ color: '#A31D1D' }}>Medications:</strong>
             <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
               {prescription.medications.map((med, index) => (
                 <li
                   key={index}
-                  style={{ marginBottom: '5px', fontSize: '14px' }}
+                  style={{ marginBottom: '5px', fontSize: '14px', color: '#A31D1D' }}
                 >
                   {med.drugName} - {med.dosage}, {med.frequency}
                 </li>
@@ -1170,11 +1187,11 @@ const Prescriptions = () => {
             </ul>
           </div>
 
-          <div style={{ marginBottom: '10px', fontSize: '14px' }}>
+          <div style={{ marginBottom: '10px', fontSize: '14px', color: '#A31D1D' }}>
             <strong>Notes:</strong> {prescription.prescriptionNotes}
           </div>
 
-          <div style={{ fontSize: '14px' }}>
+          <div style={{ fontSize: '14px', color: '#A31D1D' }}>
             <strong>Next Refill:</strong> {prescription.nextRefill}
           </div>
         </div>
@@ -1183,22 +1200,25 @@ const Prescriptions = () => {
   };
 
   return (
-    <div style={{ padding: '20px', paddingTop: '80px' }}>
+    <div style={{ padding: '20px', paddingTop: '100px', backgroundColor: 'white' }}>
       {/* Header with Title */}
       <div
         style={{
+          background: 'linear-gradient(to right, #D84040, #A31D1D)',
+          padding: '30px',
+          borderRadius: '8px',
+          marginBottom: '30px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '30px',
         }}
       >
         <div>
-          <h2 style={{ margin: 0, color: '#333', fontSize: '24px' }}>
+          <h2 style={{ margin: 0, color: 'white', fontSize: '24px' }}>
             Prescriptions
           </h2>
           <p
-            style={{ margin: '5px 0 0 0', color: '#6c757d', fontSize: '14px' }}
+            style={{ margin: '5px 0 0 0', color: '#F8F2DE', fontSize: '14px' }}
           >
             Manage digital prescriptions
           </p>
@@ -1208,8 +1228,8 @@ const Prescriptions = () => {
             onClick={() => setShowCreateModal(true)}
             style={{
               padding: '10px 16px',
-              background: '#007bff',
-              color: 'white',
+              background: '#ECDCBF',
+              color: '#A31D1D',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
@@ -1217,7 +1237,10 @@ const Prescriptions = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
+              transition: 'background-color 0.2s',
             }}
+            onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+            onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
           >
             <Plus size={16} />
             Create Prescription
@@ -1230,7 +1253,7 @@ const Prescriptions = () => {
         <div style={{ position: 'relative', flex: 1 }}>
           <Search
             size={18}
-            color="#6c757d"
+            color="#A31D1D"
             style={{
               position: 'absolute',
               left: '10px',
@@ -1248,6 +1271,7 @@ const Prescriptions = () => {
               border: '1px solid #ced4da',
               borderRadius: '4px',
               width: '100%',
+              background: 'white',
             }}
           />
         </div>
@@ -1294,7 +1318,7 @@ const Prescriptions = () => {
                 marginBottom: '15px', // Reduced margin
               }}
             >
-              <h2 style={{ margin: 0 }}>Create Prescription</h2>
+              <h2 style={{ margin: 0, color: '#A31D1D' }}>Create Prescription</h2>
               <button
                 onClick={() => setShowCreateModal(false)}
                 style={{
@@ -1305,7 +1329,7 @@ const Prescriptions = () => {
                   borderRadius: '4px',
                 }}
               >
-                <X size={24} color="#6c757d" />
+                <X size={24} color="#A31D1D" />
               </button>
             </div>
 
@@ -1315,6 +1339,7 @@ const Prescriptions = () => {
                   display: 'block',
                   marginBottom: '5px',
                   fontWeight: 'bold',
+                  color: '#A31D1D',
                 }}
               >
                 Patient <span style={{ color: 'red' }}>*</span>
@@ -1352,6 +1377,7 @@ const Prescriptions = () => {
                     display: 'block',
                     marginBottom: '5px',
                     fontWeight: 'bold',
+                    color: '#A31D1D',
                   }}
                 >
                   Start Date <span style={{ color: 'red' }}>*</span>
@@ -1380,6 +1406,7 @@ const Prescriptions = () => {
                     display: 'block',
                     marginBottom: '5px',
                     fontWeight: 'bold',
+                    color: '#A31D1D',
                   }}
                 >
                   Medical Facility <span style={{ color: 'red' }}>*</span>
@@ -1421,12 +1448,12 @@ const Prescriptions = () => {
                   marginBottom: '10px',
                 }}
               >
-                <label style={{ fontWeight: 'bold' }}>Medications</label>
+                <label style={{ fontWeight: 'bold', color: '#A31D1D' }}>Medications</label>
                 <button
                   onClick={handleAddMedication}
                   style={{
                     padding: '6px 12px',
-                    background: '#007bff',
+                    background: '#D84040',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
@@ -1435,7 +1462,10 @@ const Prescriptions = () => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
+                    transition: 'background-color 0.2s',
                   }}
+                  onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
+                  onMouseLeave={(e) => (e.target.style.background = '#D84040')}
                 >
                   <Plus size={14} />
                   Add Another Drug
@@ -1482,6 +1512,7 @@ const Prescriptions = () => {
                           display: 'block',
                           marginBottom: '5px',
                           fontSize: '14px',
+                          color: '#A31D1D',
                         }}
                       >
                         Medication <span style={{ color: 'red' }}>*</span>
@@ -1522,6 +1553,7 @@ const Prescriptions = () => {
                           display: 'block',
                           marginBottom: '5px',
                           fontSize: '14px',
+                          color: '#A31D1D',
                         }}
                       >
                         Dosage <span style={{ color: 'red' }}>*</span>
@@ -1555,6 +1587,7 @@ const Prescriptions = () => {
                           display: 'block',
                           marginBottom: '5px',
                           fontSize: '14px',
+                          color: '#A31D1D',
                         }}
                       >
                         Frequency <span style={{ color: 'red' }}>*</span>
@@ -1585,6 +1618,7 @@ const Prescriptions = () => {
                           display: 'block',
                           marginBottom: '5px',
                           fontSize: '14px',
+                          color: '#A31D1D',
                         }}
                       >
                         Quantity <span style={{ color: 'red' }}>*</span>
@@ -1618,6 +1652,7 @@ const Prescriptions = () => {
                           display: 'block',
                           marginBottom: '5px',
                           fontSize: '14px',
+                          color: '#A31D1D',
                         }}
                       >
                         Duration (days)
@@ -1650,6 +1685,7 @@ const Prescriptions = () => {
                         display: 'block',
                         marginBottom: '5px',
                         fontSize: '14px',
+                        color: '#A31D1D',
                       }}
                     >
                       Instructions
@@ -1684,6 +1720,7 @@ const Prescriptions = () => {
                   display: 'block',
                   marginBottom: '5px',
                   fontWeight: 'bold',
+                  color: '#A31D1D',
                 }}
               >
                 Prescription Notes
@@ -1714,6 +1751,7 @@ const Prescriptions = () => {
                     display: 'block',
                     marginBottom: '5px',
                     fontWeight: 'bold',
+                    color: '#A31D1D',
                   }}
                 >
                   Next Refill Date
@@ -1727,12 +1765,12 @@ const Prescriptions = () => {
                     padding: '8px 12px',
                     border: '1px solid #ced4da',
                     borderRadius: '4px',
-                    backgroundColor: '#f8f9fa',
+                    backgroundColor: '#F8F2DE',
                     cursor: 'not-allowed',
                   }}
                   title="Automatically calculated based on start date and medication durations"
                 />
-                <small style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                <small style={{ color: '#A31D1D', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                   Automatically calculated from start date and medication durations
                 </small>
               </div>
@@ -1749,12 +1787,15 @@ const Prescriptions = () => {
                 onClick={() => setShowCreateModal(false)}
                 style={{
                   padding: '8px 16px',
-                  background: '#6c757d',
-                  color: 'white',
+                  background: '#ECDCBF',
+                  color: '#A31D1D',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  transition: 'background-color 0.2s',
                 }}
+                onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
               >
                 Cancel
               </button>
@@ -1762,12 +1803,15 @@ const Prescriptions = () => {
                 onClick={handleCreatePrescription}
                 style={{
                   padding: '8px 16px',
-                  background: '#007bff',
+                  background: '#D84040',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  transition: 'background-color 0.2s',
                 }}
+                onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
+                onMouseLeave={(e) => (e.target.style.background = '#D84040')}
               >
                 Create
               </button>
@@ -1817,7 +1861,7 @@ const Prescriptions = () => {
                   marginBottom: '20px',
                 }}
               >
-                <h2 style={{ margin: 0 }}>Prescription Details</h2>
+                <h2 style={{ margin: 0, color: '#A31D1D' }}>Prescription Details</h2>
                 <button
                   onClick={() => setShowModal(false)}
                   style={{
@@ -1828,7 +1872,7 @@ const Prescriptions = () => {
                     borderRadius: '4px',
                   }}
                 >
-                  <X size={24} color="#6c757d" />
+                  <X size={24} color="#A31D1D" />
                 </button>
               </div>
             )}
@@ -1962,15 +2006,18 @@ const Prescriptions = () => {
                   onClick={() => handleExportPDF(selectedPrescription)}
                   style={{
                     padding: '8px 16px',
-                    background: '#28a745',
-                    color: 'white',
+                    background: '#ECDCBF',
+                    color: '#A31D1D',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
+                    transition: 'background-color 0.2s',
                   }}
+                  onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                  onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
                 >
                   <Download size={16} />
                   Export PDF
@@ -1979,7 +2026,7 @@ const Prescriptions = () => {
                   onClick={handlePrintFromModal}
                   style={{
                     padding: '8px 16px',
-                    background: '#007bff',
+                    background: '#D84040',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
@@ -1987,7 +2034,10 @@ const Prescriptions = () => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
+                    transition: 'background-color 0.2s',
                   }}
+                  onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
+                  onMouseLeave={(e) => (e.target.style.background = '#D84040')}
                 >
                   <Printer size={16} />
                   Print
@@ -1996,12 +2046,15 @@ const Prescriptions = () => {
                   onClick={() => setShowModal(false)}
                   style={{
                     padding: '8px 16px',
-                    background: '#6c757d',
-                    color: 'white',
+                    background: '#ECDCBF',
+                    color: '#A31D1D',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
+                    transition: 'background-color 0.2s',
                   }}
+                  onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                  onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
                 >
                   Close
                 </button>
@@ -2049,7 +2102,7 @@ const Prescriptions = () => {
                 marginBottom: '20px',
               }}
             >
-              <h2 style={{ margin: 0 }}>Dispense Medication</h2>
+              <h2 style={{ margin: 0, color: '#A31D1D' }}>Dispense Medication</h2>
               <button
                 onClick={() => {
                   setShowDispenseModal(false);
@@ -2064,24 +2117,24 @@ const Prescriptions = () => {
                   borderRadius: '4px',
                 }}
               >
-                <X size={24} color="#6c757d" />
+                <X size={24} color="#A31D1D" />
               </button>
             </div>
 
-            <div style={{ marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '4px' }}>
-              <p style={{ margin: '5px 0', fontSize: '14px' }}>
+            <div style={{ marginBottom: '20px', padding: '15px', background: '#F8F2DE', borderRadius: '4px' }}>
+              <p style={{ margin: '5px 0', fontSize: '14px', color: '#A31D1D' }}>
                 <strong>Patient:</strong> {selectedPrescription.patientName}
               </p>
-              <p style={{ margin: '5px 0', fontSize: '14px' }}>
+              <p style={{ margin: '5px 0', fontSize: '14px', color: '#A31D1D' }}>
                 <strong>Prescription #:</strong> {selectedPrescription.prescription_number || `RX-${String(selectedPrescription.id || selectedPrescription.prescription_id).padStart(6, '0')}`}
               </p>
-              <p style={{ margin: '5px 0', fontSize: '14px' }}>
+              <p style={{ margin: '5px 0', fontSize: '14px', color: '#A31D1D' }}>
                 <strong>Date:</strong> {selectedPrescription.prescriptionDate}
               </p>
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <h3 style={{ margin: '0 0 15px 0', fontSize: '16px' }}>Medications to Dispense</h3>
+              <h3 style={{ margin: '0 0 15px 0', fontSize: '16px', color: '#A31D1D' }}>Medications to Dispense</h3>
               {dispenseItems.map((item, index) => {
                 const availability = inventoryAvailability[item.medication_id];
                 const isLowStock = availability && availability.quantity_on_hand <= availability.reorder_level;
@@ -2099,7 +2152,7 @@ const Prescriptions = () => {
                     }}
                   >
                     <div style={{ marginBottom: '10px' }}>
-                      <strong style={{ fontSize: '15px' }}>{item.medication_name}</strong>
+                      <strong style={{ fontSize: '15px', color: '#A31D1D' }}>{item.medication_name}</strong>
                       {isLowStock && (
                         <span
                           style={{
@@ -2132,7 +2185,7 @@ const Prescriptions = () => {
                       )}
                     </div>
 
-                    <div style={{ marginBottom: '10px', fontSize: '14px', color: '#6c757d' }}>
+                    <div style={{ marginBottom: '10px', fontSize: '14px', color: '#A31D1D' }}>
                       <strong>Available:</strong> {item.available_quantity} {availability?.unit || 'units'}
                       {availability && availability.reorder_level > 0 && (
                         <span style={{ marginLeft: '15px' }}>
@@ -2149,6 +2202,7 @@ const Prescriptions = () => {
                             marginBottom: '5px',
                             fontSize: '14px',
                             fontWeight: 'bold',
+                            color: '#A31D1D',
                           }}
                         >
                           Quantity to Dispense <span style={{ color: 'red' }}>*</span>
@@ -2185,6 +2239,7 @@ const Prescriptions = () => {
                             display: 'block',
                             marginBottom: '5px',
                             fontSize: '14px',
+                            color: '#A31D1D',
                           }}
                         >
                           Batch Number (Optional)
@@ -2214,6 +2269,7 @@ const Prescriptions = () => {
                           display: 'block',
                           marginBottom: '5px',
                           fontSize: '14px',
+                          color: '#A31D1D',
                         }}
                       >
                         Notes (Optional)
@@ -2256,12 +2312,15 @@ const Prescriptions = () => {
                 }}
                 style={{
                   padding: '8px 16px',
-                  background: '#6c757d',
-                  color: 'white',
+                  background: '#ECDCBF',
+                  color: '#A31D1D',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  transition: 'background-color 0.2s',
                 }}
+                onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
               >
                 Cancel
               </button>
@@ -2269,12 +2328,15 @@ const Prescriptions = () => {
                 onClick={handleDispense}
                 style={{
                   padding: '8px 16px',
-                  background: '#17a2b8',
+                  background: '#D84040',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
+                  transition: 'background-color 0.2s',
                 }}
+                onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
+                onMouseLeave={(e) => (e.target.style.background = '#D84040')}
               >
                 Dispense Medication
               </button>
@@ -2295,7 +2357,7 @@ const Prescriptions = () => {
               toast.type === 'success'
                 ? '#28a745'
                 : toast.type === 'error'
-                ? '#dc3545'
+                ? '#A31D1D'
                 : toast.type === 'warning'
                 ? '#ff9800'
                 : '#17a2b8',

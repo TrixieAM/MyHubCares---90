@@ -906,8 +906,9 @@ const LabTests = () => {
   const styles = {
     pageContainer: {
       padding: '20px',
+      paddingTop: '100px',
       fontFamily: 'Arial, sans-serif',
-      backgroundColor: '#f5f5f5',
+      backgroundColor: 'white',
       minHeight: '100vh',
     },
     topBar: {
@@ -952,11 +953,11 @@ const LabTests = () => {
       cursor: 'pointer',
       borderBottom: '2px solid transparent',
       fontWeight: '500',
-      color: '#555',
+      color: '#A31D1D',
     },
     activeTab: {
-      borderBottom: '2px solid #007bff',
-      color: '#007bff',
+      borderBottom: '2px solid #D84040',
+      color: '#A31D1D',
     },
     mainCard: {
       backgroundColor: 'white',
@@ -972,14 +973,14 @@ const LabTests = () => {
       borderBottom: '1px solid #e9ecef',
     },
     cardTitle: {
-      color: '#333',
+      color: '#A31D1D',
       fontSize: '24px',
       fontWeight: 'bold',
       margin: 0,
     },
     addButton: {
-      backgroundColor: '#007bff',
-      color: 'white',
+      backgroundColor: '#ECDCBF',
+      color: '#A31D1D',
       border: 'none',
       padding: '10px 20px',
       borderRadius: '5px',
@@ -1001,6 +1002,7 @@ const LabTests = () => {
       border: '1px solid #ced4da',
       borderRadius: '5px',
       fontSize: '14px',
+      background: 'white',
     },
     filterSelect: {
       padding: '8px 12px',
@@ -1018,9 +1020,9 @@ const LabTests = () => {
       textAlign: 'left',
       fontWeight: 'bold',
       fontSize: '14px',
-      color: '#495057',
-      backgroundColor: '#f8f9fa',
-      borderBottom: '2px solid #dee2e6',
+      color: '#A31D1D',
+      backgroundColor: '#F8F2DE',
+      borderBottom: '2px solid #ECDCBF',
     },
     tableRow: {
       borderBottom: '1px solid #dee2e6',
@@ -1028,7 +1030,7 @@ const LabTests = () => {
     },
     tableCell: {
       padding: '15px 25px',
-      color: '#333',
+      color: '#A31D1D',
       fontSize: '14px',
     },
     statusBadge: {
@@ -1078,20 +1080,20 @@ const LabTests = () => {
       transition: 'background-color 0.2s',
     },
     viewButton: {
-      backgroundColor: '#17a2b8',
+      backgroundColor: '#D84040',
       color: 'white',
     },
     editButton: {
-      backgroundColor: '#ffc107',
-      color: '#212529',
+      backgroundColor: '#ECDCBF',
+      color: '#A31D1D',
     },
     deleteButton: {
-      backgroundColor: '#dc3545',
+      backgroundColor: '#A31D1D',
       color: 'white',
     },
     uploadButton: {
-      backgroundColor: '#6f42c1',
-      color: 'white',
+      backgroundColor: '#ECDCBF',
+      color: '#A31D1D',
     },
     modalOverlay: {
       position: 'fixed',
@@ -1126,7 +1128,7 @@ const LabTests = () => {
     },
     modalTitle: {
       margin: 0,
-      color: '#333',
+      color: '#A31D1D',
       fontSize: '20px',
       fontWeight: '600',
     },
@@ -1135,7 +1137,7 @@ const LabTests = () => {
       border: 'none',
       fontSize: '24px',
       cursor: 'pointer',
-      color: '#6c757d',
+      color: '#A31D1D',
     },
     form: {
       padding: '25px',
@@ -1152,7 +1154,7 @@ const LabTests = () => {
     label: {
       display: 'block',
       marginBottom: '8px',
-      color: '#495057',
+      color: '#A31D1D',
       fontSize: '14px',
       fontWeight: '600',
     },
@@ -1193,38 +1195,41 @@ const LabTests = () => {
     },
     cancelButton: {
       padding: '10px 20px',
-      border: '1px solid #6c757d',
-      backgroundColor: 'white',
-      color: '#6c757d',
+      border: 'none',
+      backgroundColor: '#ECDCBF',
+      color: '#A31D1D',
       borderRadius: '5px',
       fontSize: '14px',
       cursor: 'pointer',
       fontWeight: '500',
+      transition: 'background-color 0.2s',
     },
     submitButton: {
       padding: '10px 20px',
       border: 'none',
-      backgroundColor: '#007bff',
+      backgroundColor: '#D84040',
       color: 'white',
       borderRadius: '5px',
       fontSize: '14px',
       cursor: 'pointer',
       fontWeight: '500',
+      transition: 'background-color 0.2s',
     },
     updateButton: {
       padding: '10px 20px',
       border: 'none',
-      backgroundColor: '#28a745',
+      backgroundColor: '#D84040',
       color: 'white',
       borderRadius: '5px',
       fontSize: '14px',
       cursor: 'pointer',
       fontWeight: '500',
+      transition: 'background-color 0.2s',
     },
     emptyState: {
       padding: '40px',
       textAlign: 'center',
-      color: '#6c757d',
+      color: '#A31D1D',
     },
     emptyStateIcon: {
       fontSize: '48px',
@@ -1252,7 +1257,7 @@ const LabTests = () => {
       backgroundColor: '#28a745',
     },
     toastError: {
-      backgroundColor: '#dc3545',
+      backgroundColor: '#A31D1D',
     },
   };
 
@@ -1268,23 +1273,21 @@ const LabTests = () => {
         </div>
       )}
 
-      {/* Top Bar for User and Notifications */}
-      <div style={styles.topBar}>
-        <span style={styles.adminUser}>Admin User</span>
-        <div style={styles.notificationIcon}>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
-          <span style={styles.notificationBadge}>3</span>
-        </div>
+      {/* Header with Title */}
+      <div
+        style={{
+          background: 'linear-gradient(to right, #D84040, #A31D1D)',
+          padding: '30px',
+          borderRadius: '8px',
+          marginBottom: '30px',
+        }}
+      >
+        <h2 style={{ margin: 0, color: 'white', fontSize: '24px' }}>
+          Laboratory Tests
+        </h2>
+        <p style={{ margin: '5px 0 0 0', color: '#F8F2DE', fontSize: '14px' }}>
+          Manage lab results, orders, and files
+        </p>
       </div>
 
       {/* Tabs */}
@@ -1319,6 +1322,8 @@ const LabTests = () => {
               <button 
                 style={styles.addButton} 
                 onClick={() => openModal('addResult')}
+                onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
               >
                 Add Test Result
               </button>
@@ -1380,7 +1385,7 @@ const LabTests = () => {
                       key={result.id}
                       style={styles.tableRow}
                       onMouseEnter={(e) =>
-                        (e.currentTarget.style.backgroundColor = '#f8f9fa')
+                        (e.currentTarget.style.backgroundColor = '#F8F2DE')
                       }
                       onMouseLeave={(e) =>
                         (e.currentTarget.style.backgroundColor = 'transparent')
@@ -1414,12 +1419,16 @@ const LabTests = () => {
                           <button 
                             style={{...styles.actionButton, ...styles.viewButton}}
                             onClick={() => openModal('viewResult', result)}
+                            onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
+                            onMouseLeave={(e) => (e.target.style.background = '#D84040')}
                           >
                             View
                           </button>
                           <button 
                             style={{...styles.actionButton, ...styles.editButton}}
                             onClick={() => openModal('editResult', result)}
+                            onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                            onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
                           >
                             Edit
                           </button>
@@ -1432,12 +1441,16 @@ const LabTests = () => {
                             }}
                             onClick={() => deleteResult(result.result_id || result.id)}
                             disabled={deletingFiles.has(result.result_id || result.id)}
+                            onMouseEnter={(e) => !deletingFiles.has(result.result_id || result.id) && (e.target.style.background = '#D84040')}
+                            onMouseLeave={(e) => !deletingFiles.has(result.result_id || result.id) && (e.target.style.background = '#A31D1D')}
                           >
                             {deletingFiles.has(result.result_id || result.id) ? 'Deleting...' : 'Delete'}
                           </button>
                           <button 
                             style={{...styles.actionButton, ...styles.uploadButton}}
                             onClick={() => openModal('uploadFile', result)}
+                            onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                            onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
                           >
                             Upload
                           </button>
@@ -1459,6 +1472,8 @@ const LabTests = () => {
               <button 
                 style={styles.addButton} 
                 onClick={() => openModal('addOrder')}
+                onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
               >
                 Add Lab Order
               </button>
@@ -1522,7 +1537,7 @@ const LabTests = () => {
                       key={order.id}
                       style={styles.tableRow}
                       onMouseEnter={(e) =>
-                        (e.currentTarget.style.backgroundColor = '#f8f9fa')
+                        (e.currentTarget.style.backgroundColor = '#F8F2DE')
                       }
                       onMouseLeave={(e) =>
                         (e.currentTarget.style.backgroundColor = 'transparent')
@@ -1559,6 +1574,8 @@ const LabTests = () => {
                           <button 
                             style={{...styles.actionButton, ...styles.viewButton}}
                             onClick={() => openModal('viewOrder', order)}
+                            onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
+                            onMouseLeave={(e) => (e.target.style.background = '#D84040')}
                           >
                             View
                           </button>
@@ -1571,6 +1588,8 @@ const LabTests = () => {
                             }}
                             onClick={() => deleteOrder(order.order_id || order.id)}
                             disabled={deletingFiles.has(order.order_id || order.id)}
+                            onMouseEnter={(e) => !deletingFiles.has(order.order_id || order.id) && (e.target.style.background = '#D84040')}
+                            onMouseLeave={(e) => !deletingFiles.has(order.order_id || order.id) && (e.target.style.background = '#A31D1D')}
                           >
                             {deletingFiles.has(order.order_id || order.id) ? 'Deleting...' : 'Delete'}
                           </button>
@@ -1646,6 +1665,8 @@ const LabTests = () => {
                           <div style={styles.actionsCell}>
                             <button 
                               style={{...styles.actionButton, ...styles.viewButton}}
+                              onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
+                              onMouseLeave={(e) => (e.target.style.background = '#D84040')}
                               onClick={async () => {
                                 try {
                                   const token = getAuthToken();
@@ -1701,6 +1722,8 @@ const LabTests = () => {
                               }}
                               onClick={() => deleteFile(fileId)}
                               disabled={isDeleting}
+                              onMouseEnter={(e) => !isDeleting && (e.target.style.background = '#D84040')}
+                              onMouseLeave={(e) => !isDeleting && (e.target.style.background = '#A31D1D')}
                             >
                               {isDeleting ? 'Deleting...' : 'Delete'}
                             </button>
@@ -1964,6 +1987,8 @@ const LabTests = () => {
                     style={styles.cancelButton}
                     onClick={closeModal}
                     disabled={loading}
+                    onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                    onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
                   >
                     Cancel
                   </button>
@@ -1971,6 +1996,8 @@ const LabTests = () => {
                     type="submit" 
                     style={modalType === 'addResult' ? styles.submitButton : styles.updateButton}
                     disabled={loading}
+                    onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
+                    onMouseLeave={(e) => (e.target.style.background = '#D84040')}
                   >
                     {loading ? (modalType === 'addResult' ? 'Creating...' : 'Updating...') : (modalType === 'addResult' ? 'Add Test Result' : 'Update Result')}
                   </button>
@@ -2137,6 +2164,8 @@ const LabTests = () => {
                     style={styles.cancelButton}
                     onClick={closeModal}
                     disabled={loading}
+                    onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                    onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
                   >
                     Cancel
                   </button>
@@ -2144,6 +2173,8 @@ const LabTests = () => {
                     type="submit" 
                     style={styles.submitButton}
                     disabled={loading}
+                    onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
+                    onMouseLeave={(e) => (e.target.style.background = '#D84040')}
                   >
                     {loading ? 'Creating...' : 'Add Lab Order'}
                   </button>
@@ -2254,6 +2285,8 @@ const LabTests = () => {
                     type="button"
                     style={styles.cancelButton}
                     onClick={closeModal}
+                    onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                    onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
                   >
                     Close
                   </button>
@@ -2353,6 +2386,8 @@ const LabTests = () => {
                     type="button"
                     style={styles.cancelButton}
                     onClick={closeModal}
+                    onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                    onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
                   >
                     Close
                   </button>
@@ -2398,6 +2433,8 @@ const LabTests = () => {
                     style={styles.cancelButton}
                     onClick={closeModal}
                     disabled={loading}
+                    onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
+                    onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
                   >
                     Cancel
                   </button>
@@ -2405,6 +2442,8 @@ const LabTests = () => {
                     type="submit" 
                     style={styles.submitButton}
                     disabled={loading || !newFile.file}
+                    onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
+                    onMouseLeave={(e) => (e.target.style.background = '#D84040')}
                   >
                     {loading ? 'Uploading...' : 'Upload File'}
                   </button>

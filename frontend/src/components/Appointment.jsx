@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X, Check, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Check, Trash2, Calendar, Clock, User, MapPin, Filter } from 'lucide-react';
 import { AccessTime, LocationOn, LocalHospital } from '@mui/icons-material';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -14,6 +14,7 @@ const Appointments = ({ socket }) => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [viewMode, setViewMode] = useState('calendar'); // calendar or list
     
     // For form dropdowns
     const [patients, setPatients] = useState([]);
@@ -605,9 +606,9 @@ const Appointments = ({ socket }) => {
                 textAlign: 'center',
                 fontWeight: 'bold',
                 padding: '10px 0',
-                color: '#6c757d',
+                color: '#A31D1D',
                 fontSize: '14px',
-                borderBottom: '1px solid #e9ecef'
+                borderBottom: '2px solid #ECDCBF'
             }}>
                 {day}
             </div>
@@ -631,39 +632,46 @@ const Appointments = ({ socket }) => {
                     style={{
                         padding: '10px',
                         height: '80px',
-                        border: isToday ? '2px solid #007bff' : '1px solid #e9ecef',
-                        borderRadius: '4px',
-                        backgroundColor: isSelected ? '#e7f3ff' : 'white',
+                        border: isToday ? '2px solid #D84040' : '1px solid #ECDCBF',
+                        borderRadius: '8px',
+                        backgroundColor: isSelected ? '#F8F2DE' : 'white',
                         cursor: 'pointer',
                         position: 'relative',
                         overflow: 'hidden',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.2s ease',
+                        boxShadow: isSelected ? '0 4px 8px rgba(216, 64, 64, 0.15)' : 'none'
                     }}
                     onMouseEnter={(e) => {
                         if (!isSelected) {
-                            e.target.style.backgroundColor = '#f8f9fa';
+                            e.target.style.backgroundColor = '#F8F2DE';
+                            e.target.style.transform = 'translateY(-2px)';
+                            e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
                         }
                     }}
                     onMouseLeave={(e) => {
                         if (!isSelected) {
                             e.target.style.backgroundColor = 'white';
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = 'none';
                         }
                     }}
                 >
                     <div style={{
                         fontWeight: isToday ? 'bold' : 'normal',
-                        color: isToday ? '#007bff' : '#333',
-                        marginBottom: '5px'
+                        color: isToday ? '#D84040' : '#A31D1D',
+                        marginBottom: '5px',
+                        fontSize: '16px'
                     }}>
                         {day}
                     </div>
                     {dayAppointments.length > 0 && (
                         <div style={{
                             fontSize: '11px',
-                            color: '#6c757d',
+                            color: '#A31D1D',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
+                            whiteSpace: 'nowrap',
+                            fontWeight: '500'
                         }}>
                             {dayAppointments.length > 1 ? 
                                 `${dayAppointments.length} appointments` : 
@@ -679,7 +687,17 @@ const Appointments = ({ socket }) => {
                             width: '8px',
                             height: '8px',
                             borderRadius: '50%',
-                            backgroundColor: dayAppointments.some(a => a.status === 'scheduled' || a.status === 'confirmed') ? '#28a745' : '#dc3545'
+                            backgroundColor: dayAppointments.some(a => 
+                                a.status === 'scheduled' || 
+                                a.status === 'confirmed' || 
+                                a.status === 'pending_provider_confirmation' || 
+                                a.status === 'pending_patient_confirmation'
+                            ) ? '#28a745' : (
+                                dayAppointments.some(a => 
+                                    a.status === 'cancelled' || 
+                                    a.status === 'rejected'
+                                ) ? '#dc3545' : '#ECDCBF'
+                            )
                         }}></div>
                     )}
                 </div>
@@ -695,9 +713,14 @@ const Appointments = ({ socket }) => {
                 <div style={{ 
                     textAlign: 'center', 
                     padding: '40px 20px',
-                    color: '#6c757d'
+                    color: '#A31D1D',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                 }}>
-                    <p>No appointments scheduled for this day</p>
+                    <Calendar size={48} style={{ marginBottom: '16px', color: '#ECDCBF' }} />
+                    <p style={{ color: '#A31D1D' }}>No appointments scheduled for this day</p>
                 </div>
             );
         }
@@ -724,11 +747,14 @@ const Appointments = ({ socket }) => {
                     style={{
                         background: 'white',
                         padding: '20px',
-                        borderRadius: '8px',
+                        borderRadius: '12px',
                         marginBottom: '15px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                        transition: 'transform 0.2s ease',
-                        cursor: isClickable ? 'pointer' : 'default'
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+                        transition: 'all 0.2s ease',
+                        cursor: isClickable ? 'pointer' : 'default',
+                        border: '1px solid #F8F2DE',
+                        position: 'relative',
+                        overflow: 'hidden'
                     }}
                     onClick={() => {
                         if (canEdit) {
@@ -741,67 +767,100 @@ const Appointments = ({ socket }) => {
                     }}
                     onMouseEnter={(e) => {
                         if (isClickable) {
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                            e.currentTarget.style.transform = 'translateY(-3px)';
+                            e.currentTarget.style.boxShadow = '0 5px 15px rgba(0,0,0,0.1)';
                             if (canEdit) {
-                                e.currentTarget.style.border = '1px solid #007bff';
+                                e.currentTarget.style.borderLeft = '4px solid #D84040';
                             } else {
-                                e.currentTarget.style.border = '1px solid #6c757d';
+                                e.currentTarget.style.borderLeft = '4px solid #ECDCBF';
                             }
                         }
                     }}
                     onMouseLeave={(e) => {
                         e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                        e.currentTarget.style.border = 'none';
+                        e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.08)';
+                        e.currentTarget.style.borderLeft = '1px solid #F8F2DE';
                     }}
                 >
-                    <div>
-                        <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>
-                            {apt.patient_name || 'N/A'}
-                        </h3>
-                        <strong style={{ color: '#007bff' }}>
-                            {startDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                        </strong>
-                        <div style={{ marginTop: '8px', color: '#6c757d' }}>
-                            <span style={{ marginRight: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <AccessTime fontSize="small" /> {startDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} - {endDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                            <span style={{ marginRight: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}><LocationOn fontSize="small" /> {apt.facility_name || 'N/A'}</span>
-                            {apt.provider_name && (
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><LocalHospital fontSize="small" /> {apt.provider_name}</span>
-                            )}
-                        </div>
-                        <div style={{ marginTop: '10px' }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '4px',
+                        height: '100%',
+                        backgroundColor: (apt.status === 'scheduled' || 
+                                         apt.status === 'confirmed' || 
+                                         apt.status === 'pending_provider_confirmation' || 
+                                         apt.status === 'pending_patient_confirmation') ? '#28a745' : 
+                                        (apt.status === 'cancelled' || apt.status === 'rejected') ? '#dc3545' : 
+                                        apt.status === 'completed' ? '#A31D1D' : '#ECDCBF'
+                    }}></div>
+                    <div style={{ marginLeft: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <h3 style={{ margin: '0 0 10px 0', color: '#A31D1D', fontSize: '18px', fontWeight: 'bold' }}>
+                                {apt.patient_name || 'N/A'}
+                            </h3>
                             <span style={{
                                 padding: '4px 8px',
-                                borderRadius: '4px',
-                                background: '#17a2b8',
+                                borderRadius: '20px',
+                                background: (apt.status === 'scheduled' || 
+                                            apt.status === 'confirmed' || 
+                                            apt.status === 'pending_provider_confirmation' || 
+                                            apt.status === 'pending_patient_confirmation') ? '#28a745' : 
+                                           (apt.status === 'cancelled' || apt.status === 'rejected') ? '#dc3545' : 
+                                           apt.status === 'completed' ? '#A31D1D' : '#ECDCBF',
                                 color: 'white',
                                 fontSize: '12px',
-                                marginRight: '8px'
-                            }}>
-                                {formatAppointmentType(apt.appointment_type)}
-                            </span>
-                            <span style={{
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                background: apt.status === 'scheduled' || apt.status === 'confirmed' ? '#007bff' : 
-                                          apt.status === 'completed' ? '#28a745' : 
-                                          apt.status === 'cancelled' ? '#dc3545' : '#6c757d',
-                                color: 'white',
-                                fontSize: '12px'
+                                fontWeight: 'bold'
                             }}>
                                 {apt.status.toUpperCase()}
                             </span>
                         </div>
+                        <div style={{ marginBottom: '10px', color: '#A31D1D', fontWeight: '500', fontSize: '15px' }}>
+                            {startDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', marginBottom: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#A31D1D' }}>
+                                <Clock size={16} />
+                                <span>{startDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} - {endDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#A31D1D' }}>
+                                <MapPin size={16} />
+                                <span>{apt.facility_name || 'N/A'}</span>
+                            </div>
+                            {apt.provider_name && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#A31D1D' }}>
+                                    <User size={16} />
+                                    <span>{apt.provider_name}</span>
+                                </div>
+                            )}
+                        </div>
+                        <div style={{ marginBottom: '10px' }}>
+                            <span style={{
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                background: '#F8F2DE',
+                                color: '#A31D1D',
+                                fontSize: '12px',
+                                fontWeight: '500'
+                            }}>
+                                {formatAppointmentType(apt.appointment_type)}
+                            </span>
+                        </div>
                         {apt.notes && (
-                            <div style={{ marginTop: '10px', color: '#6c757d', fontSize: '14px' }}>
+                            <div style={{ color: '#A31D1D', fontSize: '14px', marginTop: '10px' }}>
                                 <strong>Notes:</strong> {apt.notes}
                             </div>
                         )}
                     </div>
-                    <div style={{ marginTop: '15px' }}>
+                    <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'flex-end', 
+                        gap: '10px', 
+                        marginTop: '15px',
+                        paddingTop: '15px',
+                        borderTop: '1px solid #F8F2DE'
+                    }}>
                         {/* Show Edit button for authorized users, Cancel button only if canEdit */}
                         {canEditProvider && (
                             <button 
@@ -811,16 +870,25 @@ const Appointments = ({ socket }) => {
                                 }}
                                 style={{
                                     padding: '8px 16px',
-                                    marginRight: '8px',
-                                    background: '#007bff',
+                                    background: '#D84040',
                                     color: 'white',
                                     border: 'none',
-                                    borderRadius: '4px',
+                                    borderRadius: '6px',
                                     cursor: 'pointer',
-                                    transition: 'background 0.2s ease'
+                                    transition: 'all 0.2s ease',
+                                    fontWeight: '500',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px'
                                 }}
-                                onMouseEnter={(e) => e.target.style.background = '#0056b3'}
-                                onMouseLeave={(e) => e.target.style.background = '#007bff'}
+                                onMouseEnter={(e) => {
+                                    e.target.style.background = '#A31D1D';
+                                    e.target.style.transform = 'translateY(-1px)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.background = '#D84040';
+                                    e.target.style.transform = 'translateY(0)';
+                                }}
                             >
                                 Edit
                             </button>
@@ -833,15 +901,25 @@ const Appointments = ({ socket }) => {
                                 }}
                                 style={{
                                     padding: '8px 16px',
-                                    background: '#dc3545',
+                                    background: '#A31D1D',
                                     color: 'white',
                                     border: 'none',
-                                    borderRadius: '4px',
+                                    borderRadius: '6px',
                                     cursor: 'pointer',
-                                    transition: 'background 0.2s ease'
+                                    transition: 'all 0.2s ease',
+                                    fontWeight: '500',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px'
                                 }}
-                                onMouseEnter={(e) => e.target.style.background = '#c82333'}
-                                onMouseLeave={(e) => e.target.style.background = '#dc3545'}
+                                onMouseEnter={(e) => {
+                                    e.target.style.background = '#D84040';
+                                    e.target.style.transform = 'translateY(-1px)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.background = '#A31D1D';
+                                    e.target.style.transform = 'translateY(0)';
+                                }}
                             >
                                 Cancel
                             </button>
@@ -853,132 +931,209 @@ const Appointments = ({ socket }) => {
     };
 
     return (
-        <div style={{ padding: '20px' }}>
+        <div style={{ padding: '20px', backgroundColor: 'white', minHeight: '100vh', paddingTop: '100px' }}>
             {/* Header with Title */}
-            <div style={{ marginBottom: '20px' }}>
-                <h2 style={{ margin: 0, color: '#333' }}>Appointment Calendar</h2>
-                <p style={{ margin: '5px 0 0 0', color: '#6c757d' }}>Manage and view your appointments</p>
-            </div>
-
-            {/* 2-Column Layout */}
             <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '1fr 1fr', 
-                gap: '20px',
-                alignItems: 'start'
+                marginBottom: '30px', 
+                background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+                padding: '30px', 
+                borderRadius: '12px', 
+                boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
             }}>
-                {/* Left Column - Calendar */}
-                <div style={{ 
-                    background: 'white', 
-                    padding: '20px', 
-                    borderRadius: '8px', 
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                }}>
-                    <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        marginBottom: '20px' 
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <button 
-                                onClick={() => navigateMonth('prev')}
-                                style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    marginRight: '10px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: '5px',
-                                    borderRadius: '4px',
-                                    transition: 'background 0.2s ease'
-                                }}
-                                onMouseEnter={(e) => e.target.style.background = '#f8f9fa'}
-                                onMouseLeave={(e) => e.target.style.background = 'none'}
-                            >
-                                <ChevronLeft size={20} color="#007bff" />
-                            </button>
-                            <h3 style={{ margin: 0, color: '#333' }}>
-                                {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                            </h3>
-                            <button 
-                                onClick={() => navigateMonth('next')}
-                                style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    marginLeft: '10px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: '5px',
-                                    borderRadius: '4px',
-                                    transition: 'background 0.2s ease'
-                                }}
-                                onMouseEnter={(e) => e.target.style.background = '#f8f9fa'}
-                                onMouseLeave={(e) => e.target.style.background = 'none'}
-                            >
-                                <ChevronRight size={20} color="#007bff" />
-                            </button>
-                        </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>Appointment Calendar</h2>
+                        <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>Manage and view your appointments</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button 
+                            onClick={() => setViewMode(viewMode === 'calendar' ? 'list' : 'calendar')}
+                            style={{
+                                padding: '10px 16px',
+                                background: viewMode === 'calendar' ? '#ECDCBF' : 'white',
+                                color: '#A31D1D',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                fontWeight: '500',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.target.style.background = viewMode === 'calendar' ? '#F8F2DE' : '#F8F2DE';
+                                e.target.style.transform = 'translateY(-1px)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.background = viewMode === 'calendar' ? '#ECDCBF' : 'white';
+                                e.target.style.transform = 'translateY(0)';
+                            }}
+                        >
+                            {viewMode === 'calendar' ? <Filter size={16} /> : <Calendar size={16} />}
+                            {viewMode === 'calendar' ? 'List View' : 'Calendar View'}
+                        </button>
                         {/* Only show Book Appointment button for physicians, case managers, and admins */}
                         {(currentUserRole === 'physician' || currentUserRole === 'case_manager' || currentUserRole === 'admin') && (
                             <button 
                                 onClick={() => setShowAddModal(true)}
                                 style={{
-                                    padding: '8px 16px',
-                                    background: '#007bff',
-                                    color: 'white',
+                                    padding: '10px 16px',
+                                    background: '#ECDCBF',
+                                    color: '#A31D1D',
                                     border: 'none',
-                                    borderRadius: '4px',
+                                    borderRadius: '6px',
                                     cursor: 'pointer',
-                                    transition: 'background 0.2s ease'
+                                    transition: 'all 0.2s ease',
+                                    fontWeight: '500',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px'
                                 }}
-                                onMouseEnter={(e) => e.target.style.background = '#0056b3'}
-                                onMouseLeave={(e) => e.target.style.background = '#007bff'}
+                                onMouseEnter={(e) => {
+                                    e.target.style.background = '#F8F2DE';
+                                    e.target.style.transform = 'translateY(-1px)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.background = '#ECDCBF';
+                                    e.target.style.transform = 'translateY(0)';
+                                }}
                             >
+                                <Calendar size={16} />
                                 Book Appointment
                             </button>
                         )}
                     </div>
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(7, 1fr)',
-                        gap: '5px'
-                    }}>
-                        {renderCalendar()}
-                    </div>
                 </div>
+            </div>
+
+            {/* 2-Column Layout */}
+            <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: viewMode === 'calendar' ? '1fr 1fr' : '1fr', 
+                gap: '20px',
+                alignItems: 'start'
+            }}>
+                {/* Left Column - Calendar */}
+                {viewMode === 'calendar' && (
+                    <div style={{ 
+                        background: 'white', 
+                        padding: '20px', 
+                        borderRadius: '12px', 
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                        border: '1px solid #F8F2DE'
+                    }}>
+                        <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center', 
+                            marginBottom: '20px' 
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <button 
+                                    onClick={() => navigateMonth('prev')}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        marginRight: '10px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        padding: '5px',
+                                        borderRadius: '50%',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.background = '#F8F2DE';
+                                        e.target.style.transform = 'scale(1.1)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.background = 'none';
+                                        e.target.style.transform = 'scale(1)';
+                                    }}
+                                >
+                                    <ChevronLeft size={20} color="#D84040" />
+                                </button>
+                            <h3 style={{ margin: 0, color: '#A31D1D', fontSize: '18px', fontWeight: 'bold' }}>
+                                {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                            </h3>
+                                <button 
+                                    onClick={() => navigateMonth('next')}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        marginLeft: '10px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        padding: '5px',
+                                        borderRadius: '50%',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.background = '#F8F2DE';
+                                        e.target.style.transform = 'scale(1.1)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.background = 'none';
+                                        e.target.style.transform = 'scale(1)';
+                                    }}
+                                >
+                                    <ChevronRight size={20} color="#D84040" />
+                                </button>
+                            </div>
+                        </div>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(7, 1fr)',
+                            gap: '5px'
+                        }}>
+                            {renderCalendar()}
+                        </div>
+                    </div>
+                )}
 
                 {/* Right Column - Appointments List */}
                 <div style={{ 
                     background: 'white', 
                     padding: '20px', 
-                    borderRadius: '8px', 
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    maxHeight: 'calc(100vh - 200px)',
-                    overflowY: 'auto'
+                    borderRadius: '12px', 
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                    maxHeight: viewMode === 'calendar' ? 'calc(100vh - 300px)' : 'calc(100vh - 200px)',
+                    overflowY: 'auto',
+                    border: '1px solid #F8F2DE'
                 }}>
-                    <div style={{ marginBottom: '20px' }}>
-                        <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>
+                    <div style={{ marginBottom: '20px', borderBottom: '2px solid #ECDCBF', paddingBottom: '15px' }}>
+                        <h3 style={{ margin: '0 0 10px 0', color: '#A31D1D', fontSize: '18px', fontWeight: 'bold' }}>
                             {selectedDay ? (
                                 `Appointments for ${currentMonth.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
-                            ) : (
+                            ) : viewMode === 'calendar' ? (
                                 'Select a date to view appointments'
+                            ) : (
+                                'All Appointments'
                             )}
                         </h3>
                         {selectedDay && (
-                            <p style={{ margin: 0, color: '#6c757d', fontSize: '14px' }}>
+                            <p style={{ margin: 0, color: '#A31D1D', fontSize: '14px' }}>
                                 {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''} scheduled
                             </p>
                         )}
                     </div>
                     {loading ? (
-                        <div style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                        <div style={{ textAlign: 'center', padding: '40px', color: '#A31D1D' }}>
+                            <div className="spinner" style={{
+                                border: '4px solid #F8F2DE',
+                                borderTop: '4px solid #D84040',
+                                borderRadius: '50%',
+                                width: '30px',
+                                height: '30px',
+                                animation: 'spin 1s linear infinite',
+                                margin: '0 auto 15px'
+                            }}></div>
                             Loading appointments...
                         </div>
                     ) : (
-                        renderAppointmentList(filteredAppointments)
+                        renderAppointmentList(viewMode === 'calendar' ? filteredAppointments : appointments)
                     )}
                 </div>
             </div>
@@ -1022,7 +1177,7 @@ const Appointments = ({ socket }) => {
                     position: 'fixed',
                     bottom: '20px',
                     right: '20px',
-                    backgroundColor: toast.type === 'success' ? '#28a745' : '#dc3545',
+                    backgroundColor: toast.type === 'success' ? '#28a745' : '#A31D1D',
                     color: 'white',
                     padding: '16px 20px',
                     borderRadius: '8px',
@@ -1054,6 +1209,10 @@ const Appointments = ({ socket }) => {
                         transform: translateX(0);
                         opacity: 1;
                     }
+                }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
                 }
             `}</style>
         </div>
@@ -1182,15 +1341,23 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
             <div style={{
                 background: 'white',
                 padding: '30px',
-                borderRadius: '8px',
+                borderRadius: '12px',
                 width: '90%',
                 maxWidth: '600px',
                 maxHeight: 'calc(100vh - 104px)',
                 overflow: 'auto',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+                boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                border: '1px solid #F8F2DE'
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ margin: 0 }}>
+                <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    marginBottom: '20px', 
+                    borderBottom: '1px solid #F8F2DE', 
+                    paddingBottom: '15px' 
+                }}>
+                    <h2 style={{ margin: 0, color: '#A31D1D' }}>
                         {mode === 'add' ? 'Book Appointment' : (isEditable ? 'Edit Appointment' : 'View Appointment')}
                     </h2>
                     <button
@@ -1200,28 +1367,34 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                             border: 'none',
                             cursor: 'pointer',
                             padding: '5px',
-                            borderRadius: '4px',
-                            transition: 'background 0.2s ease'
+                            borderRadius: '50%',
+                            transition: 'all 0.2s ease'
                         }}
-                        onMouseEnter={(e) => e.target.style.background = '#f8f9fa'}
-                        onMouseLeave={(e) => e.target.style.background = 'none'}
+                        onMouseEnter={(e) => {
+                            e.target.style.background = '#F8F2DE';
+                            e.target.style.transform = 'scale(1.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.background = 'none';
+                            e.target.style.transform = 'scale(1)';
+                        }}
                     >
-                        <X size={24} color="#6c757d" />
+                        <X size={24} color="#A31D1D" />
                     </button>
                 </div>
                 <form onSubmit={handleSubmit}>
-                    <div style={{ marginBottom: '15px' }}>
-                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#A31D1D' }}>
                             Patient <span style={{ color: 'red' }}>*</span>
                         </label>
                         {currentUserRole?.toLowerCase() === 'patient' ? (
                             // If user is a patient, show read-only patient name (no dropdown)
                             <div style={{
                                 width: '100%',
-                                padding: '8px',
-                                border: '1px solid #ced4da',
-                                borderRadius: '4px',
-                                backgroundColor: '#f8f9fa',
+                                padding: '12px',
+                                border: '1px solid #F8F2DE',
+                                borderRadius: '6px',
+                                backgroundColor: '#F8F2DE',
                                 color: '#495057',
                                 cursor: 'not-allowed'
                             }}>
@@ -1237,11 +1410,12 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                                 disabled={mode === 'edit' || !isEditable}
                                 style={{
                                     width: '100%',
-                                    padding: '8px',
-                                    border: '1px solid #ced4da',
-                                    borderRadius: '4px',
-                                    backgroundColor: !isEditable ? '#f8f9fa' : 'white',
-                                    cursor: !isEditable ? 'not-allowed' : 'pointer'
+                                    padding: '12px',
+                                    border: '1px solid #F8F2DE',
+                                    borderRadius: '6px',
+                                    backgroundColor: !isEditable ? '#F8F2DE' : 'white',
+                                    cursor: !isEditable ? 'not-allowed' : 'pointer',
+                                    fontSize: '16px'
                                 }}
                             >
                                 <option value="">Select Patient</option>
@@ -1254,9 +1428,9 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                         )}
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#A31D1D' }}>
                                 Date <span style={{ color: 'red' }}>*</span>
                             </label>
                             <input 
@@ -1269,16 +1443,17 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                                 min={new Date().toISOString().split('T')[0]}
                                 style={{
                                     width: '100%',
-                                    padding: '8px',
-                                    border: '1px solid #ced4da',
-                                    borderRadius: '4px',
-                                    backgroundColor: !isEditable ? '#f8f9fa' : 'white',
-                                    cursor: !isEditable ? 'not-allowed' : 'pointer'
+                                    padding: '12px',
+                                    border: '1px solid #F8F2DE',
+                                    borderRadius: '6px',
+                                    backgroundColor: !isEditable ? '#F8F2DE' : 'white',
+                                    cursor: !isEditable ? 'not-allowed' : 'pointer',
+                                    fontSize: '16px'
                                 }}
                             />
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#A31D1D' }}>
                                 Time <span style={{ color: 'red' }}>*</span>
                             </label>
                             <input 
@@ -1290,18 +1465,19 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                                 disabled={!isEditable}
                                 style={{
                                     width: '100%',
-                                    padding: '8px',
-                                    border: '1px solid #ced4da',
-                                    borderRadius: '4px',
-                                    backgroundColor: !isEditable ? '#f8f9fa' : 'white',
-                                    cursor: !isEditable ? 'not-allowed' : 'pointer'
+                                    padding: '12px',
+                                    border: '1px solid #F8F2DE',
+                                    borderRadius: '6px',
+                                    backgroundColor: !isEditable ? '#F8F2DE' : 'white',
+                                    cursor: !isEditable ? 'not-allowed' : 'pointer',
+                                    fontSize: '16px'
                                 }}
                             />
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '15px' }}>
-                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#A31D1D' }}>
                             Facility <span style={{ color: 'red' }}>*</span>
                         </label>
                         <select 
@@ -1312,11 +1488,12 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                             disabled={!isEditable}
                             style={{
                                 width: '100%',
-                                padding: '8px',
-                                border: '1px solid #ced4da',
-                                borderRadius: '4px',
-                                backgroundColor: !isEditable ? '#f8f9fa' : 'white',
-                                cursor: !isEditable ? 'not-allowed' : 'pointer'
+                                padding: '12px',
+                                border: '1px solid #F8F2DE',
+                                borderRadius: '6px',
+                                backgroundColor: !isEditable ? '#F8F2DE' : 'white',
+                                cursor: !isEditable ? 'not-allowed' : 'pointer',
+                                fontSize: '16px'
                             }}
                         >
                             <option value="">Select Facility</option>
@@ -1330,8 +1507,8 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
 
                     {/* Only show provider field for physician and case_manager roles */}
                     {canEditProvider && (
-                        <div style={{ marginBottom: '15px' }}>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#A31D1D' }}>
                                 Provider
                             </label>
                             <select 
@@ -1341,11 +1518,12 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                                 disabled={!canEditProviderField}
                                 style={{
                                     width: '100%',
-                                    padding: '8px',
-                                    border: '1px solid #ced4da',
-                                    borderRadius: '4px',
-                                    backgroundColor: !canEditProviderField ? '#f8f9fa' : 'white',
-                                    cursor: !canEditProviderField ? 'not-allowed' : 'pointer'
+                                    padding: '12px',
+                                    border: '1px solid #F8F2DE',
+                                    borderRadius: '6px',
+                                    backgroundColor: !canEditProviderField ? '#F8F2DE' : 'white',
+                                    cursor: !canEditProviderField ? 'not-allowed' : 'pointer',
+                                    fontSize: '16px'
                                 }}
                             >
                                 <option value="">Select Provider (Optional)</option>
@@ -1358,9 +1536,9 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                         </div>
                     )}
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginBottom: '20px' }}>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#A31D1D' }}>
                                 Appointment Type <span style={{ color: 'red' }}>*</span>
                             </label>
                             <select 
@@ -1371,11 +1549,12 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                                 disabled={!isEditable}
                                 style={{
                                     width: '100%',
-                                    padding: '8px',
-                                    border: '1px solid #ced4da',
-                                    borderRadius: '4px',
-                                    backgroundColor: !isEditable ? '#f8f9fa' : 'white',
-                                    cursor: !isEditable ? 'not-allowed' : 'pointer'
+                                    padding: '12px',
+                                    border: '1px solid #F8F2DE',
+                                    borderRadius: '6px',
+                                    backgroundColor: !isEditable ? '#F8F2DE' : 'white',
+                                    cursor: !isEditable ? 'not-allowed' : 'pointer',
+                                    fontSize: '16px'
                                 }}
                             >
                                 <option value="">Select Type</option>
@@ -1388,7 +1567,7 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                             </select>
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#A31D1D' }}>
                                 Duration (minutes)
                             </label>
                             <input 
@@ -1402,18 +1581,19 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                                 disabled={!isEditable}
                                 style={{
                                     width: '100%',
-                                    padding: '8px',
-                                    border: '1px solid #ced4da',
-                                    borderRadius: '4px',
-                                    backgroundColor: !isEditable ? '#f8f9fa' : 'white',
-                                    cursor: !isEditable ? 'not-allowed' : 'pointer'
+                                    padding: '12px',
+                                    border: '1px solid #F8F2DE',
+                                    borderRadius: '6px',
+                                    backgroundColor: !isEditable ? '#F8F2DE' : 'white',
+                                    cursor: !isEditable ? 'not-allowed' : 'pointer',
+                                    fontSize: '16px'
                                 }}
                             />
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '15px' }}>
-                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#A31D1D' }}>
                             Reason
                         </label>
                         <input 
@@ -1424,17 +1604,18 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                             disabled={!isEditable}
                             style={{
                                 width: '100%',
-                                padding: '8px',
-                                border: '1px solid #ced4da',
-                                borderRadius: '4px',
-                                backgroundColor: !isEditable ? '#f8f9fa' : 'white',
-                                cursor: !isEditable ? 'not-allowed' : 'text'
+                                padding: '12px',
+                                border: '1px solid #F8F2DE',
+                                borderRadius: '6px',
+                                backgroundColor: !isEditable ? '#F8F2DE' : 'white',
+                                cursor: !isEditable ? 'not-allowed' : 'text',
+                                fontSize: '16px'
                             }}
                         />
                     </div>
 
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#A31D1D' }}>
                             Notes
                         </label>
                         <textarea 
@@ -1445,31 +1626,46 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                             disabled={!isEditable}
                             style={{
                                 width: '100%',
-                                padding: '8px',
-                                border: '1px solid #ced4da',
-                                borderRadius: '4px',
+                                padding: '12px',
+                                border: '1px solid #F8F2DE',
+                                borderRadius: '6px',
                                 fontFamily: 'inherit',
-                                backgroundColor: !isEditable ? '#f8f9fa' : 'white',
-                                cursor: !isEditable ? 'not-allowed' : 'text'
+                                backgroundColor: !isEditable ? '#F8F2DE' : 'white',
+                                cursor: !isEditable ? 'not-allowed' : 'text',
+                                fontSize: '16px',
+                                resize: 'vertical'
                             }}
                         />
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                    <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'flex-end', 
+                        gap: '10px', 
+                        paddingTop: '20px', 
+                        borderTop: '1px solid #F8F2DE' 
+                    }}>
                         <button 
                             type="button"
                             onClick={onClose}
                             style={{
-                                padding: '8px 16px',
-                                background: '#6c757d',
-                                color: 'white',
+                                padding: '10px 20px',
+                                background: '#ECDCBF',
+                                color: '#A31D1D',
                                 border: 'none',
-                                borderRadius: '4px',
+                                borderRadius: '6px',
                                 cursor: 'pointer',
-                                transition: 'background 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                fontWeight: '500'
                             }}
-                            onMouseEnter={(e) => e.target.style.background = '#5a6268'}
-                            onMouseLeave={(e) => e.target.style.background = '#6c757d'}
+                            onMouseEnter={(e) => {
+                                e.target.style.background = '#F8F2DE';
+                                e.target.style.transform = 'translateY(-1px)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.background = '#ECDCBF';
+                                e.target.style.transform = 'translateY(0)';
+                            }}
                         >
                             {isEditable ? 'Cancel' : 'Close'}
                         </button>
@@ -1477,16 +1673,23 @@ const AppointmentModal = ({ mode, appointment, patients, facilities, providers, 
                             <button 
                                 type="submit"
                                 style={{
-                                    padding: '8px 16px',
-                                    background: '#007bff',
+                                    padding: '10px 20px',
+                                    background: '#D84040',
                                     color: 'white',
                                     border: 'none',
-                                    borderRadius: '4px',
+                                    borderRadius: '6px',
                                     cursor: 'pointer',
-                                    transition: 'background 0.2s ease'
+                                    transition: 'all 0.2s ease',
+                                    fontWeight: '500'
                                 }}
-                                onMouseEnter={(e) => e.target.style.background = '#0056b3'}
-                                onMouseLeave={(e) => e.target.style.background = '#007bff'}
+                                onMouseEnter={(e) => {
+                                    e.target.style.background = '#A31D1D';
+                                    e.target.style.transform = 'translateY(-1px)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.background = '#D84040';
+                                    e.target.style.transform = 'translateY(0)';
+                                }}
                             >
                                 {mode === 'add' ? 'Book Appointment' : 'Update Provider'}
                             </button>

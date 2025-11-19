@@ -10,6 +10,7 @@ class MedicationsScreen extends StatefulWidget {
 
 class _MedicationsScreenState extends State<MedicationsScreen> {
   List<dynamic> _reminders = [];
+  List<dynamic> _adherenceRecords = [];
   bool _isLoading = true;
   double _adherenceRate = 0.0;
   String? _patientId;
@@ -101,27 +102,71 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
   }
 
   Future<void> _loadReminders() async {
+    if (_patientId == null) return;
+    
     setState(() => _isLoading = true);
     try {
-      final result = await ApiService.getMedicationReminders(
+      // Load reminders from API (same as web)
+      final remindersResult = await ApiService.getMedicationReminders(
         patientId: _patientId,
       );
-      if (result['success'] == true) {
-        setState(() {
-          _reminders = result['data'] as List;
-          _isLoading = false;
-        });
-      } else {
-        setState(() => _isLoading = false);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message'] ?? 'Failed to load reminders'),
-              backgroundColor: Colors.red,
-            ),
-          );
+      
+      List<dynamic> remindersFromAPI = [];
+      if (remindersResult['success'] == true) {
+        remindersFromAPI = remindersResult['data'] as List;
+      }
+      
+      // Also load from prescriptions and build reminders (like web does)
+      if (_prescriptions.isEmpty) {
+        await _loadPrescriptions();
+      }
+      
+      List<dynamic> remindersFromPrescriptions = [];
+      for (var prescription in _prescriptions) {
+        if (prescription['status'] == 'active' && prescription['items'] != null) {
+          for (var item in prescription['items']) {
+            remindersFromPrescriptions.add({
+              'reminder_id': 'reminder-${prescription['prescription_id']}-${item['prescription_item_id']}',
+              'prescription_id': prescription['prescription_id'],
+              'patient_id': _patientId,
+              'medication_name': item['medication_name'],
+              'dosage': item['dosage'],
+              'frequency': item['frequency'],
+              'reminder_time': '09:00:00', // Default reminder time
+              'active': prescription['status'] == 'active',
+              'missed_doses': 0,
+              'browser_notifications': true,
+            });
+          }
         }
       }
+      
+      // Combine both sources, prioritizing API reminders
+      final allReminders = <dynamic>[];
+      final seenIds = <String>{};
+      
+      // Add API reminders first
+      for (var reminder in remindersFromAPI) {
+        final id = reminder['reminder_id']?.toString() ?? reminder['id']?.toString();
+        if (id != null && !seenIds.contains(id)) {
+          allReminders.add(reminder);
+          seenIds.add(id);
+        }
+      }
+      
+      // Add prescription reminders that aren't already in the list
+      for (var reminder in remindersFromPrescriptions) {
+        final id = reminder['reminder_id']?.toString();
+        if (id != null && !seenIds.contains(id)) {
+          allReminders.add(reminder);
+          seenIds.add(id);
+        }
+      }
+      
+      setState(() {
+        _reminders = allReminders;
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
@@ -142,6 +187,7 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
       final result = await ApiService.getPatientAdherence(patientId: _patientId!);
       if (result['success'] == true) {
         setState(() {
+          _adherenceRecords = result['data'] ?? [];
           _adherenceSummary = result['summary'] ?? {};
           _adherenceRate = _adherenceSummary['overall_adherence_percentage']?.toDouble() ?? 0.0;
         });
@@ -226,17 +272,28 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth > 600;
-
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Medication Schedule',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          'Medication Adherence',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1A1A1A),
+            letterSpacing: -0.5,
+          ),
         ),
-        backgroundColor: const Color(0xFF2563EB),
+        backgroundColor: Colors.white,
         elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: Colors.grey[200],
+          ),
+        ),
+        iconTheme: IconThemeData(color: Color(0xFF1A1A1A)),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -249,327 +306,374 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFA31D1D)),
               ),
             )
-          : RefreshIndicator(
-              onRefresh: () async {
-                await _loadReminders();
-                await _loadAdherenceData();
-              },
-              color: const Color(0xFF2563EB),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.all(isTablet ? 24 : 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildAdherenceCard(isTablet),
-                    SizedBox(height: isTablet ? 24 : 20),
-                    if (_reminders.isEmpty)
-                      _buildEmptyState(isTablet)
-                    else
-                      ..._reminders.map((reminder) => _buildMedicationCard(reminder, isTablet)),
-                  ],
+          : _reminders.isEmpty
+              ? _buildEmptyState()
+              : RefreshIndicator(
+                  onRefresh: () async {
+                    await _loadReminders();
+                    await _loadAdherenceData();
+                  },
+                  color: Color(0xFFA31D1D),
+                  child: ListView(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    children: [
+                      _buildAdherenceCard(),
+                      SizedBox(height: 20),
+                      ..._reminders
+                          .where((r) => r['active'] != false)
+                          .map<Widget>((reminder) => _buildMedicationCard(reminder)),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         heroTag: "medications_fab",
         onPressed: () => _showAddReminderModal(),
-        backgroundColor: const Color(0xFFB82132),
-        icon: const Icon(Icons.add),
-        label: const Text('Add Reminder'),
+        backgroundColor: Color(0xFFA31D1D),
+        elevation: 2,
+        child: Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  Widget _buildAdherenceCard(bool isTablet) {
-    final adherenceColor = _adherenceRate >= 80
-        ? const Color(0xFF10B981)
-        : _adherenceRate >= 60
-            ? Colors.orange
-            : const Color(0xFFEF4444);
-
-    final adherenceMessage = _adherenceRate >= 80
-        ? 'Excellent adherence!'
-        : _adherenceRate >= 60
-            ? 'Good adherence'
-            : 'Needs improvement';
+  Widget _buildAdherenceCard() {
+    final activeReminders = _reminders.where((r) => r['active'] != false).length;
+    final overallAdherence = _adherenceRate;
+    
+    final adherenceClass = overallAdherence >= 95 
+        ? 'success' 
+        : overallAdherence >= 80 
+            ? 'warning' 
+            : 'danger';
 
     return Container(
-      padding: EdgeInsets.all(isTablet ? 32 : 24),
+      margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF2563EB),
-            const Color(0xFF1E40AF),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Adherence Overview',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1A1A1A),
+                letterSpacing: -0.3,
+              ),
+            ),
+            SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    'Active Reminders',
+                    '$activeReminders',
+                    Icons.notifications_outlined,
+                    Color(0xFF2563EB),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard(
+                    'Adherence Rate',
+                    '${overallAdherence.toStringAsFixed(1)}%',
+                    Icons.trending_up,
+                    adherenceClass == 'success' 
+                        ? Color(0xFF10B981) 
+                        : adherenceClass == 'warning' 
+                            ? Colors.orange 
+                            : Color(0xFFEF4444),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    'Taken',
+                    '${_adherenceSummary['taken_records'] ?? 0}',
+                    Icons.check_circle_outline,
+                    Color(0xFF10B981),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard(
+                    'Missed',
+                    '${_adherenceSummary['missed_records'] ?? 0}',
+                    Icons.warning_amber_rounded,
+                    Colors.orange,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
-        borderRadius: BorderRadius.circular(isTablet ? 24 : 20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2563EB).withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Icon(icon, size: 18, color: color),
+              SizedBox(width: 8),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Adherence Rate',
-                      style: TextStyle(
-                        fontSize: isTablet ? 20 : 16,
-                        color: Colors.white.withOpacity(0.9),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      adherenceMessage,
-                      style: TextStyle(
-                        fontSize: isTablet ? 16 : 14,
-                        color: Colors.white.withOpacity(0.8),
-                      ),
-                    ),
-                    if (_adherenceSummary.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          _buildStatItem(
-                            'Taken',
-                            '${_adherenceSummary['taken_records'] ?? 0}',
-                            Colors.white,
-                            isTablet,
-                          ),
-                          const SizedBox(width: 16),
-                          _buildStatItem(
-                            'Missed',
-                            '${_adherenceSummary['missed_records'] ?? 0}',
-                            Colors.white70,
-                            isTablet,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: isTablet ? 120 : 100,
-                    height: isTablet ? 120 : 100,
-                    child: CircularProgressIndicator(
-                      value: _adherenceRate / 100,
-                      strokeWidth: isTablet ? 12 : 10,
-                      valueColor: AlwaysStoppedAnimation<Color>(adherenceColor),
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                    ),
-                  ),
-                  Column(
-                    children: [
-                      Text(
-                        '${_adherenceRate.toStringAsFixed(0)}%',
-                        style: TextStyle(
-                          fontSize: isTablet ? 32 : 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem(String label, String value, Color color, bool isTablet) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: isTablet ? 24 : 20,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isTablet ? 12 : 10,
-            color: color.withOpacity(0.8),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmptyState(bool isTablet) {
-    return Container(
-      padding: EdgeInsets.all(isTablet ? 60 : 40),
-      child: Column(
-        children: [
-          Text('💊', style: TextStyle(fontSize: isTablet ? 80 : 64)),
-          SizedBox(height: isTablet ? 24 : 20),
+          SizedBox(height: 8),
           Text(
-            'No medication reminders',
+            value,
             style: TextStyle(
-              fontSize: isTablet ? 22 : 18,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w600,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
-          ),
-          SizedBox(height: isTablet ? 12 : 10),
-          Text(
-            'Set your first reminder with custom alarm!',
-            style: TextStyle(
-              fontSize: isTablet ? 16 : 13,
-              color: Colors.grey[500],
-            ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMedicationCard(Map<String, dynamic> reminder, bool isTablet) {
-    final reminderTime = reminder['reminder_time'] ?? 'N/A';
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Color(0xFFF5F5F5),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.medication_outlined,
+                size: 56,
+                color: Colors.grey[400],
+              ),
+            ),
+            SizedBox(height: 32),
+            Text(
+              'No Medication Reminders',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1A1A1A),
+                letterSpacing: -0.5,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Create your first reminder to get started',
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.grey[600],
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () => _showAddReminderModal(),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                backgroundColor: Color(0xFFA31D1D),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Add Reminder',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMedicationCard(Map<String, dynamic> reminder) {
+    final reminderTime = reminder['reminder_time'] ?? '09:00:00';
+    final timeStr = reminderTime.toString().substring(0, 5); // Get HH:MM
     final medicationName = reminder['medication_name'] ?? 'Medication';
+    final dosage = reminder['dosage'] ?? '';
     final frequency = reminder['frequency'] ?? 'daily';
-    final missedDoses = reminder['missed_doses'] ?? 0;
     final prescriptionId = reminder['prescription_id']?.toString();
-    final isToday = _isTodayReminder(reminder);
+    final reminderId = reminder['reminder_id']?.toString() ?? 
+                       reminder['medication_reminder_id']?.toString() ?? 
+                       prescriptionId ?? '';
+    
+    // Check if today's dose was already recorded
+    final today = DateTime.now();
+    final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final todayRecord = _adherenceRecords.firstWhere(
+      (record) => record['prescription_id']?.toString() == prescriptionId && 
+                  record['adherence_date'] == todayStr,
+      orElse: () => {},
+    );
+    
+    // Get adherence for this reminder
+    final reminderAdherence = _getReminderAdherence(reminder);
 
     return Container(
-      margin: EdgeInsets.only(bottom: isTablet ? 20 : 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: isToday
-            ? Border.all(
-                color: const Color(0xFF2563EB).withOpacity(0.3),
-                width: 2,
-              )
-            : null,
-      ),
+      key: reminderId.isNotEmpty ? ValueKey(reminderId) : null,
+      margin: EdgeInsets.only(bottom: 12),
       child: Material(
-        color: Colors.transparent,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        elevation: 0,
         child: InkWell(
-          borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
           onTap: () => _showMedicationDetails(reminder),
-          child: Padding(
-            padding: EdgeInsets.all(isTablet ? 20 : 16),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.grey[200]!,
+                width: 1,
+              ),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Time indicator
+                    Container(
+                      width: 56,
+                      child: Column(
+                        children: [
+                          Text(
+                            timeStr,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1A1A),
+                              height: 1,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Time',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 20),
+                    // Content
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              if (isToday)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF2563EB).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    'TODAY',
-                                    style: TextStyle(
-                                      fontSize: isTablet ? 11 : 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF2563EB),
-                                    ),
-                                  ),
-                                ),
-                              if (isToday) const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  medicationName,
-                                  style: TextStyle(
-                                    fontSize: isTablet ? 20 : 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            medicationName,
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1A1A1A),
+                              letterSpacing: -0.3,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(height: isTablet ? 8 : 6),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.schedule,
-                                size: isTablet ? 18 : 16,
-                                color: Colors.grey[600],
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Take $frequency at $reminderTime',
-                                style: TextStyle(
-                                  fontSize: isTablet ? 15 : 13,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
+                          SizedBox(height: 16),
+                          _buildInfoRow(
+                            Icons.schedule,
+                            'Take $frequency at $timeStr',
                           ),
-                          if (missedDoses > 0) ...[
-                            SizedBox(height: isTablet ? 8 : 6),
+                          if (dosage.isNotEmpty) ...[
+                            SizedBox(height: 10),
+                            _buildInfoRow(
+                              Icons.science_outlined,
+                              'Dosage: $dosage',
+                            ),
+                          ],
+                          if (reminderAdherence != null) ...[
+                            SizedBox(height: 10),
+                            _buildInfoRow(
+                              Icons.trending_up,
+                              'Adherence: ${reminderAdherence['percentage']}% (${reminderAdherence['takenCount']}/${reminderAdherence['totalCount']} doses)',
+                            ),
+                          ],
+                          if (todayRecord.isNotEmpty) ...[
+                            SizedBox(height: 10),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFEF4444).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
+                                color: (todayRecord['taken'] == true ? Color(0xFF10B981) : Colors.orange).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                    Icons.warning_amber_rounded,
-                                    size: isTablet ? 18 : 16,
-                                    color: const Color(0xFFEF4444),
+                                    todayRecord['taken'] == true ? Icons.check_circle : Icons.close,
+                                    size: 14,
+                                    color: todayRecord['taken'] == true ? Color(0xFF10B981) : Colors.orange,
                                   ),
-                                  const SizedBox(width: 6),
+                                  SizedBox(width: 6),
                                   Text(
-                                    '$missedDoses missed ${missedDoses == 1 ? 'dose' : 'doses'}',
+                                    'Today: ${todayRecord['taken'] == true ? 'Taken' : 'Missed'}',
                                     style: TextStyle(
-                                      fontSize: isTablet ? 13 : 12,
-                                      color: const Color(0xFFEF4444),
+                                      fontSize: 12,
+                                      color: todayRecord['taken'] == true ? Color(0xFF10B981) : Colors.orange,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -580,74 +684,50 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
                         ],
                       ),
                     ),
-                    Container(
-                      padding: EdgeInsets.all(isTablet ? 16 : 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2563EB).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
+                  ],
+                ),
+                SizedBox(height: 16),
+                if (todayRecord.isEmpty)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _isMarking
+                              ? null
+                              : () => _markAsTaken(reminder, true),
+                          icon: const Icon(Icons.check_circle, size: 18),
+                          label: const Text('Taken'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981),
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
                       ),
-                      child: Column(
-                        children: [
-                          Text(
-                            reminderTime,
-                            style: TextStyle(
-                              fontSize: isTablet ? 24 : 20,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF2563EB),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _isMarking
+                              ? null
+                              : () => _markAsTaken(reminder, false),
+                          icon: const Icon(Icons.close, size: 18),
+                          label: const Text('Missed'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.orange,
+                            side: const BorderSide(color: Colors.orange, width: 1.5),
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: isTablet ? 16 : 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _isMarking
-                            ? null
-                            : () => _markAsTaken(reminder, true),
-                        icon: const Icon(Icons.check_circle, size: 20),
-                        label: const Text('Taken'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isTablet ? 24 : 20,
-                            vertical: isTablet ? 14 : 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-                          ),
-                          elevation: 2,
                         ),
                       ),
-                    ),
-                    SizedBox(width: isTablet ? 12 : 10),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _isMarking
-                            ? null
-                            : () => _markAsTaken(reminder, false),
-                        icon: const Icon(Icons.close, size: 20),
-                        label: const Text('Missed'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.orange,
-                          side: const BorderSide(color: Colors.orange, width: 1.5),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isTablet ? 24 : 20,
-                            vertical: isTablet ? 14 : 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -656,11 +736,52 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
     );
   }
 
-  bool _isTodayReminder(Map<String, dynamic> reminder) {
-    // Check if this reminder is for today
-    // You can enhance this logic based on your reminder structure
-    return true; // Simplified - you can add date checking logic here
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: Colors.grey[600],
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[700],
+              height: 1.4,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
   }
+
+  Map<String, dynamic>? _getReminderAdherence(Map<String, dynamic> reminder) {
+    final prescriptionId = reminder['prescription_id']?.toString();
+    if (prescriptionId == null) return null;
+    
+    final prescriptionAdherence = _adherenceRecords.where(
+      (record) => record['prescription_id']?.toString() == prescriptionId
+    ).toList();
+    
+    if (prescriptionAdherence.isEmpty) return null;
+    
+    final takenCount = prescriptionAdherence.where((r) => r['taken'] == true).length;
+    final totalCount = prescriptionAdherence.length;
+    final percentage = totalCount > 0 ? ((takenCount / totalCount) * 100).round() : 0;
+    
+    return {
+      'percentage': percentage,
+      'takenCount': takenCount,
+      'totalCount': totalCount,
+    };
+  }
+
 
   void _showMedicationDetails(Map<String, dynamic> reminder) {
     showModalBottomSheet(
@@ -732,8 +853,6 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
   }
 
   void _showAddReminderModal() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth > 600;
     
     // Reset form
     _medicationNameController.clear();
@@ -761,7 +880,6 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
         child: Form(
           key: _formKey,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
               // Handle bar
               Container(
@@ -776,141 +894,110 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
               
               // Header
               Padding(
-                padding: EdgeInsets.all(isTablet ? 24 : 20),
+                padding: EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Add Medication Reminder',
                       style: TextStyle(
-                        fontSize: isTablet ? 24 : 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1A1A),
+                        letterSpacing: -0.5,
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close),
+                      icon: Icon(Icons.close),
                       onPressed: () => Navigator.pop(context),
-                      color: Colors.grey[600],
                     ),
                   ],
                 ),
               ),
-              
+              Divider(height: 1, color: Colors.grey[200]),
               // Form content
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: isTablet ? 24 : 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+              Expanded(
+                child: ListView(
+                    padding: EdgeInsets.all(20),
                     children: [
                       // Medication Name
-                      _buildMedicationNameField(isTablet),
-                      SizedBox(height: isTablet ? 20 : 16),
+                      _buildMedicationNameField(),
+                      SizedBox(height: 16),
                       
                       // Dosage and Frequency Row
                       Row(
                         children: [
                           Expanded(
-                            child: _buildDosageField(isTablet),
+                            child: _buildDosageField(),
                           ),
-                          SizedBox(width: isTablet ? 16 : 12),
+                          SizedBox(width: 12),
                           Expanded(
-                            child: _buildFrequencyField(isTablet),
+                            child: _buildFrequencyField(),
                           ),
                         ],
                       ),
-                      SizedBox(height: isTablet ? 20 : 16),
+                      SizedBox(height: 16),
                       
                       // Reminder Time
-                      _buildTimeField(isTablet),
-                      SizedBox(height: isTablet ? 20 : 16),
+                      _buildTimeField(),
+                      SizedBox(height: 16),
                       
                       // Sound Preference
-                      _buildSoundPreferenceField(isTablet),
-                      SizedBox(height: isTablet ? 20 : 16),
+                      _buildSoundPreferenceField(),
+                      SizedBox(height: 16),
                       
                       // Checkboxes
-                      _buildCheckboxes(isTablet),
-                      SizedBox(height: isTablet ? 20 : 16),
+                      _buildCheckboxes(),
+                      SizedBox(height: 16),
                       
                       // Special Instructions
-                      _buildSpecialInstructionsField(isTablet),
-                      SizedBox(height: isTablet ? 24 : 20),
+                      _buildSpecialInstructionsField(),
+                      SizedBox(height: 30),
+                      
+                      // Submit button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isMarking ? null : _handleAddReminder,
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            backgroundColor: Color(0xFFA31D1D),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: _isMarking
+                              ? SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : Text(
+                                  'Create Reminder',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ),
-              
-              // Action Buttons
-              Container(
-                padding: EdgeInsets.all(isTablet ? 24 : 20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: isTablet ? 16 : 14),
-                          side: BorderSide(color: Colors.grey[300]!),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-                          ),
-                        ),
-                        child: Text(
-                          'Cancel',
-                          style: TextStyle(
-                            fontSize: isTablet ? 16 : 14,
-                            color: Colors.grey[700],
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: isTablet ? 16 : 12),
-                    Expanded(
-                      flex: 2,
-                      child: ElevatedButton(
-                        onPressed: _handleAddReminder,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2563EB),
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: isTablet ? 16 : 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-                          ),
-                          elevation: 2,
-                        ),
-                        child: Text(
-                          'Create Reminder',
-                          style: TextStyle(
-                            fontSize: isTablet ? 16 : 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
   
-  Widget _buildMedicationNameField(bool isTablet) {
+  Widget _buildMedicationNameField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -919,9 +1006,9 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
             Text(
               'Medication Name',
               style: TextStyle(
-                fontSize: isTablet ? 16 : 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                fontSize: 12,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(width: 4),
@@ -968,26 +1055,8 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
               controller: textEditingController,
               focusNode: focusNode,
               decoration: InputDecoration(
+                labelText: 'Medication Name *',
                 hintText: 'Select or type medication name',
-                prefixIcon: const Icon(Icons.medication, color: Color(0xFF2563EB)),
-                filled: true,
-                fillColor: Colors.grey[50],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-                  borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: isTablet ? 20 : 16,
-                  vertical: isTablet ? 18 : 16,
-                ),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -1004,7 +1073,7 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
             child: Text(
               'No prescriptions found. You can type a medication name manually.',
               style: TextStyle(
-                fontSize: isTablet ? 13 : 12,
+                fontSize: 12,
                 color: Colors.grey[600],
               ),
             ),
@@ -1015,7 +1084,7 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
             child: Text(
               'Select from your prescribed medications or type manually',
               style: TextStyle(
-                fontSize: isTablet ? 13 : 12,
+                fontSize: 12,
                 color: Colors.grey[600],
               ),
             ),
@@ -1024,337 +1093,129 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
     );
   }
   
-  Widget _buildDosageField(bool isTablet) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Dosage',
-          style: TextStyle(
-            fontSize: isTablet ? 16 : 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _dosageController,
-          decoration: InputDecoration(
-            hintText: 'e.g., 500mg',
-            prefixIcon: const Icon(Icons.science, color: Color(0xFF2563EB)),
-            filled: true,
-            fillColor: Colors.grey[50],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-              borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: isTablet ? 20 : 16,
-              vertical: isTablet ? 18 : 16,
-            ),
-          ),
-        ),
-      ],
+  Widget _buildDosageField() {
+    return TextFormField(
+      controller: _dosageController,
+      decoration: InputDecoration(
+        labelText: 'Dosage',
+        hintText: 'e.g., 500mg',
+      ),
     );
   }
   
-  Widget _buildFrequencyField(bool isTablet) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              'Frequency',
-              style: TextStyle(
-                fontSize: isTablet ? 16 : 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Text(
-              '*',
-              style: TextStyle(color: Colors.red),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: _selectedFrequency,
-          decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.repeat, color: Color(0xFF2563EB)),
-            filled: true,
-            fillColor: Colors.grey[50],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-              borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: isTablet ? 20 : 16,
-              vertical: isTablet ? 18 : 16,
-            ),
-          ),
-          items: const [
-            DropdownMenuItem(value: 'daily', child: Text('Daily')),
-            DropdownMenuItem(value: 'twice daily', child: Text('Twice Daily')),
-            DropdownMenuItem(value: 'three times daily', child: Text('Three Times Daily')),
-            DropdownMenuItem(value: 'weekly', child: Text('Weekly')),
-          ],
-          onChanged: (value) {
-            setState(() {
-              _selectedFrequency = value ?? 'daily';
-            });
-          },
-        ),
+  Widget _buildFrequencyField() {
+    return DropdownButtonFormField<String>(
+      decoration: InputDecoration(labelText: 'Frequency *'),
+      value: _selectedFrequency,
+      items: const [
+        DropdownMenuItem(value: 'daily', child: Text('Daily')),
+        DropdownMenuItem(value: 'twice daily', child: Text('Twice Daily')),
+        DropdownMenuItem(value: 'three times daily', child: Text('Three Times Daily')),
+        DropdownMenuItem(value: 'weekly', child: Text('Weekly')),
       ],
+      onChanged: (value) {
+        setState(() {
+          _selectedFrequency = value ?? 'daily';
+        });
+      },
+      validator: (value) => value == null ? 'Please select frequency' : null,
     );
   }
   
-  Widget _buildTimeField(bool isTablet) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              'Reminder Time',
-              style: TextStyle(
-                fontSize: isTablet ? 16 : 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Text(
-              '*',
-              style: TextStyle(color: Colors.red),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: () async {
-            final TimeOfDay? picked = await showTimePicker(
-              context: context,
-              initialTime: _selectedTime,
-              builder: (context, child) {
-                return Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: const ColorScheme.light(
-                      primary: Color(0xFF2563EB),
-                    ),
-                  ),
-                  child: child!,
-                );
-              },
-            );
-            if (picked != null) {
-              setState(() {
-                _selectedTime = picked;
-              });
-            }
-          },
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isTablet ? 20 : 16,
-              vertical: isTablet ? 18 : 16,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.access_time, color: Color(0xFF2563EB)),
-                const SizedBox(width: 12),
-                Text(
-                  _selectedTime.format(context),
-                  style: TextStyle(
-                    fontSize: isTablet ? 16 : 14,
-                    color: Colors.black87,
-                  ),
-                ),
-                const Spacer(),
-                const Icon(Icons.arrow_drop_down, color: Colors.grey),
-              ],
-            ),
-          ),
-        ),
-      ],
+  Widget _buildTimeField() {
+    return ListTile(
+      title: Text('Reminder Time *'),
+      subtitle: Text(_selectedTime.format(context)),
+      trailing: Icon(Icons.access_time),
+      onTap: () async {
+        final TimeOfDay? picked = await showTimePicker(
+          context: context,
+          initialTime: _selectedTime,
+        );
+        if (picked != null) {
+          setState(() {
+            _selectedTime = picked;
+          });
+        }
+      },
     );
   }
   
-  Widget _buildSoundPreferenceField(bool isTablet) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Sound Preference',
-          style: TextStyle(
-            fontSize: isTablet ? 16 : 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: _selectedSoundPreference,
-          decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.volume_up, color: Color(0xFF2563EB)),
-            filled: true,
-            fillColor: Colors.grey[50],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-              borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: isTablet ? 20 : 16,
-              vertical: isTablet ? 18 : 16,
-            ),
-          ),
-          items: const [
-            DropdownMenuItem(value: 'default', child: Text('Default')),
-            DropdownMenuItem(value: 'gentle', child: Text('Gentle')),
-            DropdownMenuItem(value: 'urgent', child: Text('Urgent')),
-          ],
-          onChanged: (value) {
-            setState(() {
-              _selectedSoundPreference = value ?? 'default';
-            });
-          },
-        ),
+  Widget _buildSoundPreferenceField() {
+    return DropdownButtonFormField<String>(
+      decoration: InputDecoration(labelText: 'Sound Preference'),
+      value: _selectedSoundPreference,
+      items: const [
+        DropdownMenuItem(value: 'default', child: Text('Default')),
+        DropdownMenuItem(value: 'gentle', child: Text('Gentle')),
+        DropdownMenuItem(value: 'urgent', child: Text('Urgent')),
       ],
+      onChanged: (value) {
+        setState(() {
+          _selectedSoundPreference = value ?? 'default';
+        });
+      },
     );
   }
   
-  Widget _buildCheckboxes(bool isTablet) {
+  Widget _buildCheckboxes() {
     return Column(
       children: [
         CheckboxListTile(
-          title: Text(
-            'Enable browser notifications',
-            style: TextStyle(fontSize: isTablet ? 15 : 14),
-          ),
+          title: Text('Enable browser notifications'),
           value: _browserNotifications,
           onChanged: (value) {
             setState(() {
               _browserNotifications = value ?? true;
             });
           },
-          activeColor: const Color(0xFF2563EB),
+          activeColor: Color(0xFFA31D1D),
           contentPadding: EdgeInsets.zero,
         ),
         CheckboxListTile(
-          title: Text(
-            'Active',
-            style: TextStyle(fontSize: isTablet ? 15 : 14),
-          ),
+          title: Text('Active'),
           value: _isActive,
           onChanged: (value) {
             setState(() {
               _isActive = value ?? true;
             });
           },
-          activeColor: const Color(0xFF2563EB),
+          activeColor: Color(0xFFA31D1D),
           contentPadding: EdgeInsets.zero,
         ),
       ],
     );
   }
   
-  Widget _buildSpecialInstructionsField(bool isTablet) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Special Instructions (Optional)',
-          style: TextStyle(
-            fontSize: isTablet ? 16 : 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _specialInstructionsController,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'Enter any special instructions...',
-            prefixIcon: const Padding(
-              padding: EdgeInsets.only(bottom: 60),
-              child: Icon(Icons.note, color: Color(0xFF2563EB)),
-            ),
-            filled: true,
-            fillColor: Colors.grey[50],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isTablet ? 12 : 10),
-              borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
-            ),
-            contentPadding: const EdgeInsets.all(16),
-          ),
-        ),
-      ],
+  Widget _buildSpecialInstructionsField() {
+    return TextFormField(
+      controller: _specialInstructionsController,
+      decoration: InputDecoration(
+        labelText: 'Special Instructions (Optional)',
+        hintText: 'Enter any special instructions...',
+      ),
+      maxLines: 3,
     );
   }
   
   Future<void> _handleAddReminder() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
     
     if (_medicationNameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a medication name'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Please enter a medication name')),
       );
       return;
     }
     
     if (_patientId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Patient ID not found. Please login again.'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Patient ID not found. Please login again.')),
       );
       return;
     }
+    
+    setState(() => _isMarking = true);
     
     // Format time
     final timeStr = '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}:00';
@@ -1373,51 +1234,46 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
     };
     
     try {
-      // Try to create via API first
       final result = await ApiService.createMedicationReminder(reminderData);
       
+      if (!mounted) return;
+      
       if (result['success'] == true) {
-        Navigator.pop(context);
-        await _loadReminders();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Reminder created successfully!'),
-            backgroundColor: Color(0xFF10B981),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Reminder created successfully!'),
+              ],
+            ),
+            backgroundColor: Colors.green,
           ),
         );
-      } else {
-        // Fallback to localStorage if API fails (for standalone reminders)
-        _saveReminderToLocalStorage(reminderData);
         Navigator.pop(context);
         await _loadReminders();
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Reminder saved locally!'),
-            backgroundColor: Color(0xFF10B981),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to create reminder'),
+            backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
-      // Fallback to localStorage on error
-      _saveReminderToLocalStorage(reminderData);
-      Navigator.pop(context);
-      await _loadReminders();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Reminder saved locally: ${e.toString()}'),
-          backgroundColor: Colors.orange,
-          duration: const Duration(seconds: 2),
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _isMarking = false);
+      }
     }
-  }
-  
-  void _saveReminderToLocalStorage(Map<String, dynamic> reminderData) {
-    // This is a fallback - in a real app, you'd want to sync with backend
-    // For now, we'll just show success since the API should handle it
-    print('Reminder data: $reminderData');
   }
   
   @override

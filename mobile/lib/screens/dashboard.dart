@@ -7,6 +7,7 @@ import 'medications_screen.dart';
 import 'prescriptions_screen.dart';
 import 'lab_results_screen.dart';
 import 'profile_screen.dart';
+import 'counseling_screen.dart';
 import 'notifications_screen.dart';
 
 class Dashboard extends StatefulWidget {
@@ -70,6 +71,7 @@ class _DashboardState extends State<Dashboard> {
           AppointmentsScreen(),
           MedicationsScreen(),
           LabResultsScreen(),
+          CounselingScreen(),
           ProfileScreen(),
         ],
       ),
@@ -77,13 +79,14 @@ class _DashboardState extends State<Dashboard> {
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFFB82132),
+        selectedItemColor: const Color(0xFFA31D1D),
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Appointments'),
           BottomNavigationBarItem(icon: Icon(Icons.medication), label: 'Medications'),
           BottomNavigationBarItem(icon: Icon(Icons.science), label: 'Labs'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Counseling'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),

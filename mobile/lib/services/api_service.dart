@@ -728,14 +728,82 @@ class ApiService {
       if (endDate != null) params['end_date'] = endDate;
       
       final uri = Uri.parse('$baseUrl/medication-adherence/patient/$patientId').replace(queryParameters: params);
+      print('🔍 Fetching adherence from: $uri');
+      
       final response = await http.get(uri, headers: headers);
+      print('📡 Response status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return {'success': true, 'data': data['data'] ?? [], 'summary': data['summary']};
+        print('✅ Adherence data received: ${data['data']?.length ?? 0} records');
+        print('📊 Summary: ${data['summary']}');
+        
+        return {
+          'success': true, 
+          'data': data['data'] ?? [], 
+          'summary': data['summary'] ?? {}
+        };
       }
       
-      return {'success': false, 'message': 'Failed to fetch patient adherence'};
+      final errorData = jsonDecode(response.body);
+      print('❌ Error response: $errorData');
+      return {
+        'success': false, 
+        'message': errorData['message'] ?? 'Failed to fetch patient adherence'
+      };
+    } catch (e) {
+      print('❌ Exception fetching adherence: $e');
+      return {'success': false, 'message': 'Connection error: ${e.toString()}'};
+    }
+  }
+
+  // Get counseling sessions
+  static Future<Map<String, dynamic>> getCounselingSessions({String? patientId}) async {
+    try {
+      final headers = await getHeaders();
+      String url = '$baseUrl/counseling-sessions';
+      if (patientId != null) {
+        url += '?patient_id=$patientId';
+      }
+      
+      final response = await http.get(
+        Uri.parse(url),
+        headers: headers,
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'sessions': data['sessions'] ?? data['data'] ?? []};
+      }
+      
+      return {'success': false, 'message': 'Failed to fetch counseling sessions'};
+    } catch (e) {
+      return {'success': false, 'message': 'Connection error: ${e.toString()}'};
+    }
+  }
+
+  // Create counseling session
+  static Future<Map<String, dynamic>> createCounselingSession(Map<String, dynamic> sessionData) async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/counseling-sessions'),
+        headers: headers,
+        body: jsonEncode(sessionData),
+      );
+      
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'data': data['data'] ?? data};
+      }
+      
+      String errorMessage = 'Failed to create counseling session';
+      try {
+        final errorData = jsonDecode(response.body);
+        errorMessage = errorData['message'] ?? errorMessage;
+      } catch (_) {}
+      
+      return {'success': false, 'message': errorMessage};
     } catch (e) {
       return {'success': false, 'message': 'Connection error: ${e.toString()}'};
     }

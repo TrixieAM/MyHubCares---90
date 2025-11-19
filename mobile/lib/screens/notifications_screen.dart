@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:intl/intl.dart';
+import 'dart:convert';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
@@ -106,6 +107,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       _markAsRead(notification['message_id']);
     }
 
+    // Parse payload to get appointment details
+    final payload = _parsePayload(notification['payload']);
+    final isAppointmentNotification = payload != null && 
+      (payload['type']?.toString().contains('appointment') ?? false);
+
     // Show dialog with full details
     showDialog(
       context: context,
@@ -162,54 +168,110 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             ),
                           ),
                         SizedBox(height: 20),
-                        // Details section
-                        Container(
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Date/Time
-                              _buildDetailRow(
-                                '📅',
-                                'Date & Time',
-                                _formatDate(notification['created_at'] ?? 
-                                           notification['timestamp'] ?? 
-                                           notification['sent_at'] ?? ''),
-                              ),
-                              SizedBox(height: 12),
-                              // Sender (if available)
-                              if (notification['sender_name'] != null)
-                                _buildDetailRow(
-                                  '👤',
-                                  'From',
-                                  notification['sender_name'],
+                        
+                        // Appointment Details Section (if it's an appointment notification)
+                        if (isAppointmentNotification && payload != null) ...[
+                          Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFF8F2DE),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Color(0xFFECDCBF), width: 1),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Appointment Details',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFA31D1D),
+                                  ),
                                 ),
-                              if (notification['sender_name'] != null)
-                                SizedBox(height: 12),
-                              // Priority (if available)
-                              if (notification['priority'] != null)
-                                _buildDetailRow(
-                                  '🚩',
-                                  'Priority',
-                                  notification['priority'].toString().toUpperCase(),
-                                ),
-                              if (notification['priority'] != null)
-                                SizedBox(height: 12),
-                              // Status
-                              _buildDetailRow(
-                                'ℹ️',
-                                'Status',
-                                (notification['read'] == true || notification['is_read'] == true)
-                                    ? 'Read'
-                                    : 'Unread',
-                              ),
-                            ],
+                                SizedBox(height: 16),
+                                
+                                // Appointment Type
+                                if (payload['appointment_type'] != null)
+                                  _buildAppointmentDetailRow(
+                                    '📋',
+                                    'Type',
+                                    _formatAppointmentType(payload['appointment_type']),
+                                  ),
+                                
+                                // Scheduled Date & Time
+                                if (payload['scheduled_start'] != null) ...[
+                                  SizedBox(height: 12),
+                                  _buildAppointmentDetailRow(
+                                    '📅',
+                                    'Scheduled Date & Time',
+                                    _formatAppointmentDate(payload['scheduled_start']),
+                                  ),
+                                ],
+                                
+                                // Status (Accepted/Rejected) - Make it bold
+                                if (payload['type'] != null) ...[
+                                  SizedBox(height: 16),
+                                  _buildAppointmentStatus(
+                                    payload['type'].toString(),
+                                    notification['sender_name'],
+                                    payload,
+                                  ),
+                                ],
+                                
+                                // Decline Reason (if declined)
+                                if (payload['decline_reason'] != null && 
+                                    payload['decline_reason'].toString().isNotEmpty) ...[
+                                  SizedBox(height: 12),
+                                  Container(
+                                    padding: EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red[50],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.red[200]!),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Decline Reason:',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.red[900],
+                                          ),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          payload['decline_reason'].toString(),
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.red[800],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
-                        ),
+                        ] else if (!isAppointmentNotification) ...[
+                          // For non-appointment notifications, show sender if available
+                          if (notification['sender_name'] != null)
+                            Container(
+                              padding: EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: _buildDetailRow(
+                                '👤',
+                                'From',
+                                notification['sender_name'],
+                              ),
+                            ),
+                        ],
                       ],
                     ),
                   ),
@@ -242,6 +304,132 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildAppointmentDetailRow(String emoji, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          emoji,
+          style: TextStyle(fontSize: 20),
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Color(0xFFA31D1D),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAppointmentStatus(String type, String? senderName, Map<String, dynamic>? payload) {
+    String statusText = '';
+    Color statusColor = Colors.grey;
+    
+    if (type.contains('accepted') || type.contains('confirmed')) {
+      statusText = 'ACCEPTED';
+      statusColor = Colors.green[700]!;
+    } else if (type.contains('declined') || type.contains('rejected')) {
+      statusText = 'REJECTED';
+      statusColor = Colors.red[700]!;
+    } else if (type.contains('created')) {
+      statusText = 'SCHEDULED';
+      statusColor = Color(0xFFA31D1D);
+    } else if (type.contains('updated')) {
+      statusText = 'UPDATED';
+      statusColor = Colors.orange[700]!;
+    } else {
+      statusText = 'PENDING';
+      statusColor = Colors.blue[700]!;
+    }
+
+    // Get provider name from payload or sender name
+    String? byWhom;
+    if (payload != null && payload['provider_name'] != null) {
+      byWhom = payload['provider_name'].toString();
+    } else if (senderName != null && senderName.isNotEmpty) {
+      byWhom = senderName;
+    }
+
+    return Container(
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: statusColor, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Status: ',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                statusText,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: statusColor,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          if (byWhom != null && byWhom.isNotEmpty) ...[
+            SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  'By: ',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  byWhom,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.w600,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -306,7 +494,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   String _formatDate(String? dateString) {
-    if (dateString == null) return 'Unknown date';
+    if (dateString == null || dateString.isEmpty) {
+      return 'Just now';
+    }
     try {
       final date = DateTime.parse(dateString);
       final now = DateTime.now();
@@ -328,8 +518,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return DateFormat('MMM d, yyyy').format(date);
       }
     } catch (e) {
+      // If parsing fails, return a relative time or the original string
+      return 'Recently';
+    }
+  }
+
+  String _formatAppointmentDate(String? dateString) {
+    if (dateString == null || dateString.isEmpty) {
+      return 'Date not available';
+    }
+    try {
+      final date = DateTime.parse(dateString);
+      return DateFormat('EEEE, MMMM d, yyyy \'at\' h:mm a').format(date);
+    } catch (e) {
       return dateString;
     }
+  }
+
+  String _formatAppointmentType(String? type) {
+    if (type == null || type.isEmpty) return 'Appointment';
+    return type.split('_').map((word) => 
+      word[0].toUpperCase() + word.substring(1)
+    ).join(' ');
+  }
+
+  Map<String, dynamic>? _parsePayload(dynamic payload) {
+    if (payload == null) return null;
+    try {
+      if (payload is String) {
+        return jsonDecode(payload) as Map<String, dynamic>;
+      } else if (payload is Map) {
+        return payload as Map<String, dynamic>;
+      }
+    } catch (e) {
+      print('Error parsing payload: $e');
+    }
+    return null;
   }
 
   @override
@@ -448,7 +672,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                       ),
                                       SizedBox(height: 8),
                                       Text(
-                                        _formatDate(notification['created_at'] ?? notification['timestamp']),
+                                        _formatDate(notification['created_at'] ?? 
+                                                   notification['timestamp'] ?? 
+                                                   notification['sent_at']),
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Colors.grey[500],

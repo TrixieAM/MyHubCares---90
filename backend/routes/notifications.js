@@ -177,11 +177,24 @@ export async function notifyAppointmentCreated(appointment) {
     // Message without provider info
     const body = `A new ${appointment_type.replace('_', ' ')} appointment has been scheduled for ${patientName} at ${facilityName} on ${formattedDate}.`;
     
+    // Get provider name if provider_id exists
+    let providerName = null;
+    if (provider_id) {
+      const [providers] = await db.query(
+        'SELECT full_name FROM users WHERE user_id = ?',
+        [provider_id]
+      );
+      if (providers.length > 0) {
+        providerName = providers[0].full_name;
+      }
+    }
+    
     const payload = {
       type: 'appointment_created',
       appointment_id,
       patient_id,
       provider_id,
+      provider_name: providerName, // Include provider name if available
       facility_id,
       scheduled_start,
       appointment_type,
@@ -482,10 +495,11 @@ export async function notifyAppointmentProviderAccepted(appointment) {
     const body = `Your ${appointment_type.replace('_', ' ')} appointment with ${providerName} at ${facilityName} on ${formattedDate} has been accepted.`;
     
     const payload = {
-      type: 'appointment_pending_confirmation',
+      type: 'appointment_accepted',
       appointment_id,
       patient_id,
       provider_id,
+      provider_name: providerName, // Include provider name in payload
       facility_id,
       scheduled_start,
       appointment_type,
@@ -586,6 +600,7 @@ export async function notifyAppointmentProviderDeclined(appointment, reason = nu
       appointment_id,
       patient_id,
       provider_id,
+      provider_name: providerName, // Include provider name in payload
       facility_id,
       scheduled_start,
       appointment_type,
@@ -732,6 +747,7 @@ export async function notifyAppointmentChanged(appointment, changes) {
       appointment_id,
       patient_id,
       provider_id,
+      provider_name: providerName, // Include provider name in payload
       facility_id,
       scheduled_start,
       appointment_type,
@@ -823,6 +839,7 @@ export async function notifyAppointmentPatientConfirmed(appointment) {
       appointment_id,
       patient_id,
       provider_id,
+      provider_name: providerName, // Include provider name in payload
       facility_id,
       scheduled_start,
       appointment_type
@@ -901,18 +918,28 @@ export async function notifyAppointmentPatientConfirmed(appointment) {
 // GET /api/notifications - Get user's notifications
 router.get('/', authenticateToken, async (req, res) => {
   try {
+    console.log('=== GET /api/notifications ===');
     const { type = 'all', unread_only = false } = req.query;
     const user_id = req.user.user_id;
     const user_role = req.user.role;
+
+    console.log('Notification request params:', {
+      type,
+      unread_only,
+      user_id,
+      user_role
+    });
 
     let inAppMessages = [];
     let notifications = [];
 
     // Get notifications from notifications table
     if (type === 'all' || type === 'notifications') {
+      console.log('📋 Fetching notifications from notifications table...');
       // Get patient_id if user is a patient
       let patient_id = null;
       if (user_role === 'patient') {
+        console.log('User is a patient, looking up patient_id...');
         const [patientRows] = await db.query(`
           SELECT patient_id FROM patients 
           WHERE created_by = ? OR email IN (SELECT email FROM users WHERE user_id = ?)
@@ -920,6 +947,9 @@ router.get('/', authenticateToken, async (req, res) => {
         `, [user_id, user_id]);
         if (patientRows.length > 0) {
           patient_id = patientRows[0].patient_id;
+          console.log('✅ Found patient_id:', patient_id);
+        } else {
+          console.log('⚠️ No patient_id found for user');
         }
       }
 
@@ -932,26 +962,24 @@ router.get('/', authenticateToken, async (req, res) => {
       
       if (unread_only === 'true') {
         query += ' AND n.is_read = FALSE';
+        console.log('Filtering for unread notifications only');
       }
       
       query += ' ORDER BY n.created_at DESC LIMIT 100';
       
-      console.log('Fetching notifications with query:', query);
-      console.log('Query params:', params);
+      console.log('📋 Notifications query:', query);
+      console.log('📋 Query params:', params);
       
       const [notifs] = await db.query(query, params);
       
-      console.log(`Found ${notifs.length} notifications for user ${user_id}`);
-      
-      // Try to extract appointment_id from notification message/payload if available
-      // Note: Since notifications table doesn't have patient_id column, we can't match by patient
-      // Appointments will be linked via in_app_messages payload instead
+      console.log(`✅ Found ${notifs.length} notifications for user ${user_id}`);
       
       notifications = notifs;
     }
 
     // Get in-app messages
     if (type === 'all' || type === 'in_app') {
+      console.log('💬 Fetching in-app messages...');
       let query = `
         SELECT m.*, 
                u.full_name AS sender_name
@@ -962,13 +990,24 @@ router.get('/', authenticateToken, async (req, res) => {
       
       if (unread_only === 'true') {
         query += ' AND m.is_read = FALSE';
+        console.log('Filtering for unread messages only');
       }
       
       query += ' ORDER BY m.sent_at DESC LIMIT 100';
       
+      console.log('💬 In-app messages query:', query);
+      console.log('💬 Query params:', [user_id]);
+      
       const [messages] = await db.query(query, [user_id]);
       inAppMessages = messages;
+      
+      console.log(`✅ Found ${inAppMessages.length} in-app messages for user ${user_id}`);
     }
+
+    console.log('📊 Total results:', {
+      notifications: notifications.length,
+      inAppMessages: inAppMessages.length
+    });
 
     res.json({
       success: true,
@@ -978,7 +1017,8 @@ router.get('/', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    console.error('❌ Error fetching notifications:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch notifications',
@@ -990,39 +1030,59 @@ router.get('/', authenticateToken, async (req, res) => {
 // PUT /api/notifications/:id/read - Mark notification as read/unread
 router.put('/:id/read', authenticateToken, async (req, res) => {
   try {
+    console.log('=== PUT /api/notifications/:id/read ===');
     const { id } = req.params;
     const { is_read = true } = req.body; // Default to marking as read, but allow unread
     const user_id = req.user.user_id;
 
+    console.log('Mark notification as read params:', {
+      notification_id: id,
+      is_read,
+      user_id
+    });
+
     // Try to update in notifications table first
+    console.log('📋 Trying to update in notifications table...');
     let [result] = await db.query(`
       UPDATE notifications 
       SET is_read = ?
       WHERE notification_id = ? AND recipient_id = ?
     `, [is_read, id, user_id]);
 
+    console.log('Notifications table update result:', {
+      affectedRows: result.affectedRows
+    });
+
     // If not found in notifications table, try in_app_messages
     if (result.affectedRows === 0) {
+      console.log('💬 Not found in notifications table, trying in_app_messages...');
       [result] = await db.query(`
         UPDATE in_app_messages 
         SET is_read = ?, read_at = ${is_read ? 'NOW()' : 'NULL'}
         WHERE message_id = ? AND recipient_id = ?
       `, [is_read, id, user_id]);
+      
+      console.log('In-app messages update result:', {
+        affectedRows: result.affectedRows
+      });
     }
 
     if (result.affectedRows === 0) {
+      console.error('❌ Notification not found or access denied');
       return res.status(404).json({
         success: false,
         message: 'Notification not found or access denied'
       });
     }
 
+    console.log('✅ Notification marked as', is_read ? 'read' : 'unread');
     res.json({
       success: true,
       message: `Notification marked as ${is_read ? 'read' : 'unread'}`
     });
   } catch (error) {
-    console.error('Error marking notification as read:', error);
+    console.error('❌ Error marking notification as read:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Failed to mark notification as read',
@@ -1034,21 +1094,31 @@ router.put('/:id/read', authenticateToken, async (req, res) => {
 // PUT /api/notifications/read-all - Mark all notifications as read
 router.put('/read-all', authenticateToken, async (req, res) => {
   try {
+    console.log('=== PUT /api/notifications/read-all ===');
     const user_id = req.user.user_id;
 
+    console.log('Marking all notifications as read for user:', user_id);
+
     // Update all unread notifications in the notifications table
+    console.log('📋 Updating notifications table...');
     const [result] = await db.query(`
       UPDATE notifications 
       SET is_read = TRUE
       WHERE recipient_id = ? AND is_read = FALSE
     `, [user_id]);
 
+    console.log('Notifications table updated:', result.affectedRows, 'rows');
+
     // Also update in_app_messages for consistency (these use recipient_id)
-    await db.query(`
+    console.log('💬 Updating in_app_messages table...');
+    const [messagesResult] = await db.query(`
       UPDATE in_app_messages 
       SET is_read = TRUE, read_at = NOW()
       WHERE recipient_id = ? AND recipient_type = 'user' AND is_read = FALSE
     `, [user_id]);
+
+    console.log('In-app messages updated:', messagesResult.affectedRows, 'rows');
+    console.log('✅ Total updated:', result.affectedRows + messagesResult.affectedRows, 'notifications');
 
     res.json({
       success: true,
@@ -1056,7 +1126,8 @@ router.put('/read-all', authenticateToken, async (req, res) => {
       updated_count: result.affectedRows
     });
   } catch (error) {
-    console.error('Error marking all notifications as read:', error);
+    console.error('❌ Error marking all notifications as read:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Failed to mark all notifications as read',
@@ -1068,12 +1139,16 @@ router.put('/read-all', authenticateToken, async (req, res) => {
 // GET /api/notifications/unread-count - Get unread count
 router.get('/unread-count', authenticateToken, async (req, res) => {
   try {
+    console.log('=== GET /api/notifications/unread-count ===');
     const user_id = req.user.user_id;
     const user_role = req.user.role;
+
+    console.log('Getting unread count for user:', { user_id, user_role });
 
     // Count from notifications table
     let patient_id = null;
     if (user_role === 'patient') {
+      console.log('User is a patient, looking up patient_id...');
       const [patientRows] = await db.query(`
         SELECT patient_id FROM patients 
         WHERE created_by = ? OR email IN (SELECT email FROM users WHERE user_id = ?)
@@ -1081,9 +1156,11 @@ router.get('/unread-count', authenticateToken, async (req, res) => {
       `, [user_id, user_id]);
       if (patientRows.length > 0) {
         patient_id = patientRows[0].patient_id;
+        console.log('✅ Found patient_id:', patient_id);
       }
     }
 
+    console.log('📋 Counting unread notifications...');
     let query = `
       SELECT COUNT(*) as count FROM notifications
       WHERE recipient_id = ?
@@ -1093,20 +1170,27 @@ router.get('/unread-count', authenticateToken, async (req, res) => {
     
     const [notifs] = await db.query(query, params);
     const notificationsCount = notifs[0].count || 0;
+    console.log('📋 Unread notifications count:', notificationsCount);
 
     // Count from in_app_messages
+    console.log('💬 Counting unread in-app messages...');
     const [messages] = await db.query(`
       SELECT COUNT(*) as count FROM in_app_messages
       WHERE recipient_id = ? AND recipient_type = 'user' AND is_read = FALSE
     `, [user_id]);
     const messagesCount = messages[0].count || 0;
+    console.log('💬 Unread in-app messages count:', messagesCount);
+
+    const totalCount = notificationsCount + messagesCount;
+    console.log('✅ Total unread count:', totalCount);
 
     res.json({
       success: true,
-      count: notificationsCount + messagesCount
+      count: totalCount
     });
   } catch (error) {
-    console.error('Error getting unread count:', error);
+    console.error('❌ Error getting unread count:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Failed to get unread count',

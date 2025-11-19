@@ -816,20 +816,20 @@ const ClinicalVisits = () => {
         </div>
         <div style="margin-bottom: 20px;">
           <strong>Chief Complaint/Symptoms:</strong><br>
-          <div style="margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+          <div style="margin-top: 5px; padding: 10px; background: #F8F2DE; border-radius: 4px;">
             ${visit.chief_complaint || 'None recorded'}
           </div>
         </div>
         <div style="margin-bottom: 20px;">
           <strong>Clinical Notes:</strong><br>
-          <div style="margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+          <div style="margin-top: 5px; padding: 10px; background: #F8F2DE; border-radius: 4px;">
             ${visit.clinical_notes || 'No notes'}
           </div>
         </div>
         ${visit.assessment ? `
         <div style="margin-bottom: 20px;">
           <strong>Assessment & Plan:</strong><br>
-          <div style="margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+          <div style="margin-top: 5px; padding: 10px; background: #F8F2DE; border-radius: 4px;">
             ${visit.assessment}
             ${visit.plan ? '<br><br><strong>Plan:</strong><br>' + visit.plan : ''}
           </div>
@@ -838,7 +838,7 @@ const ClinicalVisits = () => {
         ${visit.vital_signs && visit.vital_signs.length > 0 ? `
         <div style="margin-bottom: 20px;">
           <strong>Vital Signs:</strong><br>
-          <div style="margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+          <div style="margin-top: 5px; padding: 10px; background: #F8F2DE; border-radius: 4px;">
             Blood Pressure: ${visit.vital_signs[0].systolic_bp}/${visit.vital_signs[0].diastolic_bp}<br>
             Heart Rate: ${visit.vital_signs[0].pulse_rate} bpm<br>
             Respiratory Rate: ${visit.vital_signs[0].respiratory_rate}<br>
@@ -851,7 +851,7 @@ const ClinicalVisits = () => {
         ${visit.diagnoses && visit.diagnoses.length > 0 ? `
         <div style="margin-bottom: 20px;">
           <strong>Diagnoses:</strong><br>
-          <div style="margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+          <div style="margin-top: 5px; padding: 10px; background: #F8F2DE; border-radius: 4px;">
             ${visit.diagnoses.map((d, i) => `${i + 1}. ${d.diagnosis_description}${d.icd10_code ? ' (ICD-10: ' + d.icd10_code + ')' : ''}`).join('<br>')}
           </div>
         </div>
@@ -859,7 +859,7 @@ const ClinicalVisits = () => {
         ${visit.procedures && visit.procedures.length > 0 ? `
         <div style="margin-bottom: 20px;">
           <strong>Procedures:</strong><br>
-          <div style="margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+          <div style="margin-top: 5px; padding: 10px; background: #F8F2DE; border-radius: 4px;">
             ${visit.procedures.map((p, i) => `${i + 1}. ${p.procedure_name}${p.cpt_code ? ' (CPT: ' + p.cpt_code + ')' : ''}`).join('<br>')}
           </div>
         </div>
@@ -959,7 +959,7 @@ const ClinicalVisits = () => {
 
     if (loading) {
       return (
-        <p style={{ color: '#6c757d', textAlign: 'center', padding: '20px' }}>
+        <p style={{ color: '#A31D1D', textAlign: 'center', padding: '20px' }}>
           Loading clinical visits...
         </p>
       );
@@ -967,7 +967,7 @@ const ClinicalVisits = () => {
 
     if (filteredVisits.length === 0) {
       return (
-        <p style={{ color: '#6c757d', textAlign: 'center', padding: '20px' }}>
+        <p style={{ color: '#A31D1D', textAlign: 'center', padding: '20px' }}>
           No clinical visits found
         </p>
       );
@@ -988,21 +988,21 @@ const ClinicalVisits = () => {
         }}
       >
         <div style={{ flex: 1 }}>
-          <h3 style={{ margin: '0 0 5px 0', color: '#333', fontSize: '18px' }}>
+          <h3 style={{ margin: '0 0 5px 0', color: '#A31D1D', fontSize: '18px', fontWeight: 'bold' }}>
             {getPatientName(visit.patient_id)}
           </h3>
           <div
-            style={{ marginBottom: '5px', color: '#007bff', fontSize: '14px' }}
+            style={{ marginBottom: '5px', color: '#D84040', fontSize: '14px', fontWeight: '500' }}
           >
             📅 {formatDate(visit.visit_date)} • {visit.visit_type} •{' '}
             {getFacilityName(visit.facility_id)}
           </div>
           <div
-            style={{ marginBottom: '5px', color: '#6c757d', fontSize: '14px' }}
+            style={{ marginBottom: '5px', color: '#A31D1D', fontSize: '14px' }}
           >
             WHO Stage: {visit.who_stage}
           </div>
-          <div style={{ color: '#333', fontStyle: 'italic', fontSize: '14px' }}>
+          <div style={{ color: '#A31D1D', fontStyle: 'italic', fontSize: '14px' }}>
             "
             {visit.clinical_notes && visit.clinical_notes.length > 50
               ? visit.clinical_notes.substring(0, 50) + '...'
@@ -1011,7 +1011,7 @@ const ClinicalVisits = () => {
           </div>
           {visit.diagnoses && visit.diagnoses.length > 0 && (
             <div
-              style={{ marginTop: '5px', fontSize: '13px', color: '#6c757d' }}
+              style={{ marginTop: '5px', fontSize: '13px', color: '#A31D1D' }}
             >
               🏥 Diagnoses:{' '}
               {visit.diagnoses.map((d) => d.diagnosis_description).join(', ')}
@@ -1019,7 +1019,7 @@ const ClinicalVisits = () => {
           )}
           {visit.procedures && visit.procedures.length > 0 && (
             <div
-              style={{ marginTop: '5px', fontSize: '13px', color: '#6c757d' }}
+              style={{ marginTop: '5px', fontSize: '13px', color: '#A31D1D' }}
             >
               🔧 Procedures:{' '}
               {visit.procedures.map((p) => p.procedure_name).join(', ')}
@@ -1031,12 +1031,22 @@ const ClinicalVisits = () => {
             onClick={() => handleViewDetails(visit)}
             style={{
               padding: '8px 16px',
-              background: '#6c757d',
+              background: '#D84040',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '14px',
+              transition: 'all 0.2s ease',
+              fontWeight: '500'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#A31D1D';
+              e.target.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = '#D84040';
+              e.target.style.transform = 'translateY(0)';
             }}
           >
             View Details
@@ -1045,12 +1055,22 @@ const ClinicalVisits = () => {
             onClick={() => handleExportSinglePDF(visit)}
             style={{
               padding: '8px 16px',
-              background: '#007bff',
-              color: 'white',
+              background: '#ECDCBF',
+              color: '#A31D1D',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '14px',
+              transition: 'all 0.2s ease',
+              fontWeight: '500'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#F8F2DE';
+              e.target.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = '#ECDCBF';
+              e.target.style.transform = 'translateY(0)';
             }}
           >
             Export PDF
@@ -1061,59 +1081,75 @@ const ClinicalVisits = () => {
   };
 
   return (
-    <div style={{ padding: '20px', paddingTop: '80px' }}>
-      {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '30px',
-        }}
-      >
-        <div>
-          <h2 style={{ margin: 0, color: '#333', fontSize: '24px' }}>
-            Clinical Visits
-          </h2>
-          <p
-            style={{ margin: '5px 0 0 0', color: '#6c757d', fontSize: '14px' }}
-          >
-            Record and manage patient consultations
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={handleExportPDF}
-            style={{
-              padding: '10px 16px',
-              background: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px',
-            }}
-          >
-            Export All
-          </button>
-          <button
-            onClick={handleRecordNewVisit}
-            style={{
-              padding: '10px 16px',
-              background: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
-            <Plus size={16} />
-            Record New Visit
-          </button>
+    <div style={{ padding: '20px', backgroundColor: 'white', minHeight: '100vh', paddingTop: '100px' }}>
+      {/* Header with Title */}
+      <div style={{ 
+        marginBottom: '30px', 
+        background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+        padding: '30px', 
+        borderRadius: '12px', 
+        boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>Clinical Visits</h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>Record and manage patient consultations</p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={handleExportPDF}
+              style={{
+                padding: '10px 16px',
+                background: '#ECDCBF',
+                color: '#A31D1D',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#F8F2DE';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#ECDCBF';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              Export All
+            </button>
+            <button
+              onClick={handleRecordNewVisit}
+              style={{
+                padding: '10px 16px',
+                background: '#ECDCBF',
+                color: '#A31D1D',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#F8F2DE';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#ECDCBF';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              <Plus size={16} />
+              Record New Visit
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1122,7 +1158,7 @@ const ClinicalVisits = () => {
         <div style={{ position: 'relative', flex: 1 }}>
           <Search
             size={18}
-            color="#6c757d"
+            color="#A31D1D"
             style={{
               position: 'absolute',
               left: '10px',
@@ -1146,7 +1182,7 @@ const ClinicalVisits = () => {
         <div style={{ position: 'relative' }}>
           <Filter
             size={18}
-            color="#6c757d"
+            color="#A31D1D"
             style={{
               position: 'absolute',
               left: '10px',
@@ -1209,8 +1245,8 @@ const ClinicalVisits = () => {
               toast.type === 'success'
                 ? '#28a745'
                 : toast.type === 'error'
-                ? '#dc3545'
-                : '#17a2b8',
+                ? '#A31D1D'
+                : '#D84040',
             color: 'white',
             padding: '16px 20px',
             borderRadius: '8px',
@@ -1501,7 +1537,7 @@ const ClinicalVisitModal = ({
             marginBottom: '20px',
           }}
         >
-          <h2 style={{ margin: 0 }}>
+          <h2 style={{ margin: 0, color: '#A31D1D', fontWeight: 'bold' }}>
             {mode === 'add'
               ? 'Record Clinical Visit'
               : mode === 'edit'
@@ -1515,10 +1551,19 @@ const ClinicalVisitModal = ({
               border: 'none',
               cursor: 'pointer',
               padding: '5px',
-              borderRadius: '4px',
+              borderRadius: '50%',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#F8F2DE';
+              e.target.style.transform = 'scale(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'none';
+              e.target.style.transform = 'scale(1)';
             }}
           >
-            <X size={24} color="#6c757d" />
+            <X size={24} color="#A31D1D" />
           </button>
         </div>
 
@@ -1541,6 +1586,7 @@ const ClinicalVisitModal = ({
                   display: 'block',
                   marginBottom: '5px',
                   fontWeight: 'bold',
+                  color: '#A31D1D',
                 }}
               >
                 Patient <span style={{ color: 'red' }}>*</span>
@@ -1576,6 +1622,7 @@ const ClinicalVisitModal = ({
                   display: 'block',
                   marginBottom: '5px',
                   fontWeight: 'bold',
+                  color: '#A31D1D',
                 }}
               >
                 Facility <span style={{ color: 'red' }}>*</span>
@@ -1673,6 +1720,7 @@ const ClinicalVisitModal = ({
                   display: 'block',
                   marginBottom: '5px',
                   fontWeight: 'bold',
+                  color: '#A31D1D',
                 }}
               >
                 WHO Stage <span style={{ color: 'red' }}>*</span>
@@ -1703,6 +1751,7 @@ const ClinicalVisitModal = ({
                   display: 'block',
                   marginBottom: '5px',
                   fontWeight: 'bold',
+                  color: '#A31D1D',
                 }}
               >
                 Chief Complaint <span style={{ color: 'red' }}>*</span>
@@ -1728,6 +1777,7 @@ const ClinicalVisitModal = ({
                   display: 'block',
                   marginBottom: '5px',
                   fontWeight: 'bold',
+                  color: '#A31D1D',
                 }}
               >
                 Assessment
@@ -1752,6 +1802,7 @@ const ClinicalVisitModal = ({
                   display: 'block',
                   marginBottom: '5px',
                   fontWeight: 'bold',
+                  color: '#A31D1D',
                 }}
               >
                 Plan
@@ -1832,6 +1883,7 @@ const ClinicalVisitModal = ({
                   display: 'block',
                   marginBottom: '5px',
                   fontWeight: 'bold',
+                  color: '#A31D1D',
                 }}
               >
                 Vital Signs
@@ -1844,7 +1896,7 @@ const ClinicalVisitModal = ({
                 }}
               >
                 <div>
-                  <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                  <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                     Blood Pressure {/* e.g., 120/80 */}
                   </label>
                   <input
@@ -1863,7 +1915,7 @@ const ClinicalVisitModal = ({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                  <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                     Heart Rate {/* e.g., 72 */}
                   </label>
                   <input
@@ -1882,7 +1934,7 @@ const ClinicalVisitModal = ({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                  <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                     Respiratory Rate {/* e.g., 16 */}
                   </label>
                   <input
@@ -1901,7 +1953,7 @@ const ClinicalVisitModal = ({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                  <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                     Temperature (°C) {/* e.g., 36.5 */}
                   </label>
                   <input
@@ -1920,7 +1972,7 @@ const ClinicalVisitModal = ({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                  <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                     Weight (kg) {/* e.g., 65 */}
                   </label>
                   <input
@@ -1939,7 +1991,7 @@ const ClinicalVisitModal = ({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                  <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                     Height (cm) {/* e.g., 165 */}
                   </label>
                   <input
@@ -1966,6 +2018,7 @@ const ClinicalVisitModal = ({
                   display: 'block',
                   marginBottom: '5px',
                   fontWeight: 'bold',
+                  color: '#A31D1D',
                 }}
               >
                 Clinical Notes
@@ -1989,12 +2042,12 @@ const ClinicalVisitModal = ({
                 <div
                   style={{
                     padding: '12px',
-                    backgroundColor: '#e7f3ff',
-                    borderLeft: '4px solid #007bff',
+                    backgroundColor: '#F8F2DE',
+                    borderLeft: '4px solid #D84040',
                     borderRadius: '4px',
                   }}
                 >
-                  <p style={{ margin: 0, color: '#004085', fontSize: '14px' }}>
+                  <p style={{ margin: 0, color: '#A31D1D', fontSize: '14px' }}>
                     You can add diagnoses and procedures after saving the visit.
                   </p>
                 </div>
@@ -2025,12 +2078,19 @@ const ClinicalVisitModal = ({
                       onClick={handleAddDiagnosis}
                       style={{
                         padding: '5px 10px',
-                        background: '#17a2b8',
+                        background: '#D84040',
                         color: 'white',
                         border: 'none',
                         borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#A31D1D';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#D84040';
                       }}
                     >
                       Add Diagnosis
@@ -2042,8 +2102,8 @@ const ClinicalVisitModal = ({
                         padding: '10px',
                         border: '1px solid #e9ecef',
                         borderRadius: '4px',
-                        backgroundColor: '#f8f9fa',
-                        color: '#6c757d',
+                        backgroundColor: '#F8F2DE',
+                        color: '#A31D1D',
                         textAlign: 'center',
                       }}
                     >
@@ -2072,7 +2132,7 @@ const ClinicalVisitModal = ({
                             type="button"
                             onClick={() => handleRemoveDiagnosis(index)}
                             style={{
-                              background: '#dc3545',
+                              background: '#A31D1D',
                               color: 'white',
                               border: 'none',
                               borderRadius: '4px',
@@ -2092,7 +2152,7 @@ const ClinicalVisitModal = ({
                           }}
                         >
                           <div>
-                            <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                            <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                               ICD-10 Code
                             </label>
                             <input
@@ -2116,7 +2176,7 @@ const ClinicalVisitModal = ({
                             />
                           </div>
                           <div>
-                            <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                            <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                               Type
                             </label>
                             <select
@@ -2145,7 +2205,7 @@ const ClinicalVisitModal = ({
                             </select>
                           </div>
                           <div style={{ gridColumn: 'span 2' }}>
-                            <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                            <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                               Description
                             </label>
                             <textarea
@@ -2168,7 +2228,7 @@ const ClinicalVisitModal = ({
                             />
                           </div>
                           <div>
-                            <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                            <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                               Onset Date
                             </label>
                             <input
@@ -2191,7 +2251,7 @@ const ClinicalVisitModal = ({
                             />
                           </div>
                           <div>
-                            <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                            <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                               Resolved Date
                             </label>
                             <input
@@ -2264,12 +2324,19 @@ const ClinicalVisitModal = ({
                       onClick={handleAddProcedure}
                       style={{
                         padding: '5px 10px',
-                        background: '#6f42c1',
+                        background: '#D84040',
                         color: 'white',
                         border: 'none',
                         borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#A31D1D';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#D84040';
                       }}
                     >
                       Add Procedure
@@ -2281,8 +2348,8 @@ const ClinicalVisitModal = ({
                         padding: '10px',
                         border: '1px solid #e9ecef',
                         borderRadius: '4px',
-                        backgroundColor: '#f8f9fa',
-                        color: '#6c757d',
+                        backgroundColor: '#F8F2DE',
+                        color: '#A31D1D',
                         textAlign: 'center',
                       }}
                     >
@@ -2311,7 +2378,7 @@ const ClinicalVisitModal = ({
                             type="button"
                             onClick={() => handleRemoveProcedure(index)}
                             style={{
-                              background: '#dc3545',
+                              background: '#A31D1D',
                               color: 'white',
                               border: 'none',
                               borderRadius: '4px',
@@ -2331,7 +2398,7 @@ const ClinicalVisitModal = ({
                           }}
                         >
                           <div>
-                            <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                            <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                               CPT Code
                             </label>
                             <input
@@ -2355,7 +2422,7 @@ const ClinicalVisitModal = ({
                             />
                           </div>
                           <div>
-                            <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                            <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                               Performed At
                             </label>
                             <input
@@ -2378,7 +2445,7 @@ const ClinicalVisitModal = ({
                             />
                           </div>
                           <div style={{ gridColumn: 'span 2' }}>
-                            <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                            <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                               Procedure Name
                             </label>
                             <input
@@ -2402,7 +2469,7 @@ const ClinicalVisitModal = ({
                             />
                           </div>
                           <div style={{ gridColumn: 'span 2' }}>
-                            <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                            <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                               Description
                             </label>
                             <textarea
@@ -2425,7 +2492,7 @@ const ClinicalVisitModal = ({
                             />
                           </div>
                           <div style={{ gridColumn: 'span 2' }}>
-                            <label style={{ fontSize: '12px', color: '#6c757d' }}>
+                            <label style={{ fontSize: '12px', color: '#A31D1D' }}>
                               Outcome
                             </label>
                             <textarea
@@ -2467,11 +2534,21 @@ const ClinicalVisitModal = ({
                 onClick={onClose}
                 style={{
                   padding: '8px 16px',
-                  background: '#6c757d',
-                  color: 'white',
+                  background: '#ECDCBF',
+                  color: '#A31D1D',
                   border: 'none',
-                  borderRadius: '4px',
+                  borderRadius: '6px',
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontWeight: '500'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#F8F2DE';
+                  e.target.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#ECDCBF';
+                  e.target.style.transform = 'translateY(0)';
                 }}
               >
                 Cancel
@@ -2482,11 +2559,21 @@ const ClinicalVisitModal = ({
                   type="submit"
                   style={{
                     padding: '8px 16px',
-                    background: '#007bff',
+                    background: '#D84040',
                     color: 'white',
                     border: 'none',
-                    borderRadius: '4px',
+                    borderRadius: '6px',
                     cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    fontWeight: '500'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#A31D1D';
+                    e.target.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#D84040';
+                    e.target.style.transform = 'translateY(0)';
                   }}
                 >
                   {mode === 'add' ? 'Save Visit' : 'Update Visit'}
@@ -2570,7 +2657,7 @@ const VisitDetailsView = ({
 
   if (!visit) {
     return (
-      <p style={{ color: '#6c757d', textAlign: 'center', padding: '20px' }}>
+      <p style={{ color: '#A31D1D', textAlign: 'center', padding: '20px' }}>
         Loading visit details...
       </p>
     );
@@ -2584,7 +2671,7 @@ const VisitDetailsView = ({
             display: 'block',
             marginBottom: '5px',
             fontWeight: 'bold',
-            color: '#6c757d',
+            color: '#A31D1D',
           }}
         >
           Patient Name
@@ -2725,7 +2812,7 @@ const VisitDetailsView = ({
             display: 'block',
             marginBottom: '5px',
             fontWeight: 'bold',
-            color: '#6c757d',
+            color: '#A31D1D',
           }}
         >
           WHO Stage
@@ -2750,7 +2837,7 @@ const VisitDetailsView = ({
             display: 'block',
             marginBottom: '5px',
             fontWeight: 'bold',
-            color: '#6c757d',
+            color: '#A31D1D',
           }}
         >
           Clinical Notes
@@ -2784,23 +2871,30 @@ const VisitDetailsView = ({
             style={{
               margin: 0,
               fontWeight: 'bold',
-              color: '#333',
+              color: '#A31D1D',
               fontSize: '16px',
             }}
           >
             Diagnoses
           </h3>
-          <button
+            <button
             type="button"
             onClick={() => setShowDiagnosisForm(!showDiagnosisForm)}
             style={{
               padding: '5px 10px',
-              background: '#17a2b8',
+              background: '#D84040',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
               fontSize: '12px',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#A31D1D';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = '#D84040';
             }}
           >
             {showDiagnosisForm ? 'Cancel' : 'Add Diagnosis'}
@@ -2814,7 +2908,7 @@ const VisitDetailsView = ({
               borderRadius: '4px',
               padding: '15px',
               marginBottom: '10px',
-              backgroundColor: '#f8f9fa',
+                  backgroundColor: '#F8F2DE',
             }}
           >
             <div style={{ marginBottom: '10px' }}>
@@ -2936,12 +3030,19 @@ const VisitDetailsView = ({
                 }}
                 style={{
                   padding: '6px 12px',
-                  background: '#6c757d',
-                  color: 'white',
+                  background: '#ECDCBF',
+                  color: '#A31D1D',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
                   fontSize: '12px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#F8F2DE';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#ECDCBF';
                 }}
               >
                 Cancel
@@ -2951,12 +3052,19 @@ const VisitDetailsView = ({
                 onClick={handleSaveDiagnosisClick}
                 style={{
                   padding: '6px 12px',
-                  background: '#17a2b8',
+                  background: '#D84040',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
                   fontSize: '12px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#A31D1D';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#D84040';
                 }}
               >
                 Save Diagnosis
@@ -2971,7 +3079,7 @@ const VisitDetailsView = ({
               padding: '10px',
               border: '1px solid #e9ecef',
               borderRadius: '4px',
-              backgroundColor: '#f8f9fa',
+                  backgroundColor: '#F8F2DE',
             }}
           >
             {visit.diagnoses.map((d, i) => (
@@ -2987,7 +3095,7 @@ const VisitDetailsView = ({
               padding: '10px',
               border: '1px solid #e9ecef',
               borderRadius: '4px',
-              backgroundColor: '#f8f9fa',
+                  backgroundColor: '#F8F2DE',
               color: '#6c757d',
             }}
           >
@@ -3010,7 +3118,7 @@ const VisitDetailsView = ({
             style={{
               margin: 0,
               fontWeight: 'bold',
-              color: '#333',
+              color: '#A31D1D',
               fontSize: '16px',
             }}
           >
@@ -3021,12 +3129,19 @@ const VisitDetailsView = ({
             onClick={() => setShowProcedureForm(!showProcedureForm)}
             style={{
               padding: '5px 10px',
-              background: '#6f42c1',
+              background: '#D84040',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
               fontSize: '12px',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#A31D1D';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = '#D84040';
             }}
           >
             {showProcedureForm ? 'Cancel' : 'Add Procedure'}
@@ -3040,7 +3155,7 @@ const VisitDetailsView = ({
               borderRadius: '4px',
               padding: '15px',
               marginBottom: '10px',
-              backgroundColor: '#f8f9fa',
+                  backgroundColor: '#F8F2DE',
             }}
           >
             <div style={{ marginBottom: '10px' }}>
@@ -3146,12 +3261,19 @@ const VisitDetailsView = ({
                 }}
                 style={{
                   padding: '6px 12px',
-                  background: '#6c757d',
-                  color: 'white',
+                  background: '#ECDCBF',
+                  color: '#A31D1D',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
                   fontSize: '12px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#F8F2DE';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#ECDCBF';
                 }}
               >
                 Cancel
@@ -3161,12 +3283,19 @@ const VisitDetailsView = ({
                 onClick={handleSaveProcedureClick}
                 style={{
                   padding: '6px 12px',
-                  background: '#6f42c1',
+                  background: '#D84040',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
                   fontSize: '12px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#A31D1D';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#D84040';
                 }}
               >
                 Save Procedure
@@ -3181,7 +3310,7 @@ const VisitDetailsView = ({
               padding: '10px',
               border: '1px solid #e9ecef',
               borderRadius: '4px',
-              backgroundColor: '#f8f9fa',
+                  backgroundColor: '#F8F2DE',
             }}
           >
             {visit.procedures.map((p, i) => (
@@ -3197,7 +3326,7 @@ const VisitDetailsView = ({
               padding: '10px',
               border: '1px solid #e9ecef',
               borderRadius: '4px',
-              backgroundColor: '#f8f9fa',
+                  backgroundColor: '#F8F2DE',
               color: '#6c757d',
             }}
           >
@@ -3218,11 +3347,21 @@ const VisitDetailsView = ({
           onClick={onClose}
           style={{
             padding: '8px 16px',
-            background: '#6c757d',
+            background: '#D84040',
             color: 'white',
             border: 'none',
-            borderRadius: '4px',
+            borderRadius: '6px',
             cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            fontWeight: '500'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = '#A31D1D';
+            e.target.style.transform = 'translateY(-1px)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = '#D84040';
+            e.target.style.transform = 'translateY(0)';
           }}
         >
           Close
