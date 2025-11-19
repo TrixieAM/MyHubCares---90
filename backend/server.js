@@ -24,6 +24,11 @@ import labResultsRoutes from './routes/lab-results.js';
 import labFilesRoutes from './routes/lab-files.js';
 import appointmentsRoutes, { setSocketIO } from './routes/appointments.js';
 import notificationsRoutes from './routes/notifications.js';
+import faqsRoutes from './routes/faqs.js';
+import referralsRoutes from './routes/referrals.js';
+import counselingSessionsRoutes from './routes/counseling-sessions.js';
+import htsSessionsRoutes from './routes/hts-sessions.js';
+import careTasksRoutes from './routes/care-tasks.js';
 import { processAppointmentReminders } from './services/reminderService.js';
 
 const app = express();
@@ -81,6 +86,11 @@ app.use('/api/lab-results', labResultsRoutes);
 app.use('/api/lab-files', labFilesRoutes);
 app.use('/api/appointments', appointmentsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/faqs', faqsRoutes);
+app.use('/api/referrals', referralsRoutes);
+app.use('/api/counseling-sessions', counselingSessionsRoutes);
+app.use('/api/hts-sessions', htsSessionsRoutes);
+app.use('/api/care-tasks', careTasksRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

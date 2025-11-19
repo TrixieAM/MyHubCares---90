@@ -1090,19 +1090,7 @@ CREATE TABLE `notifications` (
 -- Dumping data for table `notifications`
 --
 
-INSERT INTO `notifications` (`notification_id`, `recipient_id`, `title`, `message`, `type`, `is_read`, `read_at`, `created_at`) VALUES
-('0d363ac7-4f78-4bb9-ad1c-8f36911dd944', '33333333-3333-3333-3333-333333333333', 'New Appointment Scheduled: Hanna Sarabia', 'A new initial appointment has been scheduled for Hanna Sarabia at MyHubCares Main Facility on Thursday, November 20, 2025 at 10:00 AM.', 'appointment', 0, NULL, '2025-11-19 00:01:08'),
-('22c00179-8d15-4172-88da-01be8a97bbcb', '42356bf7-84ef-4aaa-9610-d74b65c3929f', 'New Appointment Scheduled: Hanna Sarabia', 'A new initial appointment has been scheduled for Hanna Sarabia at MyHubCares Main Facility on Thursday, November 20, 2025 at 10:00 AM.', 'appointment', 0, NULL, '2025-11-19 00:01:09'),
-('4bc141e4-b3fc-4de2-a6ea-cffe98f6af41', '22222222-2222-2222-2222-222222222222', 'Appointment Confirmation Required: Hanna Sarabia', 'A new initial appointment has been scheduled for Hanna Sarabia at MyHubCares Main Facility on Thursday, November 20, 2025 at 10:00 AM. Please accept or decline this appointment.', 'appointment', 1, NULL, '2025-11-19 00:01:09'),
-('6c37e61d-d72f-4555-9a81-583f120563ba', '55555555-5555-5555-5555-555555555555', 'New Appointment Scheduled: Hanna Sarabia', 'A new initial appointment has been scheduled for Hanna Sarabia at MyHubCares Main Facility on Thursday, November 20, 2025 at 10:00 AM.', 'appointment', 0, NULL, '2025-11-19 00:01:09'),
-('70f4420a-fbd5-45bf-9554-f1924fd651d0', '22222222-2222-2222-2222-222222222222', 'New Appointment Scheduled: Hanna Sarabia', 'A new initial appointment has been scheduled for Hanna Sarabia at MyHubCares Main Facility on Thursday, November 20, 2025 at 10:00 AM.', 'appointment', 0, NULL, '2025-11-19 00:01:08'),
-('7d5a5404-e148-4a43-a443-00194ae91935', '16bec9d0-6123-4428-b9a3-fea81c3592a0', 'Appointment Confirmation Required', 'Your initial appointment with Dr. Juan Dela Cruz at MyHubCares Main Facility on Thursday, November 20, 2025 at 10:00 AM has been accepted. Please confirm to finalize your appointment.', 'appointment', 1, NULL, '2025-11-19 00:01:33'),
-('8e135a75-683f-49fe-a55b-0266621042a7', '16bec9d0-6123-4428-b9a3-fea81c3592a0', 'Appointment Request Submitted', 'Your initial appointment request for Thursday, November 20, 2025 at 10:00 AM at MyHubCares Main Facility has been submitted. Waiting for provider confirmation.', 'appointment', 0, NULL, '2025-11-19 00:01:09'),
-('8ee0b820-ae73-46e7-8368-3f90b2905f35', '44444444-4444-4444-4444-444444444444', 'New Appointment Scheduled: Hanna Sarabia', 'A new initial appointment has been scheduled for Hanna Sarabia at MyHubCares Main Facility on Thursday, November 20, 2025 at 10:00 AM.', 'appointment', 0, NULL, '2025-11-19 00:01:09'),
-('903c3cce-1b89-4b3c-a3c7-b062c789afde', '44444444-4444-4444-4444-444444444444', 'Appointment Confirmation Required: Hanna Sarabia', 'A new initial appointment has been scheduled for Hanna Sarabia at MyHubCares Main Facility on Thursday, November 20, 2025 at 10:00 AM. Please accept or decline this appointment.', 'appointment', 0, NULL, '2025-11-19 00:01:09'),
-('a71e8623-8d2f-47d4-bc23-30b246ccfa9f', '16bec9d0-6123-4428-b9a3-fea81c3592a0', 'Appointment Confirmation Required', 'Your appointment has been accepted. Please confirm.', 'appointment', 0, NULL, '2025-11-19 00:01:33'),
-('d1e4d42e-8c54-448d-8c1f-acfe1a9cc471', '16bec9d0-6123-4428-b9a3-fea81c3592a0', 'Appointment Request Submitted', 'Your initial appointment request for Thursday, November 20, 2025 at 10:00 AM at MyHubCares Main Facility has been submitted. Waiting for provider confirmation.', 'appointment', 0, NULL, '2025-11-19 00:01:09'),
-('dd4ac8ce-ea69-4f17-9acb-0512e68d68d6', '11111111-1111-1111-1111-111111111111', 'New Appointment Scheduled: Hanna Sarabia', 'A new initial appointment has been scheduled for Hanna Sarabia at MyHubCares Main Facility on Thursday, November 20, 2025 at 10:00 AM.', 'appointment', 0, NULL, '2025-11-19 00:01:08');
+
 
 -- --------------------------------------------------------
 

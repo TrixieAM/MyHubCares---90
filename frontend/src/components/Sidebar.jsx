@@ -30,6 +30,7 @@ import {
   Business as BusinessIcon,
   Vaccines as VaccinesIcon,
   Person as PersonIcon,
+  ListAlt as ListAltIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 240;
@@ -51,6 +52,7 @@ const allMenuItems = [
   { text: 'HTS Sessions', icon: <AssignmentIcon />, path: '/hts-sessions', roles: ['admin', 'physician', 'nurse', 'case_manager'] },
   { text: 'Counseling Sessions', icon: <PeopleIcon />, path: '/counseling', roles: ['admin', 'physician', 'nurse', 'case_manager'] },
   { text: 'Referrals', icon: <HospitalIcon />, path: '/referrals', roles: ['admin', 'physician', 'nurse', 'case_manager'] },
+  { text: 'Care Tasks', icon: <ListAltIcon />, path: '/care-tasks', roles: ['admin', 'case_manager'] },
   { text: 'Branch', icon: <BusinessIcon />, path: '/branch-management', roles: ['admin'] },
   { text: 'Settings', icon: <SettingsIcon />, path: '/settings', roles: ['admin', 'physician', 'nurse', 'case_manager', 'lab_personnel', 'patient'] },
 ];

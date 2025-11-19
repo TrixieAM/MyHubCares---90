@@ -707,7 +707,8 @@ const Appointments = ({ socket }) => {
             const endDate = new Date(apt.scheduled_end);
             
             // Check if current user can edit this appointment (for full editing)
-            const canEdit = (currentUserRole === 'physician' || currentUserRole === 'case_manager' || currentUserRole === 'admin') &&
+            // Admin cannot delete appointments, so exclude admin from canEdit for delete button
+            const canEdit = (currentUserRole === 'physician' || currentUserRole === 'case_manager') &&
                            (apt.status === 'scheduled' || apt.status === 'confirmed' || 
                             apt.status === 'pending_provider_confirmation' || apt.status === 'pending_patient_confirmation');
             

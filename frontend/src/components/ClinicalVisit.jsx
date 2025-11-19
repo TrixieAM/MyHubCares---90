@@ -38,9 +38,34 @@ const ClinicalVisits = () => {
   const [patients, setPatients] = useState([]);
   const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState(null);
+
+  // Helper function to get user role from token
+  const getRoleFromToken = () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return null;
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const decoded = JSON.parse(jsonPayload);
+      return decoded.role || null;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
+  };
 
   // Fetch all required data on component mount
   useEffect(() => {
+    // Get user role from token
+    const role = getRoleFromToken();
+    setCurrentUserRole(role);
     fetchInitialData();
   }, []);
 
@@ -1169,6 +1194,7 @@ const ClinicalVisits = () => {
           getFacilityName={getFacilityName}
           onSaveDiagnosis={handleSaveDiagnosis}
           onSaveProcedure={handleSaveProcedure}
+          currentUserRole={currentUserRole}
         />
       )}
 
@@ -1234,6 +1260,7 @@ const ClinicalVisitModal = ({
   getFacilityName,
   onSaveDiagnosis,
   onSaveProcedure,
+  currentUserRole,
 }) => {
   // Helper function for date formatting
   const formatDate = (dateString) => {
@@ -2449,19 +2476,22 @@ const ClinicalVisitModal = ({
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                style={{
-                  padding: '8px 16px',
-                  background: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              >
-                {mode === 'add' ? 'Save Visit' : 'Update Visit'}
-              </button>
+              {/* Hide update button for admin role */}
+              {!(mode === 'edit' && currentUserRole === 'admin') && (
+                <button
+                  type="submit"
+                  style={{
+                    padding: '8px 16px',
+                    background: '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {mode === 'add' ? 'Save Visit' : 'Update Visit'}
+                </button>
+              )}
             </div>
           </form>
         )}

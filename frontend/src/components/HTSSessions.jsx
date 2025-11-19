@@ -1,147 +1,342 @@
 import React, { useState, useEffect } from 'react';
 
-const HTSSessions = () => {
-  // Initial dummy data matching the images
-  const [sessions, setSessions] = useState([
-    {
-      id: 1,
-      patientName: 'John Doe',
-      sessionDate: '5/15/2024',
-      sessionType: 'Facility-based',
-      preTest: true,
-      postTest: true,
-      result: 'Positive',
-      details: {
-        branch: 'My Hub Cares Ortigas Main',
-        counselor: 'Anna Reyes',
-        referral: 'ART Clinic',
-        remarks: 'Patient well-informed and prepared for results',
-      },
-    },
-    {
-      id: 2,
-      patientName: 'Maria Santos',
-      sessionDate: '11/20/2023',
-      sessionType: 'Community-based',
-      preTest: true,
-      postTest: true,
-      result: 'Positive',
-      details: {
-        branch: 'My Hub Cares Ortigas Main',
-        counselor: 'Anna Reyes',
-        referral: 'Treatment Hub',
-        remarks: 'Referred to nearest treatment facility',
-      },
-    },
-  ]);
+const API_URL = 'http://localhost:5000/api';
 
-  const [filteredSessions, setFilteredSessions] = useState(sessions);
+const HTSSessions = () => {
+  const [sessions, setSessions] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [facilities, setFacilities] = useState([]);
+  const [clientTypes, setClientTypes] = useState([]);
+  const [physicians, setPhysicians] = useState([]);
+  const [filteredSessions, setFilteredSessions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [resultFilter, setResultFilter] = useState('All Results');
+  const [resultFilter, setResultFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [newSession, setNewSession] = useState({
-    patient: '',
-    sessionDate: new Date().toISOString().split('T')[0],
-    sessionType: 'Facility-based',
-    preTestCounseling: true,
-    consentGiven: true,
-    testResult: '',
-    postTestCounseling: false,
-    linkageReferred: false,
-    referralDestination: '',
+    patient_id: '',
+    facility_id: '',
+    tester_id: '',
+    session_date: new Date().toISOString().split('T')[0],
+    session_type: 'Facility-based',
+    client_type: '',
+    test_result: '',
+    test_type: '',
+    pre_test_counseling: true,
+    consent_given: true,
+    post_test_counseling: false,
+    linkage_referred: false,
+    referral_destination: '',
     remarks: '',
   });
 
+  // Get auth token
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
+  };
+
+  // Load HTS sessions from API
+  const loadSessions = async () => {
+    try {
+      setLoading(true);
+      const token = getAuthToken();
+      if (!token) {
+        setSessions([]);
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/hts-sessions`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('HTS Sessions API Response:', data);
+        if (data.success) {
+          console.log('Loaded HTS sessions:', data.sessions?.length || 0);
+          console.log('Sample session:', data.sessions?.[0]);
+          setSessions(data.sessions || []);
+        } else {
+          console.error('API returned success=false:', data);
+          setSessions([]);
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('Failed to load HTS sessions:', response.status, errorData);
+        alert(`Failed to load HTS sessions: ${errorData.message || response.status}`);
+        setSessions([]);
+      }
+    } catch (error) {
+      console.error('Error loading HTS sessions:', error);
+      setSessions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load patients
+  const loadPatients = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/patients`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setPatients(data.patients || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading patients:', error);
+    }
+  };
+
+  // Load facilities
+  const loadFacilities = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/facilities`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setFacilities(data.facilities || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading facilities:', error);
+    }
+  };
+
+  // Load client types
+  const loadClientTypes = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/client-types`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setClientTypes(data.client_types || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading client types:', error);
+      // If endpoint doesn't exist, set empty array
+      setClientTypes([]);
+    }
+  };
+
+  // Load physicians (testers/counselors)
+  const loadPhysicians = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/users/providers`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          console.log('Loaded physicians for HTS:', data.providers?.length || 0);
+          setPhysicians(data.providers || []);
+        } else {
+          console.error('API returned success=false for providers:', data);
+        }
+      } else {
+        console.error('Failed to load providers:', response.status);
+      }
+    } catch (error) {
+      console.error('Error loading physicians:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadSessions();
+    loadPatients();
+    loadFacilities();
+    loadClientTypes();
+    loadPhysicians();
+  }, []);
+
   // Filter sessions based on search and result filter
   useEffect(() => {
-    let filtered = sessions;
+    let filtered = [...sessions]; // Create a copy
 
     if (searchTerm) {
-      filtered = filtered.filter((session) =>
-        session.patientName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter((session) => {
+        const patientName = (session.patient_name || '').toLowerCase();
+        return patientName.includes(searchTerm.toLowerCase());
+      });
     }
 
-    if (resultFilter !== 'All Results') {
-      filtered = filtered.filter((session) => session.result === resultFilter);
+    if (resultFilter !== 'all') {
+      filtered = filtered.filter((session) => {
+        const result = (session.test_result || '').toLowerCase();
+        if (resultFilter === 'Positive') return result === 'positive' || result === 'reactive';
+        if (resultFilter === 'Reactive') return result === 'positive' || result === 'reactive';
+        if (resultFilter === 'Non-reactive') return result === 'negative' || result === 'non-reactive';
+        return true;
+      });
     }
 
+    console.log('Filtered HTS sessions:', filtered.length, 'out of', sessions.length);
     setFilteredSessions(filtered);
   }, [searchTerm, resultFilter, sessions]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setNewSession((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    
+    // If test result is positive or reactive, automatically refer for linkage
+    if (name === 'test_result' && (value === 'positive' || value === 'Positive' || value === 'Reactive')) {
+      setNewSession((prev) => ({
+        ...prev,
+        [name]: value,
+        linkage_referred: true,
+      }));
+    } else {
+      setNewSession((prev) => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      }));
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const newId = Math.max(...sessions.map((s) => s.id), 0) + 1;
-    const sessionToAdd = {
-      id: newId,
-      patientName: newSession.patient,
-      sessionDate: new Date(newSession.sessionDate).toLocaleDateString(
-        'en-US',
-        {
-          month: 'numeric',
-          day: 'numeric',
-          year: 'numeric',
-        }
-      ),
-      sessionType: newSession.sessionType,
-      preTest: newSession.preTestCounseling,
-      postTest: newSession.postTestCounseling,
-      result: newSession.testResult,
-      details: {
-        branch: 'My Hub Cares Ortigas Main',
-        counselor: 'Admin User',
-        referral: newSession.referralDestination,
-        remarks: newSession.remarks,
-      },
-    };
+    if (!newSession.patient_id || !newSession.facility_id || !newSession.tester_id || !newSession.session_date || !newSession.test_result) {
+      alert('Please fill in all required fields');
+      return;
+    }
 
-    setSessions([...sessions, sessionToAdd]);
-    setNewSession({
-      patient: '',
-      sessionDate: new Date().toISOString().split('T')[0],
-      sessionType: 'Facility-based',
-      preTestCounseling: true,
-      consentGiven: true,
-      testResult: '',
-      postTestCounseling: false,
-      linkageReferred: false,
-      referralDestination: '',
-      remarks: '',
-    });
-    setShowModal(false);
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        alert('Please log in to record HTS sessions');
+        return;
+      }
+
+      // Prepare notes with additional fields that might not be in the backend schema
+      const notesData = {
+        session_type: newSession.session_type,
+        client_type: newSession.client_type || null,
+        consent_given: newSession.consent_given,
+        referral_destination: newSession.referral_destination || null,
+        remarks: newSession.remarks || null,
+      };
+
+      const response = await fetch(`${API_URL}/hts-sessions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          patient_id: newSession.patient_id,
+          facility_id: newSession.facility_id,
+          tester_id: newSession.tester_id,
+          test_date: newSession.session_date,
+          test_result: newSession.test_result,
+          test_type: newSession.test_type || newSession.session_type || null,
+          pre_test_counseling: newSession.pre_test_counseling || false,
+          post_test_counseling: newSession.post_test_counseling || false,
+          linked_to_care: newSession.linkage_referred || false,
+          care_link_date: newSession.linkage_referred ? new Date().toISOString().split('T')[0] : null,
+          notes: JSON.stringify(notesData),
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          await loadSessions();
+          setNewSession({
+            patient_id: '',
+            facility_id: '',
+            tester_id: '',
+            session_date: new Date().toISOString().split('T')[0],
+            session_type: 'Facility-based',
+            client_type: '',
+            test_result: '',
+            test_type: '',
+            pre_test_counseling: true,
+            consent_given: true,
+            post_test_counseling: false,
+            linkage_referred: false,
+            referral_destination: '',
+            remarks: '',
+          });
+          setShowModal(false);
+        } else {
+          alert(data.message || 'Failed to record HTS session');
+        }
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to record HTS session');
+      }
+    } catch (error) {
+      console.error('Error creating HTS session:', error);
+      alert('Error creating HTS session');
+    }
   };
 
   const handleCancel = () => {
     setNewSession({
-      patient: '',
-      sessionDate: new Date().toISOString().split('T')[0],
-      sessionType: 'Facility-based',
-      preTestCounseling: true,
-      consentGiven: true,
-      testResult: '',
-      postTestCounseling: false,
-      linkageReferred: false,
-      referralDestination: '',
+      patient_id: '',
+      facility_id: '',
+      tester_id: '',
+      session_date: new Date().toISOString().split('T')[0],
+      session_type: 'Facility-based',
+      client_type: '',
+      test_result: '',
+      test_type: '',
+      pre_test_counseling: true,
+      consent_given: true,
+      post_test_counseling: false,
+      linkage_referred: false,
+      referral_destination: '',
       remarks: '',
     });
     setShowModal(false);
   };
 
   const viewSessionDetails = (sessionId) => {
-    const session = sessions.find((s) => s.id === sessionId);
-    setSelectedSession(session);
-    setShowDetailsModal(true);
+    const session = sessions.find((s) => {
+      const sId = s.hts_id || s.id;
+      return sId === sessionId;
+    });
+    if (session) {
+      setSelectedSession(session);
+      setShowDetailsModal(true);
+    }
   };
 
   // Styles
@@ -432,7 +627,7 @@ const HTSSessions = () => {
               value={resultFilter}
               onChange={(e) => setResultFilter(e.target.value)}
             >
-              <option value="All Results">All Results</option>
+              <option value="all">All Results</option>
               <option value="Positive">Positive</option>
               <option value="Reactive">Reactive</option>
               <option value="Non-reactive">Non-reactive</option>
@@ -440,47 +635,68 @@ const HTSSessions = () => {
           </div>
         </div>
         <div style={styles.cardBody}>
-          {filteredSessions.length > 0 ? (
-            filteredSessions.map((session) => (
-              <div key={session.id} style={styles.sessionCard}>
-                <div style={styles.sessionInfo}>
-                  <h3 style={styles.patientName}>{session.patientName}</h3>
-                  <div style={styles.patientMeta}>
-                    <div style={styles.metaItem}>📅 {session.sessionDate}</div>
-                    <div style={styles.metaItem}>🏥 {session.sessionType}</div>
-                    <div style={styles.metaItem}>
-                      ✓ Pre-test: {session.preTest ? 'Yes' : 'No'}
-                    </div>
-                    <div style={styles.metaItem}>
-                      ✓ Post-test: {session.postTest ? 'Yes' : 'No'}
+          {loading ? (
+            <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+              Loading sessions...
+            </div>
+          ) : filteredSessions.length > 0 ? (
+            filteredSessions.map((session) => {
+              const sessionId = session.hts_id || session.id;
+              const testResult = (session.test_result || '').toLowerCase();
+              const isPositive = testResult === 'positive' || testResult === 'reactive';
+              
+              return (
+                <div key={sessionId} style={styles.sessionCard}>
+                  <div style={styles.sessionInfo}>
+                    <h3 style={styles.patientName}>{session.patient_name || 'N/A'}</h3>
+                    <div style={styles.patientMeta}>
+                      <div style={styles.metaItem}>
+                        📅 {session.test_date ? new Date(session.test_date).toLocaleDateString() : 'N/A'}
+                      </div>
+                      <div style={styles.metaItem}>
+                        🏥 {(() => {
+                          try {
+                            const notesData = session.notes ? JSON.parse(session.notes) : {};
+                            return notesData.session_type || session.test_type || 'N/A';
+                          } catch {
+                            return session.test_type || 'N/A';
+                          }
+                        })()}
+                      </div>
+                      <div style={styles.metaItem}>
+                        ✓ Pre-test: {session.pre_test_counseling ? 'Yes' : 'No'}
+                      </div>
+                      <div style={styles.metaItem}>
+                        ✓ Post-test: {session.post_test_counseling ? 'Yes' : 'No'}
+                      </div>
                     </div>
                   </div>
+                  <div style={styles.sessionActions}>
+                    <span
+                      style={{
+                        ...styles.badge,
+                        ...(isPositive ? styles.badgePositive : styles.badgeNegative),
+                      }}
+                    >
+                      {session.test_result ? session.test_result.charAt(0).toUpperCase() + session.test_result.slice(1) : 'N/A'}
+                    </span>
+                    <button
+                      style={styles.viewButton}
+                      onClick={() => viewSessionDetails(sessionId)}
+                    >
+                      View Details
+                    </button>
+                  </div>
                 </div>
-                <div style={styles.sessionActions}>
-                  <span
-                    style={{
-                      ...styles.badge,
-                      ...(session.result === 'POSITIVE'
-                        ? styles.badgePositive
-                        : styles.badgeNegative),
-                    }}
-                  >
-                    {session.result}
-                  </span>
-                  <button
-                    style={styles.viewButton}
-                    onClick={() => viewSessionDetails(session.id)}
-                  >
-                    View Details
-                  </button>
-                </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div
               style={{ padding: '20px', textAlign: 'center', color: '#666' }}
             >
-              No HTS sessions found
+              {sessions.length === 0 
+                ? 'No HTS sessions found. Check console for API response details.'
+                : `No sessions match your filters. Showing ${sessions.length} total session(s).`}
             </div>
           )}
         </div>
@@ -502,46 +718,48 @@ const HTSSessions = () => {
             <form onSubmit={handleSubmit}>
               <div style={styles.modalBody}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label} htmlFor="patient">
-                    Patient
+                  <label style={styles.label} htmlFor="patient_id">
+                    Patient <span style={{ color: 'red' }}>*</span>
                   </label>
                   <select
-                    id="patient"
-                    name="patient"
-                    value={newSession.patient}
+                    id="patient_id"
+                    name="patient_id"
+                    value={newSession.patient_id}
                     onChange={handleInputChange}
                     style={styles.select}
                     required
                   >
                     <option value="">Select Patient</option>
-                    <option value="John Doe">John Doe</option>
-                    <option value="Maria Santos">Maria Santos</option>
-                    <option value="Other">Other</option>
+                    {patients.map((p) => (
+                      <option key={p.patient_id || p.id} value={p.patient_id || p.id}>
+                        {p.patient_name || `${p.first_name || p.firstName} ${p.last_name || p.lastName}`}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div style={styles.formRow}>
                   <div style={styles.formGroupHalf}>
-                    <label style={styles.label} htmlFor="sessionDate">
-                      Session Date
+                    <label style={styles.label} htmlFor="session_date">
+                      Session Date <span style={{ color: 'red' }}>*</span>
                     </label>
                     <input
                       type="date"
-                      id="sessionDate"
-                      name="sessionDate"
-                      value={newSession.sessionDate}
+                      id="session_date"
+                      name="session_date"
+                      value={newSession.session_date}
                       onChange={handleInputChange}
                       style={styles.input}
                       required
                     />
                   </div>
                   <div style={styles.formGroupHalf}>
-                    <label style={styles.label} htmlFor="sessionType">
-                      Session Type
+                    <label style={styles.label} htmlFor="session_type">
+                      Session Type <span style={{ color: 'red' }}>*</span>
                     </label>
                     <select
-                      id="sessionType"
-                      name="sessionType"
-                      value={newSession.sessionType}
+                      id="session_type"
+                      name="session_type"
+                      value={newSession.session_type}
                       onChange={handleInputChange}
                       style={styles.select}
                       required
@@ -553,44 +771,103 @@ const HTSSessions = () => {
                     </select>
                   </div>
                 </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label} htmlFor="facility_id">
+                    MyHubCares Branch <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <select
+                    id="facility_id"
+                    name="facility_id"
+                    value={newSession.facility_id}
+                    onChange={handleInputChange}
+                    style={styles.select}
+                    required
+                  >
+                    <option value="">Select MyHubCares Branch</option>
+                    {facilities.map((f) => (
+                      <option key={f.facility_id || f.id} value={f.facility_id || f.id}>
+                        {f.facility_name || f.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label} htmlFor="tester_id">
+                    Tester/Counselor <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <select
+                    id="tester_id"
+                    name="tester_id"
+                    value={newSession.tester_id}
+                    onChange={handleInputChange}
+                    style={styles.select}
+                    required
+                  >
+                    <option value="">Select Tester/Counselor</option>
+                    {physicians.map((physician) => (
+                      <option key={physician.user_id || physician.id} value={physician.user_id || physician.id}>
+                        {physician.full_name || physician.fullName || `${physician.first_name || physician.firstName || ''} ${physician.last_name || physician.lastName || ''}`.trim() || physician.username}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label} htmlFor="client_type">
+                    Client Type
+                  </label>
+                  <select
+                    id="client_type"
+                    name="client_type"
+                    value={newSession.client_type}
+                    onChange={handleInputChange}
+                    style={styles.select}
+                  >
+                    <option value="">Select Type</option>
+                    {clientTypes.map((ct) => (
+                      <option key={ct.client_type_id || ct.id} value={ct.client_type_id || ct.id}>
+                        {ct.type_name || ct.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 <h4>Pre-Test Counseling</h4>
                 <div style={styles.checkboxGroup}>
                   <input
                     type="checkbox"
-                    id="preTestCounseling"
-                    name="preTestCounseling"
-                    checked={newSession.preTestCounseling}
+                    id="pre_test_counseling"
+                    name="pre_test_counseling"
+                    checked={newSession.pre_test_counseling}
                     onChange={handleInputChange}
                     style={styles.checkbox}
                   />
-                  <label htmlFor="preTestCounseling">
+                  <label htmlFor="pre_test_counseling">
                     Pre-test counseling provided
                   </label>
                 </div>
                 <div style={styles.checkboxGroup}>
                   <input
                     type="checkbox"
-                    id="consentGiven"
-                    name="consentGiven"
-                    checked={newSession.consentGiven}
+                    id="consent_given"
+                    name="consent_given"
+                    checked={newSession.consent_given}
                     onChange={handleInputChange}
                     style={styles.checkbox}
                   />
-                  <label htmlFor="consentGiven">
+                  <label htmlFor="consent_given">
                     Informed consent obtained
                   </label>
                 </div>
 
                 <h4>Test Results</h4>
                 <div style={styles.formGroup}>
-                  <label style={styles.label} htmlFor="testResult">
-                    Test Result
+                  <label style={styles.label} htmlFor="test_result">
+                    Test Result <span style={{ color: 'red' }}>*</span>
                   </label>
                   <select
-                    id="testResult"
-                    name="testResult"
-                    value={newSession.testResult}
+                    id="test_result"
+                    name="test_result"
+                    value={newSession.test_result}
                     onChange={handleInputChange}
                     style={styles.select}
                     required
@@ -607,43 +884,45 @@ const HTSSessions = () => {
                 <div style={styles.checkboxGroup}>
                   <input
                     type="checkbox"
-                    id="postTestCounseling"
-                    name="postTestCounseling"
-                    checked={newSession.postTestCounseling}
+                    id="post_test_counseling"
+                    name="post_test_counseling"
+                    checked={newSession.post_test_counseling}
                     onChange={handleInputChange}
                     style={styles.checkbox}
                   />
-                  <label htmlFor="postTestCounseling">
+                  <label htmlFor="post_test_counseling">
                     Post-test counseling provided
                   </label>
                 </div>
                 <div style={styles.checkboxGroup}>
                   <input
                     type="checkbox"
-                    id="linkageReferred"
-                    name="linkageReferred"
-                    checked={newSession.linkageReferred}
+                    id="linkage_referred"
+                    name="linkage_referred"
+                    checked={newSession.linkage_referred}
                     onChange={handleInputChange}
                     style={styles.checkbox}
                   />
-                  <label htmlFor="linkageReferred">
+                  <label htmlFor="linkage_referred">
                     Referred for linkage to care
                   </label>
                 </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.label} htmlFor="referralDestination">
-                    Referral Destination
-                  </label>
-                  <input
-                    type="text"
-                    id="referralDestination"
-                    name="referralDestination"
-                    value={newSession.referralDestination}
-                    onChange={handleInputChange}
-                    placeholder="e.g., ART Clinic"
-                    style={styles.input}
-                  />
-                </div>
+                {newSession.linkage_referred && (
+                  <div style={styles.formGroup}>
+                    <label style={styles.label} htmlFor="referral_destination">
+                      Referral Destination
+                    </label>
+                    <input
+                      type="text"
+                      id="referral_destination"
+                      name="referral_destination"
+                      value={newSession.referral_destination}
+                      onChange={handleInputChange}
+                      placeholder="e.g., ART Clinic"
+                      style={styles.input}
+                    />
+                  </div>
+                )}
 
                 <div style={styles.formGroup}>
                   <label style={styles.label} htmlFor="remarks">
@@ -655,6 +934,7 @@ const HTSSessions = () => {
                     value={newSession.remarks}
                     onChange={handleInputChange}
                     style={styles.textarea}
+                    rows="3"
                   />
                 </div>
               </div>
@@ -692,20 +972,27 @@ const HTSSessions = () => {
               <div style={styles.detailsGroup}>
                 <div style={styles.detailsLabel}>Patient Name</div>
                 <div style={styles.detailsValue}>
-                  {selectedSession.patientName}
+                  {selectedSession.patient_name || 'N/A'}
                 </div>
               </div>
               <div style={styles.formRow}>
                 <div style={styles.formGroupHalf}>
                   <div style={styles.detailsLabel}>Session Date</div>
                   <div style={styles.detailsValue}>
-                    {selectedSession.sessionDate}
+                    {selectedSession.test_date ? new Date(selectedSession.test_date).toLocaleDateString() : 'N/A'}
                   </div>
                 </div>
                 <div style={styles.formGroupHalf}>
                   <div style={styles.detailsLabel}>Session Type</div>
                   <div style={styles.detailsValue}>
-                    {selectedSession.sessionType}
+                    {(() => {
+                      try {
+                        const notesData = selectedSession.notes ? JSON.parse(selectedSession.notes) : {};
+                        return notesData.session_type || selectedSession.test_type || 'N/A';
+                      } catch {
+                        return selectedSession.test_type || 'N/A';
+                      }
+                    })()}
                   </div>
                 </div>
               </div>
@@ -713,13 +1000,13 @@ const HTSSessions = () => {
                 <div style={styles.formGroupHalf}>
                   <div style={styles.detailsLabel}>MyHubCares Branch</div>
                   <div style={styles.detailsValue}>
-                    {selectedSession.details.branch}
+                    {selectedSession.facility_name || 'N/A'}
                   </div>
                 </div>
                 <div style={styles.formGroupHalf}>
-                  <div style={styles.detailsLabel}>Counselor</div>
+                  <div style={styles.detailsLabel}>Tester</div>
                   <div style={styles.detailsValue}>
-                    {selectedSession.details.counselor}
+                    {selectedSession.tester_name || 'N/A'}
                   </div>
                 </div>
               </div>
@@ -728,7 +1015,7 @@ const HTSSessions = () => {
               <div style={styles.checkboxGroup}>
                 <input
                   type="checkbox"
-                  checked={selectedSession.preTest}
+                  checked={selectedSession.pre_test_counseling || false}
                   disabled
                   style={styles.checkbox}
                 />
@@ -737,7 +1024,14 @@ const HTSSessions = () => {
               <div style={styles.checkboxGroup}>
                 <input
                   type="checkbox"
-                  checked={true}
+                  checked={(() => {
+                    try {
+                      const notesData = selectedSession.notes ? JSON.parse(selectedSession.notes) : {};
+                      return notesData.consent_given || false;
+                    } catch {
+                      return false;
+                    }
+                  })()}
                   disabled
                   style={styles.checkbox}
                 />
@@ -747,14 +1041,16 @@ const HTSSessions = () => {
               <h4>Test Results</h4>
               <div style={styles.detailsGroup}>
                 <div style={styles.detailsLabel}>Result</div>
-                <div style={styles.detailsValue}>{selectedSession.result}</div>
+                <div style={styles.detailsValue}>
+                  {selectedSession.test_result ? selectedSession.test_result.charAt(0).toUpperCase() + selectedSession.test_result.slice(1) : 'N/A'}
+                </div>
               </div>
 
               <h4>Post-Test & Linkage</h4>
               <div style={styles.checkboxGroup}>
                 <input
                   type="checkbox"
-                  checked={selectedSession.postTest}
+                  checked={selectedSession.post_test_counseling || false}
                   disabled
                   style={styles.checkbox}
                 />
@@ -763,29 +1059,56 @@ const HTSSessions = () => {
               <div style={styles.checkboxGroup}>
                 <input
                   type="checkbox"
-                  checked={selectedSession.details.referral ? true : false}
+                  checked={selectedSession.linked_to_care || false}
                   disabled
                   style={styles.checkbox}
                 />
                 <label>Referred for linkage to care</label>
               </div>
-              {selectedSession.details.referral && (
-                <div style={styles.detailsGroup}>
-                  <div style={styles.detailsLabel}>Referral Destination</div>
-                  <div style={styles.detailsValue}>
-                    {selectedSession.details.referral}
-                  </div>
-                </div>
-              )}
+              {(() => {
+                try {
+                  const notesData = selectedSession.notes ? JSON.parse(selectedSession.notes) : {};
+                  if (notesData.referral_destination) {
+                    return (
+                      <div style={styles.detailsGroup}>
+                        <div style={styles.detailsLabel}>Referral Destination</div>
+                        <div style={styles.detailsValue}>
+                          {notesData.referral_destination}
+                        </div>
+                      </div>
+                    );
+                  }
+                } catch {}
+                return null;
+              })()}
 
-              {selectedSession.details.remarks && (
-                <div style={styles.detailsGroup}>
-                  <div style={styles.detailsLabel}>Remarks</div>
-                  <div style={styles.detailsValue}>
-                    {selectedSession.details.remarks}
-                  </div>
-                </div>
-              )}
+              {(() => {
+                try {
+                  const notesData = selectedSession.notes ? JSON.parse(selectedSession.notes) : {};
+                  if (notesData.remarks) {
+                    return (
+                      <div style={styles.detailsGroup}>
+                        <div style={styles.detailsLabel}>Remarks</div>
+                        <div style={styles.detailsValue}>
+                          {notesData.remarks}
+                        </div>
+                      </div>
+                    );
+                  }
+                } catch {
+                  if (selectedSession.notes) {
+                    return (
+                      <div style={styles.detailsGroup}>
+                        <div style={styles.detailsLabel}>Remarks</div>
+                        <div style={styles.detailsValue}>
+                          {selectedSession.notes}
+                        </div>
+                      </div>
+                    );
+                  }
+                }
+                return null;
+              })()}
             </div>
           </div>
         </div>

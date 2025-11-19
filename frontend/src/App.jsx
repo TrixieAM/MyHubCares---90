@@ -30,6 +30,7 @@ import Profile from './components/Profile.jsx';
 import Settings from './components/Settings.jsx';
 import MedicationAdherence from './components/MedicationAdherence.jsx';
 import MyAppointments from './components/MyAppointments.jsx';
+import CareTasks from './components/CareTasks.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import { SOCKET_URL } from './config/api';
 
@@ -243,6 +244,14 @@ export default function App() {
                 <ProtectedRoute allowedRoles={['patient']}>
                   <MyAppointments socket={socket} />
                 </ProtectedRoute>
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/care-tasks"
+            element={
+              <MainLayout socket={socket}>
+                <CareTasks socket={socket} />
               </MainLayout>
             }
           />

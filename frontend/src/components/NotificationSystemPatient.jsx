@@ -33,44 +33,37 @@ const NotificationSystemPatient = ({ socket }) => {
                 let allNotifications = [];
                 
                 // Process notifications from notifications table (patients see notifications where patient_id IS NULL)
-                if (data.success && data.data?.notifications) {
+                // Note: notifications table doesn't have payload column, so no appointment data here
+                if (data.success && data.data?.notifications && Array.isArray(data.data.notifications)) {
                     const notifs = data.data.notifications.map(notif => {
-                        const appointment_id = notif.appointment_id || null;
-                        const appointment_type = notif.appointment_type || null;
-                        const scheduled_start = notif.scheduled_start || null;
-                        
                         return {
                             id: notif.notification_id,
                             notification_id: notif.notification_id,
                             type: notif.type || 'system',
                             title: notif.title,
                             message: notif.message,
-                            appointment: appointment_id ? {
-                                appointment_id: appointment_id,
-                                appointment_type: appointment_type,
-                                scheduled_start: scheduled_start
-                            } : null,
-                            appointment_id: appointment_id,
+                            appointment: null, // notifications table doesn't store appointment data
+                            appointment_id: null,
                             requires_confirmation: false,
                             decline_reason: null,
                             timestamp: notif.created_at,
                             read: notif.is_read || false,
                             is_read: notif.is_read || false,
                             message_id: notif.notification_id,
-                            patient_id: notif.patient_id
+                            patient_id: null
                         };
                     });
                     allNotifications = [...allNotifications, ...notifs];
                 }
                 
                 // Process in-app messages
-                if (data.success && data.data?.in_app_messages) {
+                if (data.success && data.data?.in_app_messages && Array.isArray(data.data.in_app_messages)) {
                     const messages = data.data.in_app_messages.map(msg => {
                         let payload = null;
                         try {
                             payload = typeof msg.payload === 'string' ? JSON.parse(msg.payload) : msg.payload;
                         } catch (e) {
-                            payload = { type: 'appointment' };
+                            payload = null;
                         }
                         
                         return {
@@ -95,18 +88,117 @@ const NotificationSystemPatient = ({ socket }) => {
                     allNotifications = [...allNotifications, ...messages];
                 }
                 
-                // Sort by timestamp (newest first)
-                allNotifications.sort((a, b) => {
+                // Validate appointments exist before showing notifications
+                // Filter out notifications for appointments that no longer exist
+                const token = getAuthToken();
+                const validationPromises = allNotifications.map(async (notif) => {
+                    // If notification has an appointment_id, verify it exists
+                    if (notif.appointment_id) {
+                        try {
+                            const appointmentResponse = await fetch(`${API_BASE_URL}/appointments/${notif.appointment_id}`, {
+                                headers: { Authorization: `Bearer ${token}` }
+                            });
+                            
+                            // Only include notification if appointment exists
+                            if (appointmentResponse.ok) {
+                                const appointmentData = await appointmentResponse.json();
+                                if (appointmentData.success && appointmentData.data) {
+                                    return notif; // Appointment exists, include notification
+                                }
+                            }
+                            // Appointment doesn't exist, return null to filter out
+                            return null;
+                        } catch (error) {
+                            // On error checking appointment, filter out to be safe
+                            console.warn('Error validating appointment for notification:', error);
+                            return null;
+                        }
+                    } else {
+                        // No appointment_id, include notification as-is
+                        return notif;
+                    }
+                });
+                
+                // Wait for all validations to complete in parallel
+                const validationResults = await Promise.all(validationPromises);
+                const validatedNotifications = validationResults.filter(notif => notif !== null);
+                
+                // Aggressive deduplication: keep only ONE notification per appointment_id
+                // Prefer in_app_messages (has message_id) over notifications table
+                const seenAppointments = new Map();
+                const deduplicatedNotifications = [];
+                
+                // Separate notifications by source: in_app_messages vs notifications table
+                const inAppMessages = validatedNotifications.filter(n => n.message_id);
+                const tableNotifications = validatedNotifications.filter(n => !n.message_id);
+                
+                // First, add all in_app_messages (preferred source) - these are the primary notifications
+                for (const notif of inAppMessages) {
+                    if (notif.appointment_id) {
+                        const key = notif.appointment_id;
+                        // Only add if we haven't seen this appointment_id yet
+                        if (!seenAppointments.has(key)) {
+                            seenAppointments.set(key, notif);
+                            deduplicatedNotifications.push(notif);
+                        }
+                    } else {
+                        // For notifications without appointment_id, deduplicate by title + message
+                        const key = `${notif.title || ''}_${notif.message?.substring(0, 50) || ''}`;
+                        if (!seenAppointments.has(key)) {
+                            seenAppointments.set(key, notif);
+                            deduplicatedNotifications.push(notif);
+                        }
+                    }
+                }
+                
+                // Skip all notifications table entries if we already have in_app_messages
+                // This ensures we only show ONE notification per appointment
+                // Only add table notifications if they don't have an appointment_id (system notifications)
+                for (const notif of tableNotifications) {
+                    if (notif.appointment_id) {
+                        // Skip - we already have the in_app_message version
+                        continue;
+                    } else {
+                        // For notifications without appointment_id, deduplicate by title + message
+                        const key = `${notif.title || ''}_${notif.message?.substring(0, 50) || ''}`;
+                        if (!seenAppointments.has(key)) {
+                            seenAppointments.set(key, notif);
+                            deduplicatedNotifications.push(notif);
+                        }
+                    }
+                }
+                
+                // Already sorted by timestamp above, but sort again to be safe
+                deduplicatedNotifications.sort((a, b) => {
                     const dateA = new Date(a.timestamp || a.created_at || 0);
                     const dateB = new Date(b.timestamp || b.created_at || 0);
                     return dateB - dateA;
                 });
                 
-                setNotifications(allNotifications);
-                setUnreadCount(allNotifications.filter(n => !n.read && !n.is_read).length);
+                console.log(`[NotificationSystemPatient] Deduplicated: ${validatedNotifications.length} -> ${deduplicatedNotifications.length} notifications`);
+                console.log(`[NotificationSystemPatient] In-app messages: ${inAppMessages.length}, Table notifications: ${tableNotifications.length}`);
+                if (deduplicatedNotifications.length > 1) {
+                    console.warn('[NotificationSystemPatient] Still seeing duplicates:', deduplicatedNotifications.map(n => ({
+                        id: n.id,
+                        appointment_id: n.appointment_id,
+                        title: n.title,
+                        has_message_id: !!n.message_id
+                    })));
+                }
+                
+                // Set notifications - only validated and deduplicated ones
+                setNotifications(deduplicatedNotifications);
+                setUnreadCount(deduplicatedNotifications.filter(n => !n.read && !n.is_read).length);
+            } else {
+                // If API call fails, clear notifications
+                setNotifications([]);
+                setUnreadCount(0);
             }
         } catch (error) {
             console.error('Error fetching notifications:', error);
+            // On error, clear notifications
+            setNotifications([]);
+            setUnreadCount(0);
         }
     };
 
@@ -277,8 +369,11 @@ const NotificationSystemPatient = ({ socket }) => {
     };
 
     const handleNotificationClick = async (notification) => {
+        // Only mark as read if currently unread (don't toggle)
         const isCurrentlyRead = notification.read || notification.is_read;
-        markAsRead(notification.id, !isCurrentlyRead);
+        if (!isCurrentlyRead) {
+            markAsRead(notification.id, true);
+        }
         
         if (notification.appointment_id) {
             setLoadingAppointment(true);
@@ -720,6 +815,8 @@ const AppointmentDetailsModal = ({ appointment, onClose }) => {
                     </button>
                 </div>
 
+                {/* Patients don't need to see their own name - they already know who they are */}
+                
                 <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
                         Date & Time
@@ -767,22 +864,7 @@ const AppointmentDetailsModal = ({ appointment, onClose }) => {
                     </div>
                 </div>
 
-                {appointment.provider_name && (
-                    <div style={{ marginBottom: '15px' }}>
-                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
-                            Provider
-                        </label>
-                        <div style={{
-                            padding: '8px',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '4px',
-                            fontSize: '14px',
-                            background: '#f9fafb'
-                        }}>
-                            {appointment.provider_name}
-                        </div>
-                    </div>
-                )}
+                {/* Patients don't need to see provider name in details - it's already in the notification message */}
 
                 {appointment.reason && (
                     <div style={{ marginBottom: '15px' }}>

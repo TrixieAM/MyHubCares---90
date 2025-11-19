@@ -16,7 +16,7 @@ import {
   TableRow,
   Alert,
   AlertTitle,
-  Button
+  Button,
 } from '@mui/material';
 import {
   People as PeopleIcon,
@@ -24,9 +24,23 @@ import {
   Warning as WarningIcon,
   Medication as PrescriptionIcon,
   CalendarMonth as CalendarIcon,
-  Notifications as BellIcon
+  Notifications as BellIcon,
 } from '@mui/icons-material';
-import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+} from 'recharts';
 import { API_BASE_URL } from '../config/api';
 
 const Dashboard = ({ socket }) => {
@@ -34,7 +48,7 @@ const Dashboard = ({ socket }) => {
   const [userRole, setUserRole] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Patient-specific data
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [activeReminders, setActiveReminders] = useState([]);
@@ -46,7 +60,7 @@ const Dashboard = ({ socket }) => {
     totalPatients: 3,
     todayAppointments: 0,
     lowStockAlerts: 0,
-    monthlyPrescriptions: 0
+    monthlyPrescriptions: 0,
   });
 
   const [patientRegistrationData, setPatientRegistrationData] = useState([
@@ -55,7 +69,7 @@ const Dashboard = ({ socket }) => {
     { name: 'Mar', patients: 5 },
     { name: 'Apr', patients: 4 },
     { name: 'May', patients: 6 },
-    { name: 'Jun', patients: 8 }
+    { name: 'Jun', patients: 8 },
   ]);
 
   const [monthlyAppointmentsData, setMonthlyAppointmentsData] = useState([
@@ -64,13 +78,13 @@ const Dashboard = ({ socket }) => {
     { name: 'Mar', appointments: 12 },
     { name: 'Apr', appointments: 18 },
     { name: 'May', appointments: 14 },
-    { name: 'Jun', appointments: 20 }
+    { name: 'Jun', appointments: 20 },
   ]);
 
   const [riskDistributionData, setRiskDistributionData] = useState([
     { name: 'Low', value: 60, color: '#4caf50' },
     { name: 'Medium', value: 30, color: '#ff9800' },
-    { name: 'High', value: 10, color: '#f44336' }
+    { name: 'High', value: 10, color: '#f44336' },
   ]);
 
   const [monthlyPrescriptionsData, setMonthlyPrescriptionsData] = useState([
@@ -79,7 +93,7 @@ const Dashboard = ({ socket }) => {
     { name: 'Mar', prescriptions: 7 },
     { name: 'Apr', prescriptions: 10 },
     { name: 'May', prescriptions: 9 },
-    { name: 'Jun', prescriptions: 12 }
+    { name: 'Jun', prescriptions: 12 },
   ]);
 
   const [alerts, setAlerts] = useState([]);
@@ -102,7 +116,7 @@ const Dashboard = ({ socket }) => {
     // Simulate receiving real-time alerts
     if (socket) {
       socket.on('systemAlert', (alert) => {
-        setAlerts(prev => [alert, ...prev].slice(0, 5)); // Keep only the latest 5 alerts
+        setAlerts((prev) => [alert, ...prev].slice(0, 5)); // Keep only the latest 5 alerts
       });
     }
 
@@ -122,7 +136,7 @@ const Dashboard = ({ socket }) => {
       }
 
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -144,40 +158,54 @@ const Dashboard = ({ socket }) => {
       const token = getAuthToken();
       if (!token || !currentUser) return;
 
-      const patientId = currentUser.patient?.patient_id || currentUser.patient_id || currentUser.patientId;
+      const patientId =
+        currentUser.patient?.patient_id ||
+        currentUser.patient_id ||
+        currentUser.patientId;
       if (!patientId) return;
 
       // Fetch appointments
       const appointmentsResponse = await fetch(`${API_BASE_URL}/appointments`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (appointmentsResponse.ok) {
         const appointmentsData = await appointmentsResponse.json();
         if (appointmentsData.success) {
           const now = new Date();
-          const upcoming = (appointmentsData.data || []).filter(apt => {
-            const aptDate = new Date(apt.scheduled_start);
-            return aptDate >= now && (apt.status === 'scheduled' || apt.status === 'confirmed');
-          }).sort((a, b) => new Date(a.scheduled_start) - new Date(b.scheduled_start));
+          const upcoming = (appointmentsData.data || [])
+            .filter((apt) => {
+              const aptDate = new Date(apt.scheduled_start);
+              return (
+                aptDate >= now &&
+                (apt.status === 'scheduled' || apt.status === 'confirmed')
+              );
+            })
+            .sort(
+              (a, b) =>
+                new Date(a.scheduled_start) - new Date(b.scheduled_start)
+            );
           setUpcomingAppointments(upcoming);
         }
       }
 
       // Fetch prescriptions
-      const prescriptionsResponse = await fetch(`${API_BASE_URL}/prescriptions?patient_id=${patientId}&status=active`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const prescriptionsResponse = await fetch(
+        `${API_BASE_URL}/prescriptions?patient_id=${patientId}&status=active`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (prescriptionsResponse.ok) {
         const prescriptionsData = await prescriptionsResponse.json();
         if (prescriptionsData.success) {
           setActivePrescriptions(prescriptionsData.data || []);
-          
+
           // Build today's medications from prescriptions
           const today = new Date();
           const todayMeds = [];
-          (prescriptionsData.data || []).forEach(prescription => {
+          (prescriptionsData.data || []).forEach((prescription) => {
             if (prescription.items && prescription.items.length > 0) {
-              prescription.items.forEach(item => {
+              prescription.items.forEach((item) => {
                 // Extract time from frequency or use default
                 let reminderTime = '09:00';
                 if (item.frequency) {
@@ -186,13 +214,13 @@ const Dashboard = ({ socket }) => {
                     reminderTime = timeMatch[0];
                   }
                 }
-                
+
                 todayMeds.push({
                   medication_name: item.medication_name || 'Medication',
                   dosage: item.dosage || '',
                   frequency: item.frequency || 'daily',
                   reminder_time: reminderTime,
-                  prescription_id: prescription.prescription_id
+                  prescription_id: prescription.prescription_id,
                 });
               });
             }
@@ -202,19 +230,22 @@ const Dashboard = ({ socket }) => {
       }
 
       // Fetch reminders (from medication adherence)
-      const remindersResponse = await fetch(`${API_BASE_URL}/prescriptions?patient_id=${patientId}&status=active`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const remindersResponse = await fetch(
+        `${API_BASE_URL}/prescriptions?patient_id=${patientId}&status=active`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (remindersResponse.ok) {
         const remindersData = await remindersResponse.json();
         if (remindersData.success) {
           const activeRemindersList = [];
-          (remindersData.data || []).forEach(prescription => {
+          (remindersData.data || []).forEach((prescription) => {
             if (prescription.items && prescription.items.length > 0) {
-              prescription.items.forEach(item => {
+              prescription.items.forEach((item) => {
                 activeRemindersList.push({
                   medication_name: item.medication_name,
-                  reminder_time: item.frequency || 'daily'
+                  reminder_time: item.frequency || 'daily',
                 });
               });
             }
@@ -231,9 +262,7 @@ const Dashboard = ({ socket }) => {
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardContent sx={{ flexGrow: 1 }}>
         <Box display="flex" alignItems="center">
-          <Box sx={{ mr: 2, color }}>
-            {icon}
-          </Box>
+          <Box sx={{ mr: 2, color }}>{icon}</Box>
           <Box>
             <Typography color="textSecondary" gutterBottom variant="h6">
               {title}
@@ -249,123 +278,185 @@ const Dashboard = ({ socket }) => {
 
   // Patient Dashboard
   if (userRole === 'patient') {
-    const userName = currentUser?.full_name || currentUser?.username || 'Patient';
+    const userName =
+      currentUser?.full_name || currentUser?.username || 'Patient';
     const upcomingCount = upcomingAppointments.length;
     const remindersCount = activeReminders.length;
     const prescriptionsCount = activePrescriptions.length;
 
     return (
-      <Box sx={{ 
-        flexGrow: 1, 
-        p: 3, 
-        backgroundColor: '#F5F5F5',
-        minHeight: '100vh'
-      }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          p: { xs: 2, sm: 3 },
+          backgroundColor: '#F5F5F5',
+          minHeight: '100vh',
+          width: '100%',
+        }}
+      >
         {/* Welcome Header */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: '#333', mb: 1 }}>
+        <Box sx={{ mb: { xs: 3, sm: 4 } }}>
+          <Typography
+            variant="h4"
+            sx={{ fontWeight: 700, color: '#333', mb: 1 }}
+          >
             Welcome back, {userName.split(' ')[0]}!
           </Typography>
-          <Typography variant="body1" sx={{ color: '#666', fontSize: '1.1rem' }}>
+          <Typography
+            variant="body1"
+            sx={{ color: '#666', fontSize: '1.1rem' }}
+          >
             Here's your health summary
           </Typography>
         </Box>
 
         {/* Summary Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={4}>
-            <Card sx={{ 
-              backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              <CardContent sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3 }}>
+        <Grid
+          container
+          spacing={{ xs: 2, sm: 3 }}
+          sx={{ mb: { xs: 3, sm: 4 } }}
+        >
+          <Grid item xs={12} sm={6} md={4}>
+            <Card
+              sx={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <CardContent
+                sx={{
+                  flexGrow: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  p: { xs: 2, sm: 3 },
+                }}
+              >
                 <Box>
-                  <Typography variant="h3" sx={{ fontWeight: 700, color: '#333', mb: 1 }}>
+                  <Typography
+                    variant="h3"
+                    sx={{ fontWeight: 700, color: '#333', mb: 1 }}
+                  >
                     {upcomingCount}
                   </Typography>
                   <Typography variant="body1" sx={{ color: '#666' }}>
                     Upcoming Appointments
                   </Typography>
                 </Box>
-                <Box sx={{ 
-                  width: 48, 
-                  height: 48, 
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '12px',
+                    background:
+                      'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <CalendarIcon sx={{ color: '#FFFFFF', fontSize: 28 }} />
                 </Box>
               </CardContent>
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
-            <Card sx={{ 
-              backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              <CardContent sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3 }}>
+          <Grid item xs={12} sm={6} md={4}>
+            <Card
+              sx={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <CardContent
+                sx={{
+                  flexGrow: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  p: { xs: 2, sm: 3 },
+                }}
+              >
                 <Box>
-                  <Typography variant="h3" sx={{ fontWeight: 700, color: '#333', mb: 1 }}>
+                  <Typography
+                    variant="h3"
+                    sx={{ fontWeight: 700, color: '#333', mb: 1 }}
+                  >
                     {remindersCount}
                   </Typography>
                   <Typography variant="body1" sx={{ color: '#666' }}>
                     Active Reminders
                   </Typography>
                 </Box>
-                <Box sx={{ 
-                  width: 48, 
-                  height: 48, 
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '12px',
+                    background:
+                      'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <BellIcon sx={{ color: '#FFFFFF', fontSize: 28 }} />
                 </Box>
               </CardContent>
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
-            <Card sx={{ 
-              backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              <CardContent sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3 }}>
+          <Grid item xs={12} sm={6} md={4}>
+            <Card
+              sx={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <CardContent
+                sx={{
+                  flexGrow: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  p: { xs: 2, sm: 3 },
+                }}
+              >
                 <Box>
-                  <Typography variant="h3" sx={{ fontWeight: 700, color: '#333', mb: 1 }}>
+                  <Typography
+                    variant="h3"
+                    sx={{ fontWeight: 700, color: '#333', mb: 1 }}
+                  >
                     {prescriptionsCount}
                   </Typography>
                   <Typography variant="body1" sx={{ color: '#666' }}>
                     Active Prescriptions
                   </Typography>
                 </Box>
-                <Box sx={{ 
-                  width: 48, 
-                  height: 48, 
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '12px',
+                    background:
+                      'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <PrescriptionIcon sx={{ color: '#FFFFFF', fontSize: 28 }} />
                 </Box>
               </CardContent>
@@ -374,20 +465,34 @@ const Dashboard = ({ socket }) => {
         </Grid>
 
         {/* Main Content Sections */}
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, sm: 3 }}>
           {/* Upcoming Appointments */}
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ 
-              p: 3, 
-              backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#333' }}>
+          <Grid item xs={12} lg={6}>
+            <Paper
+              sx={{
+                p: { xs: 2, sm: 3 },
+                backgroundColor: '#FFFFFF',
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 2,
+                  flexWrap: 'wrap',
+                  gap: 1,
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 700, color: '#333' }}
+                >
                   Upcoming Appointments
                 </Typography>
                 <Button
@@ -401,7 +506,7 @@ const Dashboard = ({ socket }) => {
                     px: 2,
                     '&:hover': {
                       backgroundColor: '#B82D2D',
-                    }
+                    },
                   }}
                 >
                   Book Appointment
@@ -416,17 +521,32 @@ const Dashboard = ({ socket }) => {
                   {upcomingAppointments.slice(0, 3).map((apt, index) => {
                     const aptDate = new Date(apt.scheduled_start);
                     return (
-                      <Box key={apt.appointment_id || index} sx={{ 
-                        mb: 2, 
-                        p: 2, 
-                        backgroundColor: '#F8F2DE',
-                        borderRadius: '8px'
-                      }}>
-                        <Typography variant="body1" sx={{ fontWeight: 600, color: '#333', mb: 0.5 }}>
+                      <Box
+                        key={apt.appointment_id || index}
+                        sx={{
+                          mb: 2,
+                          p: 2,
+                          backgroundColor: '#F8F2DE',
+                          borderRadius: '8px',
+                        }}
+                      >
+                        <Typography
+                          variant="body1"
+                          sx={{ fontWeight: 600, color: '#333', mb: 0.5 }}
+                        >
                           {apt.facility_name || 'Appointment'}
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#666' }}>
-                          {aptDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at {aptDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                          {aptDate.toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            month: 'long',
+                            day: 'numeric',
+                          })}{' '}
+                          at{' '}
+                          {aptDate.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </Typography>
                       </Box>
                     );
@@ -437,17 +557,22 @@ const Dashboard = ({ socket }) => {
           </Grid>
 
           {/* Today's Medications */}
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ 
-              p: 3, 
-              backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#333', mb: 2 }}>
+          <Grid item xs={12} lg={6}>
+            <Paper
+              sx={{
+                p: { xs: 2, sm: 3 },
+                backgroundColor: '#FFFFFF',
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 700, color: '#333', mb: 2 }}
+              >
                 Today's Medications
               </Typography>
               {todayMedications.length === 0 ? (
@@ -457,28 +582,39 @@ const Dashboard = ({ socket }) => {
               ) : (
                 <Box>
                   {todayMedications.map((med, index) => (
-                    <Box key={index} sx={{ 
-                      mb: 2, 
-                      p: 2, 
-                      backgroundColor: '#F8F2DE',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
+                    <Box
+                      key={index}
+                      sx={{
+                        mb: 2,
+                        p: 2,
+                        backgroundColor: '#F8F2DE',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: 1,
+                      }}
+                    >
                       <Box>
-                        <Typography variant="body1" sx={{ fontWeight: 600, color: '#333', mb: 0.5 }}>
+                        <Typography
+                          variant="body1"
+                          sx={{ fontWeight: 600, color: '#333', mb: 0.5 }}
+                        >
                           {med.medication_name}
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#666' }}>
                           Take at {med.reminder_time} daily
                         </Typography>
                       </Box>
-                      <Typography variant="h6" sx={{ 
-                        color: '#D84040', 
-                        fontWeight: 700,
-                        fontSize: '1.1rem'
-                      }}>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: '#D84040',
+                          fontWeight: 700,
+                          fontSize: '1.1rem',
+                        }}
+                      >
                         {med.reminder_time}
                       </Typography>
                     </Box>
@@ -494,10 +630,17 @@ const Dashboard = ({ socket }) => {
 
   // Admin/Staff Dashboard (existing)
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Grid container spacing={3}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        p: { xs: 2, sm: 3 },
+        width: '100%',
+        overflowX: 'hidden',
+      }}
+    >
+      <Grid container spacing={{ xs: 2, sm: 3 }}>
         {/* Statistics Cards */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} lg={3}>
           <StatCard
             title="Total Patients"
             value={stats.totalPatients}
@@ -505,7 +648,7 @@ const Dashboard = ({ socket }) => {
             color="#1976d2"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} lg={3}>
           <StatCard
             title="Today's Appointments"
             value={stats.todayAppointments}
@@ -513,7 +656,7 @@ const Dashboard = ({ socket }) => {
             color="#4caf50"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} lg={3}>
           <StatCard
             title="Low Stock Alerts"
             value={stats.lowStockAlerts}
@@ -521,7 +664,7 @@ const Dashboard = ({ socket }) => {
             color="#ff9800"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} lg={3}>
           <StatCard
             title="Monthly Prescriptions"
             value={stats.monthlyPrescriptions}
@@ -531,12 +674,12 @@ const Dashboard = ({ socket }) => {
         </Grid>
 
         {/* Charts */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, height: 300 }}>
+        <Grid item xs={12} lg={6}>
+          <Paper sx={{ p: 2, height: { xs: 300, sm: 350, md: 400 } }}>
             <Typography variant="h6" gutterBottom>
               Patient Registration Trend
             </Typography>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="85%">
               <LineChart data={patientRegistrationData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
@@ -549,12 +692,12 @@ const Dashboard = ({ socket }) => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, height: 300 }}>
+        <Grid item xs={12} lg={6}>
+          <Paper sx={{ p: 2, height: { xs: 300, sm: 350, md: 400 } }}>
             <Typography variant="h6" gutterBottom>
               Monthly Appointments
             </Typography>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="85%">
               <BarChart data={monthlyAppointmentsData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
@@ -567,19 +710,21 @@ const Dashboard = ({ socket }) => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, height: 300 }}>
+        <Grid item xs={12} lg={6}>
+          <Paper sx={{ p: 2, height: { xs: 300, sm: 350, md: 400 } }}>
             <Typography variant="h6" gutterBottom>
               Risk Distribution
             </Typography>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="85%">
               <PieChart>
                 <Pie
                   data={riskDistributionData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) =>
+                    `${name} ${(percent * 100).toFixed(0)}%`
+                  }
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -594,19 +739,23 @@ const Dashboard = ({ socket }) => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, height: 300 }}>
+        <Grid item xs={12} lg={6}>
+          <Paper sx={{ p: 2, height: { xs: 300, sm: 350, md: 400 } }}>
             <Typography variant="h6" gutterBottom>
               Monthly Prescriptions
             </Typography>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="85%">
               <LineChart data={monthlyPrescriptionsData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="prescriptions" stroke="#9c27b0" />
+                <Line
+                  type="monotone"
+                  dataKey="prescriptions"
+                  stroke="#9c27b0"
+                />
               </LineChart>
             </ResponsiveContainer>
           </Paper>
@@ -624,7 +773,7 @@ const Dashboard = ({ socket }) => {
                 All systems are running normally.
               </Alert>
             ) : (
-              <TableContainer>
+              <TableContainer sx={{ overflowX: 'auto' }}>
                 <Table>
                   <TableHead>
                     <TableRow>

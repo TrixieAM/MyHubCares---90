@@ -94,7 +94,8 @@ export async function createInAppMessage({
   subject,
   body,
   payload = null,
-  priority = 'normal'
+  priority = 'normal',
+  createNotificationEntry = false // Don't create duplicate notification by default
 }) {
   try {
     const message_id = uuidv4();
@@ -115,8 +116,9 @@ export async function createInAppMessage({
       priority
     ]);
 
-    // Also create entry in notifications table if recipient is a user
-    if (recipient_type === 'user') {
+    // Only create entry in notifications table if explicitly requested
+    // This prevents duplicates - we use in_app_messages as the primary source
+    if (createNotificationEntry && recipient_type === 'user') {
       const notificationResult = await createNotification({
         recipient_id,
         title: subject,
@@ -171,7 +173,7 @@ export async function notifyAppointmentCreated(appointment) {
       minute: '2-digit'
     });
 
-    const subject = `New Appointment Scheduled: ${patientName}`;
+    const subject = `New Appointment`;
     // Message without provider info
     const body = `A new ${appointment_type.replace('_', ' ')} appointment has been scheduled for ${patientName} at ${facilityName} on ${formattedDate}.`;
     
@@ -188,22 +190,23 @@ export async function notifyAppointmentCreated(appointment) {
 
     const notifications = [];
     
-    // NOTIFICATION 1: For ALL STAFF (admin, physician, nurse, case_manager, lab_personnel) - NOT patients
-    // Get all active staff users to notify them
+    // NOTIFICATION 1: For NON-PHYSICIAN/NURSE STAFF (admin, case_manager, lab_personnel) - NOT patients, physicians, or nurses
+    // Physicians and nurses will get Accept/Decline notifications separately (see below)
+    // Get all active staff users EXCEPT physicians and nurses (they get special notifications with Accept/Decline)
     const [allStaff] = await db.query(`
       SELECT user_id, role FROM users 
-      WHERE role IN ('admin', 'physician', 'nurse', 'case_manager', 'lab_personnel')
+      WHERE role IN ('admin', 'case_manager', 'lab_personnel')
         AND status = 'active'
     `);
     
-    console.log('=== Creating notifications for staff ===');
+    console.log('=== Creating notifications for non-physician/nurse staff ===');
     console.log('Staff count:', allStaff.length);
     
     for (const staff of allStaff) {
       // Create notification entry in notifications table
       // Include patient_id so patients can be excluded from seeing these notifications
-      // For staff, set requires_confirmation to true so they see Accept/Decline buttons
-      const staffPayload = { ...payload, requires_confirmation: true };
+      // For staff, set requires_confirmation to false (they don't need Accept/Decline)
+      const staffPayload = { ...payload, requires_confirmation: false };
       const notificationResult = await createNotification({
         recipient_id: staff.user_id,
         patient_id: patient_id, // Include patient_id to exclude patient from seeing this
@@ -238,33 +241,11 @@ export async function notifyAppointmentCreated(appointment) {
 
     if (patientUsers.length > 0) {
       const patientUserId = patientUsers[0].user_id;
-      const patientSubject = `Appointment Request Submitted`;
+      // Simplified, direct notification title
+      const patientSubject = `New Appointment`;
       const patientBody = `Your ${appointment_type.replace('_', ' ')} appointment request for ${formattedDate} at ${facilityName} has been submitted. Waiting for provider confirmation.`;
       
-      // Create notification in notifications table for patient
-      // Set patient_id to NULL so this notification is only visible to the patient
-      const patientNotificationResult = await createNotification({
-        recipient_id: patientUserId,
-        patient_id: null, // NULL so this is only for the patient
-        title: patientSubject,
-        message: patientBody,
-        type: 'appointment', // Use 'appointment' type for appointment notifications
-        payload: JSON.stringify(payload)
-      });
-      
-      if (patientNotificationResult.success) {
-        notifications.push({ 
-          type: 'notification', 
-          user_id: patientUserId, 
-          role: 'patient',
-          notification_id: patientNotificationResult.notification_id 
-        });
-        console.log(`✅ Notification created for patient (${patientUserId}): ${patientNotificationResult.notification_id}`);
-      } else {
-        console.error(`❌ Failed to create notification for patient (${patientUserId}):`, patientNotificationResult.error);
-      }
-      
-      // Also create in-app message for backward compatibility
+      // Only create in-app message for patients (remove duplicate notifications table entry)
       // Ensure payload doesn't have requires_confirmation for patients
       const patientPayload = { ...payload, requires_confirmation: false };
       const patientMessage = await createInAppMessage({
@@ -278,6 +259,9 @@ export async function notifyAppointmentCreated(appointment) {
       });
       if (patientMessage.success) {
         notifications.push(patientMessage);
+        console.log(`✅ In-app message created for patient (${patientUserId})`);
+      } else {
+        console.error(`❌ Failed to create in-app message for patient (${patientUserId}):`, patientMessage.error);
       }
     }
 
@@ -286,26 +270,36 @@ export async function notifyAppointmentCreated(appointment) {
       console.log('=== Notifying Provider ===');
       console.log('Provider ID:', provider_id);
       
-      const providerSubject = `Appointment Confirmation Required: ${patientName}`;
-      // Message without provider info
-      const providerBody = `A new ${appointment_type.replace('_', ' ')} appointment has been scheduled for ${patientName} at ${facilityName} on ${formattedDate}. Please accept or decline this appointment.`;
+      // Get provider role to check if it's a physician or nurse
+      const [providerInfo] = await db.query(`
+        SELECT role FROM users WHERE user_id = ?
+      `, [provider_id]);
       
-      // In-app message for provider
-      const providerMessage = await createInAppMessage({
-        sender_id: null, // System message
-        recipient_id: provider_id,
-        recipient_type: 'user',
-        subject: providerSubject,
-        body: providerBody,
-        payload: { ...payload, requires_confirmation: true },
-        priority: 'high'
-      });
+      const providerRole = providerInfo.length > 0 ? providerInfo[0].role : null;
       
-      if (providerMessage.success) {
-        console.log('Provider notification created successfully:', provider_id);
-        notifications.push(providerMessage);
-      } else {
-        console.error('Failed to create provider notification:', providerMessage.error);
+      // Only notify if provider is physician or nurse (they need Accept/Decline)
+      if (providerRole === 'physician' || providerRole === 'nurse') {
+        const providerSubject = `New Appointment`;
+        // Message without provider info
+        const providerBody = `A new ${appointment_type.replace('_', ' ')} appointment has been scheduled for ${patientName} at ${facilityName} on ${formattedDate}. Please accept or decline this appointment.`;
+        
+        // In-app message for provider
+        const providerMessage = await createInAppMessage({
+          sender_id: null, // System message
+          recipient_id: provider_id,
+          recipient_type: 'user',
+          subject: providerSubject,
+          body: providerBody,
+          payload: { ...payload, requires_confirmation: true },
+          priority: 'high'
+        });
+        
+        if (providerMessage.success) {
+          console.log('Provider notification created successfully:', provider_id);
+          notifications.push(providerMessage);
+        } else {
+          console.error('Failed to create provider notification:', providerMessage.error);
+        }
       }
     }
 
@@ -322,7 +316,7 @@ export async function notifyAppointmentCreated(appointment) {
     console.log('Case managers found:', caseManagers.length);
 
     for (const caseManager of caseManagers) {
-      const cmSubject = `Appointment Confirmation Required: ${patientName}`;
+      const cmSubject = `New Appointment`;
       // Message without provider info
       const cmBody = `A new ${appointment_type.replace('_', ' ')} appointment has been scheduled for ${patientName} at ${facilityName} on ${formattedDate}. Please accept or decline this appointment.`;
       
@@ -347,42 +341,90 @@ export async function notifyAppointmentCreated(appointment) {
       }
     }
     
-    // Also notify all physicians in the facility if no provider is assigned
+    // Also notify all physicians and nurses in the facility if no provider is assigned
     if (!provider_id) {
-      const [physicians] = await db.query(`
-        SELECT user_id FROM users 
-        WHERE role = 'physician' 
+      const [physiciansAndNurses] = await db.query(`
+        SELECT user_id, role FROM users 
+        WHERE role IN ('physician', 'nurse')
         AND (facility_id = ? OR facility_id IS NULL)
         AND status = 'active'
       `, [facility_id]);
       
-      console.log('=== Notifying Physicians (no provider assigned) ===');
-      console.log('Physicians found:', physicians.length);
+      console.log('=== Notifying Physicians and Nurses (no provider assigned) ===');
+      console.log('Physicians and nurses found:', physiciansAndNurses.length);
       
-      for (const physician of physicians) {
-        const physicianSubject = `Appointment Confirmation Required: ${patientName}`;
+      for (const staff of physiciansAndNurses) {
+        const staffSubject = `New Appointment`;
         // Message without provider info
-        const physicianBody = `A new ${appointment_type.replace('_', ' ')} appointment has been scheduled for ${patientName} at ${facilityName} on ${formattedDate}. Please accept or decline this appointment.`;
+        const staffBody = `A new ${appointment_type.replace('_', ' ')} appointment has been scheduled for ${patientName} at ${facilityName} on ${formattedDate}. Please accept or decline this appointment.`;
         
-        console.log('Creating notification for physician:', physician.user_id);
+        console.log(`Creating notification for ${staff.role}:`, staff.user_id);
         
-        // In-app message for physician
-        const physicianMessage = await createInAppMessage({
+        // In-app message for physician/nurse
+        const staffMessage = await createInAppMessage({
           sender_id: null,
-          recipient_id: physician.user_id,
+          recipient_id: staff.user_id,
           recipient_type: 'user',
-          subject: physicianSubject,
-          body: physicianBody,
+          subject: staffSubject,
+          body: staffBody,
           payload: { ...payload, requires_confirmation: true },
           priority: 'high'
         });
         
-        if (physicianMessage.success) {
-          console.log('Physician notification created successfully:', physician.user_id);
-          notifications.push(physicianMessage);
+        if (staffMessage.success) {
+          console.log(`${staff.role} notification created successfully:`, staff.user_id);
+          notifications.push(staffMessage);
         } else {
-          console.error('Failed to create physician notification:', physicianMessage.error);
+          console.error(`Failed to create ${staff.role} notification:`, staffMessage.error);
         }
+      }
+    }
+    
+    // Also notify all nurses in the facility (even if provider is assigned, nurses should also see it)
+    // Exclude the provider if they are a nurse (already notified above)
+    const nurseQuery = provider_id 
+      ? `SELECT user_id FROM users 
+         WHERE role = 'nurse'
+         AND (facility_id = ? OR facility_id IS NULL)
+         AND status = 'active'
+         AND user_id != ?`
+      : `SELECT user_id FROM users 
+         WHERE role = 'nurse'
+         AND (facility_id = ? OR facility_id IS NULL)
+         AND status = 'active'`;
+    
+    const [nurses] = await db.query(nurseQuery, provider_id ? [facility_id, provider_id] : [facility_id]);
+    
+    console.log('=== Notifying Nurses ===');
+    console.log('Nurses found:', nurses.length);
+    
+    for (const nurse of nurses) {
+      // Skip if this nurse is already the provider (already notified above)
+      if (nurse.user_id === provider_id) {
+        continue;
+      }
+      
+      const nurseSubject = `New Appointment`;
+      const nurseBody = `A new ${appointment_type.replace('_', ' ')} appointment has been scheduled for ${patientName} at ${facilityName} on ${formattedDate}. Please accept or decline this appointment.`;
+      
+      console.log('Creating notification for nurse:', nurse.user_id);
+      
+      // In-app message for nurse
+      const nurseMessage = await createInAppMessage({
+        sender_id: null,
+        recipient_id: nurse.user_id,
+        recipient_type: 'user',
+        subject: nurseSubject,
+        body: nurseBody,
+        payload: { ...payload, requires_confirmation: true },
+        priority: 'high'
+      });
+      
+      if (nurseMessage.success) {
+        console.log('Nurse notification created successfully:', nurse.user_id);
+        notifications.push(nurseMessage);
+      } else {
+        console.error('Failed to create nurse notification:', nurseMessage.error);
       }
     }
 
@@ -436,8 +478,8 @@ export async function notifyAppointmentProviderAccepted(appointment) {
       minute: '2-digit'
     });
 
-    const subject = `Appointment Confirmation Required`;
-    const body = `Your ${appointment_type.replace('_', ' ')} appointment with ${providerName} at ${facilityName} on ${formattedDate} has been accepted. Please confirm to finalize your appointment.`;
+    const subject = `Appointment Accepted`;
+    const body = `Your ${appointment_type.replace('_', ' ')} appointment with ${providerName} at ${facilityName} on ${formattedDate} has been accepted.`;
     
     const payload = {
       type: 'appointment_pending_confirmation',
@@ -476,18 +518,8 @@ export async function notifyAppointmentProviderAccepted(appointment) {
       });
       notifications.push(patientMessage);
 
-      // Create notification entry for patient
-      const patientNotification = await createNotification({
-        recipient_id: patientUserId,
-        patient_id: null, // NULL so this is only for the patient
-        title: 'Appointment Confirmation Required',
-        message: `Your appointment has been accepted. Please confirm.`,
-        type: 'alert',
-        payload: JSON.stringify(payload)
-      });
-      if (patientNotification.success) {
-        notifications.push(patientNotification);
-      }
+      // Only create in-app message for patient (no duplicate notification entry)
+      // The in-app message is sufficient - no need for duplicate notifications table entry
     }
 
     return { success: true, notifications };
@@ -584,19 +616,9 @@ export async function notifyAppointmentProviderDeclined(appointment, reason = nu
         payload,
         priority: 'high'
       });
-      notifications.push(patientMessage);
-
-      // Create notification entry for patient
-      const patientNotification = await createNotification({
-        recipient_id: patientUserId,
-        patient_id: null, // NULL so this is only for the patient
-        title: 'Appointment Declined',
-        message: reason ? `Your appointment has been declined. Reason: ${reason}` : `Your appointment has been declined. Please contact the facility to reschedule.`,
-        type: 'appointment',
-        payload: JSON.stringify(payload)
-      });
-      if (patientNotification.success) {
-        notifications.push(patientNotification);
+      // Only create in-app message for patient (no duplicate notification entry)
+      if (patientMessage.success) {
+        notifications.push(patientMessage);
       }
     }
 
@@ -608,6 +630,152 @@ export async function notifyAppointmentProviderDeclined(appointment, reason = nu
 }
 
 // Helper function to notify provider and patient that appointment was confirmed
+// Helper function to notify patient when appointment provider or time changes
+export async function notifyAppointmentChanged(appointment, changes) {
+  try {
+    const { appointment_id, patient_id, provider_id, facility_id, scheduled_start, appointment_type } = appointment;
+    
+    // Get patient name
+    const [patients] = await db.query(
+      'SELECT first_name, last_name FROM patients WHERE patient_id = ?',
+      [patient_id]
+    );
+    const patientName = patients.length > 0 
+      ? `${patients[0].first_name} ${patients[0].last_name}`
+      : 'Patient';
+
+    // Get facility name
+    const [facilities] = await db.query(
+      'SELECT facility_name FROM facilities WHERE facility_id = ?',
+      [facility_id]
+    );
+    const facilityName = facilities.length > 0 ? facilities[0].facility_name : 'Facility';
+
+    // Get provider name
+    let providerName = 'Provider';
+    if (provider_id) {
+      const [providers] = await db.query(
+        'SELECT full_name FROM users WHERE user_id = ?',
+        [provider_id]
+      );
+      if (providers.length > 0) {
+        providerName = providers[0].full_name;
+      }
+    }
+
+    // Get old provider name if provider changed
+    let oldProviderName = null;
+    if (changes.providerChanged && changes.oldProviderId) {
+      const [oldProviders] = await db.query(
+        'SELECT full_name FROM users WHERE user_id = ?',
+        [changes.oldProviderId]
+      );
+      if (oldProviders.length > 0) {
+        oldProviderName = oldProviders[0].full_name;
+      }
+    }
+
+    const appointmentDate = new Date(scheduled_start);
+    const formattedDate = appointmentDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    // Build notification message based on what changed
+    let subject = 'Appointment Updated';
+    let body = '';
+    
+    if (changes.providerChanged && changes.timeChanged) {
+      const oldDate = changes.oldScheduledStart ? new Date(changes.oldScheduledStart).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : 'previous time';
+      subject = `Appointment Updated`;
+      body = `Your ${appointment_type.replace('_', ' ')} appointment at ${facilityName} has been updated. `;
+      if (oldProviderName) {
+        body += `Provider changed from ${oldProviderName} to ${providerName}. `;
+      } else {
+        body += `Provider is now ${providerName}. `;
+      }
+      body += `New date and time: ${formattedDate}.`;
+    } else if (changes.providerChanged) {
+      subject = `Appointment Updated`;
+      body = `Your ${appointment_type.replace('_', ' ')} appointment at ${facilityName} on ${formattedDate} has been updated. `;
+      if (oldProviderName) {
+        body += `Provider changed from ${oldProviderName} to ${providerName}.`;
+      } else {
+        body += `Provider is now ${providerName}.`;
+      }
+    } else if (changes.timeChanged) {
+      const oldDate = changes.oldScheduledStart ? new Date(changes.oldScheduledStart).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : 'previous time';
+      subject = `Appointment Updated`;
+      body = `Your ${appointment_type.replace('_', ' ')} appointment at ${facilityName} with ${providerName} has been rescheduled. New date and time: ${formattedDate}.`;
+    }
+
+    const payload = {
+      type: 'appointment_updated',
+      appointment_id,
+      patient_id,
+      provider_id,
+      facility_id,
+      scheduled_start,
+      appointment_type,
+      changes: {
+        providerChanged: changes.providerChanged,
+        timeChanged: changes.timeChanged
+      }
+    };
+
+    // Notify patient
+    const [patientUsers] = await db.query(`
+      SELECT u.user_id 
+      FROM patients p
+      LEFT JOIN users u ON p.created_by = u.user_id OR p.email = u.email
+      WHERE p.patient_id = ?
+      LIMIT 1
+    `, [patient_id]);
+
+    if (patientUsers.length > 0) {
+      const patientUserId = patientUsers[0].user_id;
+      
+      // Create in-app message for patient
+      const patientMessage = await createInAppMessage({
+        sender_id: null,
+        recipient_id: patientUserId,
+        recipient_type: 'user',
+        subject: subject,
+        body: body,
+        payload: JSON.stringify(payload),
+        priority: 'high'
+      });
+      
+      if (patientMessage.success) {
+        console.log('Patient notification created for appointment change:', appointment_id);
+      }
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error notifying appointment change:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function notifyAppointmentPatientConfirmed(appointment) {
   try {
     const { appointment_id, patient_id, provider_id, facility_id, scheduled_start, appointment_type } = appointment;
@@ -664,7 +832,7 @@ export async function notifyAppointmentPatientConfirmed(appointment) {
 
     // Notify provider that patient confirmed
     if (provider_id) {
-      const providerSubject = `Appointment Confirmed: ${patientName}`;
+      const providerSubject = `Appointment Confirmed`;
       const providerBody = `${patientName} has confirmed their ${appointment_type.replace('_', ' ')} appointment at ${facilityName} on ${formattedDate}.`;
       
       // In-app message for provider
@@ -707,7 +875,7 @@ export async function notifyAppointmentPatientConfirmed(appointment) {
       const patientSubject = `Appointment Confirmed`;
       const patientBody = `Your ${appointment_type.replace('_', ' ')} appointment with ${providerName} at ${facilityName} on ${formattedDate} has been confirmed.`;
       
-      // In-app message for patient
+      // Only create in-app message for patient (no duplicate notification entry)
       const patientMessage = await createInAppMessage({
         sender_id: null, // System message
         recipient_id: patientUserId,
@@ -715,21 +883,11 @@ export async function notifyAppointmentPatientConfirmed(appointment) {
         subject: patientSubject,
         body: patientBody,
         payload,
-        priority: 'normal'
+        priority: 'normal',
+        createNotificationEntry: false // Don't create duplicate
       });
-      notifications.push(patientMessage);
-
-      // Create notification entry for patient
-      const patientNotification = await createNotification({
-        recipient_id: patientUserId,
-        patient_id: null, // NULL so this is only for the patient
-        title: 'Appointment Confirmed',
-        message: `Your appointment has been confirmed successfully`,
-        type: 'appointment',
-        payload: JSON.stringify(payload)
-      });
-      if (patientNotification.success) {
-        notifications.push(patientNotification);
+      if (patientMessage.success) {
+        notifications.push(patientMessage);
       }
     }
 

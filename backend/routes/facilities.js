@@ -24,7 +24,10 @@ router.get('/', async (req, res) => {
 
     if (is_active !== undefined) {
       query += ' AND f.is_active = ?';
-      params.push(is_active);
+      // Convert string "1" or "0" to number, or keep as is if already number
+      const isActiveValue = is_active === '1' || is_active === 1 ? 1 : (is_active === '0' || is_active === 0 ? 0 : is_active);
+      params.push(isActiveValue);
+      console.log('Filtering facilities by is_active:', isActiveValue);
     }
 
     if (facility_type) {
@@ -47,6 +50,8 @@ router.get('/', async (req, res) => {
     query += ' ORDER BY f.created_at DESC';
 
     const [facilities] = await db.query(query, params);
+    
+    console.log(`Found ${facilities.length} facilities matching criteria`);
 
     // Parse JSON address field for each facility
     const facilitiesWithParsedAddress = facilities.map((facility) => ({
@@ -57,6 +62,7 @@ router.get('/', async (req, res) => {
           : facility.address,
     }));
 
+    console.log('Returning facilities:', facilitiesWithParsedAddress.length);
     res.json({ success: true, data: facilitiesWithParsedAddress });
   } catch (error) {
     console.error('Error fetching facilities:', error);

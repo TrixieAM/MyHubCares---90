@@ -877,10 +877,33 @@ router.put('/:id', authenticateToken, async (req, res) => {
       WHERE a.appointment_id = ?
     `, [id]);
 
+    const updatedAppointment = updated[0];
+
+    // Check if provider_id or scheduled_start changed and notify patient
+    const providerChanged = provider_id !== undefined && oldData.provider_id !== provider_id;
+    const timeChanged = scheduled_start !== undefined && 
+                        oldData.scheduled_start && 
+                        new Date(oldData.scheduled_start).getTime() !== new Date(scheduled_start).getTime();
+
+    if ((providerChanged || timeChanged) && updatedAppointment) {
+      try {
+        const { notifyAppointmentChanged } = await import('../routes/notifications.js');
+        await notifyAppointmentChanged(updatedAppointment, {
+          providerChanged,
+          timeChanged,
+          oldProviderId: oldData.provider_id,
+          oldScheduledStart: oldData.scheduled_start
+        });
+      } catch (notificationError) {
+        console.error('Error sending appointment change notification (non-fatal):', notificationError);
+        // Don't fail the update if notification fails
+      }
+    }
+
     res.json({
       success: true,
       message: 'Appointment updated successfully',
-      data: updated[0]
+      data: updatedAppointment
     });
   } catch (error) {
     console.error('Error updating appointment:', error);

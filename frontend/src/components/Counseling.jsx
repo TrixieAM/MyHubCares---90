@@ -1,72 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+const API_URL = 'http://localhost:5000/api';
 
 const Counseling = () => {
   const navigate = useNavigate();
 
-  // Initialize with dummy data matching the screenshots
-  const [sessions, setSessions] = useState([
-    {
-      id: 1,
-      patientId: 1,
-      patientName: 'John Doe',
-      sessionDate: '2025-10-22',
-      sessionType: 'Adherence Counseling',
-      duration: 45,
-      topics: [
-        'Medication Adherence',
-        'Side Effect Management',
-        'Lifestyle Modifications',
-      ],
-      notes:
-        'Patient discussed challenges with medication adherence and we set up reminders.',
-      followUpRequired: true,
-      followUpDate: '2025-11-22',
-      counselorId: 1,
-      counselorName: 'Anna Reyes',
-    },
-    {
-      id: 2,
-      patientId: 2,
-      patientName: 'Maria Santos',
-      sessionDate: '2025-10-18',
-      sessionType: 'Mental Health Support',
-      duration: 60,
-      topics: ['Coping Strategies', 'Stigma Management', 'Family Disclosure'],
-      notes:
-        'Patient expressed concerns about stigma and we discussed coping strategies.',
-      followUpRequired: true,
-      followUpDate: '2025-11-01',
-      counselorId: 2,
-      counselorName: 'Dr. James Wilson',
-    },
-  ]);
-
-  const [patients] = useState([
-    { id: 1, name: 'John Doe' },
-    { id: 2, name: 'Maria Santos' },
-    { id: 3, name: 'Robert Chen' },
-    { id: 4, name: 'Emily Johnson' },
-  ]);
-
-  const [counselors] = useState([
-    { id: 1, name: 'Anna Reyes' },
-    { id: 2, name: 'Dr. James Wilson' },
-    { id: 3, name: 'Dr. Sarah Miller' },
-  ]);
-
-  // Users with their names and roles
-  const [users] = useState([
-    { name: 'Admin User', role: 'ADMIN' },
-    { name: 'Dr. Alice Johnson', role: 'PHYSICIAN' },
-    { name: 'Dr. Bob Williams', role: 'PHYSICIAN' },
-    { name: 'Nurse Carol Davis', role: 'NURSE' },
-    { name: 'Manager Frank Wright', role: 'CASE MANAGER' },
-    { name: 'Counselor Eve Miller', role: 'COUNSELOR' },
-  ]);
-
-  // Extract unique roles for the role dropdown
-  const uniqueRoles = [...new Set(users.map((user) => user.role))];
+  const [sessions, setSessions] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [facilities, setFacilities] = useState([]);
+  const [physicians, setPhysicians] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [showModal, setShowModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -74,134 +18,406 @@ const Counseling = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
 
+  // Map display names to database enum values
+  const sessionTypeMap = {
+    'Adherence Counseling': 'adherence',
+    'Mental Health Support': 'mental_health',
+    'Pre-ART Counseling': 'pre_test',
+    'Disclosure Support': 'support',
+    'Family Counseling': 'support',
+    'Substance Abuse': 'other',
+  };
+
+  // Reverse map for display
+  const sessionTypeDisplayMap = {
+    'adherence': 'Adherence Counseling',
+    'mental_health': 'Mental Health Support',
+    'pre_test': 'Pre-ART Counseling',
+    'post_test': 'Post-Test Counseling',
+    'support': 'Support',
+    'other': 'Other',
+  };
+
   const [newSession, setNewSession] = useState({
-    patientId: '',
-    sessionDate: '',
+    patient_id: '',
+    counselor_id: '',
+    facility_id: '',
+    session_date: new Date().toISOString().split('T')[0],
+    session_type: '',
     duration: 45,
-    sessionType: '',
     topics: [],
-    notes: '',
-    followUpRequired: false,
-    followUpDate: '',
-    counselorId: 1,
-    performedByName: 'Admin User',
-    performedByRole: 'ADMIN',
+    session_notes: '',
+    follow_up_required: false,
+    follow_up_date: '',
   });
+
+  // Get auth token
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
+  };
+
+  // Load counseling sessions from API
+  const loadSessions = async () => {
+    try {
+      setLoading(true);
+      const token = getAuthToken();
+      if (!token) {
+        setSessions([]);
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/counseling-sessions`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Counseling Sessions API Response:', data);
+        if (data.success) {
+          console.log('Loaded counseling sessions:', data.sessions?.length || 0);
+          console.log('Sample session:', data.sessions?.[0]);
+          setSessions(data.sessions || []);
+        } else {
+          console.error('API returned success=false:', data);
+          setSessions([]);
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('Failed to load counseling sessions:', response.status, errorData);
+        alert(`Failed to load counseling sessions: ${errorData.message || response.status}`);
+        setSessions([]);
+      }
+    } catch (error) {
+      console.error('Error loading counseling sessions:', error);
+      setSessions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load patients
+  const loadPatients = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/patients`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          console.log('Loaded patients:', data.patients?.length || 0);
+          setPatients(data.patients || []);
+        } else {
+          console.error('API returned success=false for patients:', data);
+        }
+      } else {
+        console.error('Failed to load patients:', response.status);
+      }
+    } catch (error) {
+      console.error('Error loading patients:', error);
+    }
+  };
+
+  // Load facilities
+  const loadFacilities = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        console.warn('No auth token available for loading facilities');
+        setFacilities([]);
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/facilities?is_active=1`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Facilities API response:', data);
+        
+        // Handle different response formats
+        let facilitiesArray = [];
+        if (data.success && data.data && Array.isArray(data.data)) {
+          facilitiesArray = data.data;
+        } else if (data.success && data.facilities && Array.isArray(data.facilities)) {
+          facilitiesArray = data.facilities;
+        } else if (Array.isArray(data)) {
+          facilitiesArray = data;
+        } else if (data && typeof data === 'object') {
+          facilitiesArray = data.facilities || data.data || [];
+        }
+        
+        // Filter to only active facilities if is_active field exists
+        if (facilitiesArray.length > 0 && facilitiesArray[0].hasOwnProperty('is_active')) {
+          facilitiesArray = facilitiesArray.filter(f => f.is_active === 1 || f.is_active === true);
+        }
+        
+        console.log('Loaded facilities:', facilitiesArray.length);
+        setFacilities(facilitiesArray);
+        
+        if (facilitiesArray.length === 0) {
+          console.warn('No active facilities found');
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('Failed to load facilities:', response.status, errorData);
+        setFacilities([]);
+      }
+    } catch (error) {
+      console.error('Error loading facilities:', error);
+      setFacilities([]);
+    }
+  };
+
+  // Load physicians (counselors)
+  const loadPhysicians = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/users/providers`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          console.log('Loaded physicians:', data.providers?.length || 0);
+          setPhysicians(data.providers || []);
+        } else {
+          console.error('API returned success=false for providers:', data);
+        }
+      } else {
+        console.error('Failed to load providers:', response.status);
+      }
+    } catch (error) {
+      console.error('Error loading physicians:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadSessions();
+    loadPatients();
+    loadFacilities();
+    loadPhysicians();
+  }, []);
 
   // Calculate statistics
   const totalSessions = sessions.length;
   const followUpNeeded = sessions.filter(
-    (s) => s.followUpRequired && new Date(s.followUpDate) <= new Date()
+    (s) => s.follow_up_required && s.follow_up_date && new Date(s.follow_up_date) <= new Date()
   ).length;
-  const avgDuration =
-    sessions.length > 0
-      ? Math.round(
-          sessions.reduce((sum, s) => sum + s.duration, 0) / sessions.length
-        )
-      : 0;
+
+  // Calculate average duration
+  const getAvgDuration = (sessions) => {
+    if (sessions.length === 0) return 0;
+    const durations = sessions
+      .map((s) => {
+        try {
+          const notesData = s.session_notes ? JSON.parse(s.session_notes) : {};
+          return notesData.duration || 0;
+        } catch {
+          return 0;
+        }
+      })
+      .filter((d) => d > 0);
+    if (durations.length === 0) return 0;
+    const total = durations.reduce((sum, d) => sum + d, 0);
+    return Math.round(total / durations.length);
+  };
+
+  const avgDuration = getAvgDuration(sessions);
 
   // Filter sessions based on search and type filter
-  const filteredSessions = sessions.filter((session) => {
-    const matchesSearch =
-      session.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.sessionType.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType =
-      typeFilter === 'all' || session.sessionType === typeFilter;
-    return matchesSearch && matchesType;
-  });
+  const filteredSessions = useMemo(() => {
+    let filtered = [...sessions]; // Create a copy
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter((session) => {
+        const patientName = (session.patient_name || '').toLowerCase();
+        const sessionTypeDisplay = (sessionTypeDisplayMap[session.session_type] || session.session_type || '').toLowerCase();
+        const sessionType = (session.session_type || '').toLowerCase();
+        return patientName.includes(searchTerm.toLowerCase()) ||
+               sessionTypeDisplay.includes(searchTerm.toLowerCase()) ||
+               sessionType.includes(searchTerm.toLowerCase());
+      });
+    }
+    
+    // Filter by type
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter((session) => {
+        return session.session_type === sessionTypeMap[typeFilter] ||
+               sessionTypeDisplayMap[session.session_type] === typeFilter;
+      });
+    }
+    
+    console.log('Filtered counseling sessions:', filtered.length, 'out of', sessions.length);
+    return filtered;
+  }, [sessions, searchTerm, typeFilter]);
+
+  // Get topics from session notes
+  const getSessionTopics = (session) => {
+    try {
+      const notesData = session.session_notes ? JSON.parse(session.session_notes) : {};
+      return notesData.topics || [];
+    } catch {
+      return [];
+    }
+  };
+
+  // Get duration from session notes
+  const getSessionDuration = (session) => {
+    try {
+      const notesData = session.session_notes ? JSON.parse(session.session_notes) : {};
+      return notesData.duration || 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  // Check if follow-up is due
+  const isFollowUpDue = (session) => {
+    return session.follow_up_required && 
+           session.follow_up_date && 
+           new Date(session.follow_up_date) <= new Date();
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    if (type === 'checkbox') {
-      if (name === 'topics') {
-        const updatedTopics = [...newSession.topics];
+    if (name === 'follow_up_required') {
+      setNewSession((prev) => ({ ...prev, [name]: checked }));
+    } else if (type === 'checkbox' && name.startsWith('topic_')) {
+      const topicValue = value;
+      setNewSession((prev) => {
+        const topics = prev.topics || [];
         if (checked) {
-          updatedTopics.push(value);
+          return { ...prev, topics: [...topics, topicValue] };
         } else {
-          const index = updatedTopics.indexOf(value);
-          if (index > -1) {
-            updatedTopics.splice(index, 1);
-          }
+          return { ...prev, topics: topics.filter((t) => t !== topicValue) };
         }
-        setNewSession((prev) => ({ ...prev, topics: updatedTopics }));
-      } else {
-        setNewSession((prev) => ({ ...prev, [name]: checked }));
-      }
+      });
+    } else if (type === 'number') {
+      setNewSession((prev) => ({ ...prev, [name]: parseInt(value) || 0 }));
     } else {
       setNewSession((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (
-      newSession.patientId &&
-      newSession.sessionDate &&
-      newSession.sessionType &&
-      newSession.topics.length > 0
-    ) {
-      const patient = patients.find(
-        (p) => p.id === parseInt(newSession.patientId)
-      );
-      const counselor = counselors.find(
-        (c) => c.id === parseInt(newSession.counselorId)
-      );
+    
+    if (!newSession.patient_id || !newSession.counselor_id || !newSession.facility_id || !newSession.session_date || !newSession.session_type) {
+      alert('Please fill in all required fields');
+      return;
+    }
 
-      const newId =
-        sessions.length > 0 ? Math.max(...sessions.map((s) => s.id)) + 1 : 1;
-      const sessionToAdd = {
-        id: newId,
-        patientId: parseInt(newSession.patientId),
-        patientName: patient ? patient.name : 'Unknown',
-        sessionDate: newSession.sessionDate,
-        sessionType: newSession.sessionType,
-        duration: parseInt(newSession.duration),
-        topics: newSession.topics,
-        notes: newSession.notes,
-        followUpRequired: newSession.followUpRequired,
-        followUpDate: newSession.followUpDate,
-        counselorId: parseInt(newSession.counselorId),
-        counselorName: counselor ? counselor.name : 'Unknown',
+    if (!newSession.topics || newSession.topics.length === 0) {
+      alert('Please select at least one topic');
+      return;
+    }
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        alert('Please log in to record counseling sessions');
+        return;
+      }
+
+      // Prepare notes with additional fields
+      const notesData = {
+        duration: newSession.duration || 45,
+        topics: newSession.topics || [],
+        notes: newSession.session_notes || '',
       };
 
-      setSessions([...sessions, sessionToAdd]);
-      setNewSession({
-        patientId: '',
-        sessionDate: '',
-        duration: 45,
-        sessionType: '',
-        topics: [],
-        notes: '',
-        followUpRequired: false,
-        followUpDate: '',
-        counselorId: 1,
-        performedByName: 'Admin User',
-        performedByRole: 'ADMIN',
+      const response = await fetch(`${API_URL}/counseling-sessions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          patient_id: newSession.patient_id,
+          facility_id: newSession.facility_id,
+          session_date: newSession.session_date,
+          session_type: sessionTypeMap[newSession.session_type] || newSession.session_type || 'other',
+          session_notes: JSON.stringify(notesData),
+          follow_up_required: newSession.follow_up_required || false,
+          follow_up_date: newSession.follow_up_required && newSession.follow_up_date ? newSession.follow_up_date : null,
+          counselor_id: newSession.counselor_id || null, // Use selected counselor or current user
+        }),
       });
-      setShowModal(false);
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          console.log('Successfully created counseling session:', data);
+          await loadSessions();
+          setNewSession({
+            patient_id: '',
+            counselor_id: '',
+            facility_id: '',
+            session_date: new Date().toISOString().split('T')[0],
+            session_type: '',
+            duration: 45,
+            topics: [],
+            session_notes: '',
+            follow_up_required: false,
+            follow_up_date: '',
+          });
+          setShowModal(false);
+          alert('Counseling session recorded successfully');
+        } else {
+          console.error('API returned success=false:', data);
+          alert(data.message || 'Failed to record counseling session');
+        }
+      } else {
+        const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('Failed to create counseling session:', response.status, error);
+        alert(error.message || 'Failed to record counseling session');
+      }
+    } catch (error) {
+      console.error('Error creating counseling session:', error);
+      alert('Error creating counseling session');
     }
   };
 
   const handleCancel = () => {
     setNewSession({
-      patientId: '',
-      sessionDate: '',
+      patient_id: '',
+      counselor_id: '',
+      facility_id: '',
+      session_date: new Date().toISOString().split('T')[0],
+      session_type: '',
       duration: 45,
-      sessionType: '',
       topics: [],
-      notes: '',
-      followUpRequired: false,
-      followUpDate: '',
-      counselorId: 1,
-      performedByName: 'Admin User',
-      performedByRole: 'ADMIN',
+      session_notes: '',
+      follow_up_required: false,
+      follow_up_date: '',
     });
     setShowModal(false);
   };
 
   const viewSessionDetails = (sessionId) => {
-    const session = sessions.find((s) => s.id === sessionId);
+    const session = sessions.find((s) => {
+      const sId = s.session_id || s.id;
+      return sId === sessionId;
+    });
     if (session) {
       setSelectedSession(session);
       setShowDetailsModal(true);
@@ -634,53 +850,69 @@ const Counseling = () => {
 
       {/* Session List - Card Layout */}
       <div style={styles.listContainer}>
-        {filteredSessions.map((session) => {
-          const isFollowUpDue =
-            session.followUpRequired &&
-            new Date(session.followUpDate) <= new Date();
-          return (
-            <div key={session.id} style={styles.patientCard}>
-              <div style={styles.patientInfo}>
-                <h3 style={styles.patientName}>{session.patientName}</h3>
-                <div style={styles.patientMeta}>
-                  <span>
-                    📅 {new Date(session.sessionDate).toLocaleDateString()}
-                  </span>
-                  <span>💬 {session.sessionType}</span>
-                  <span>⏱ {session.duration} minutes</span>
-                  {session.followUpRequired && (
+        {loading ? (
+          <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+            Loading sessions...
+          </div>
+        ) : filteredSessions.length > 0 ? (
+          filteredSessions.map((session) => {
+            const sessionId = session.session_id || session.id;
+            const isFollowUpDue =
+              session.follow_up_required &&
+              session.follow_up_date &&
+              new Date(session.follow_up_date) <= new Date();
+            return (
+              <div key={sessionId} style={styles.patientCard}>
+                <div style={styles.patientInfo}>
+                  <h3 style={styles.patientName}>{session.patient_name || 'N/A'}</h3>
+                  <div style={styles.patientMeta}>
                     <span>
-                      🔄 Follow-up:{' '}
-                      {new Date(session.followUpDate).toLocaleDateString()}
+                      📅 {session.session_date ? new Date(session.session_date).toLocaleDateString() : 'N/A'}
                     </span>
+                    <span>💬 {sessionTypeDisplayMap[session.session_type] || session.session_type || 'N/A'}</span>
+                    <span>⏱ {getSessionDuration(session) > 0 ? `${getSessionDuration(session)} minutes` : 'N/A'}</span>
+                    {session.follow_up_required && session.follow_up_date && (
+                      <span>
+                        🔄 Follow-up:{' '}
+                        {new Date(session.follow_up_date).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                  {getSessionTopics(session).length > 0 && (
+                    <p style={styles.patientTopics}>
+                      <strong>Topics:</strong> {getSessionTopics(session).join(', ')}
+                    </p>
                   )}
                 </div>
-                <p style={styles.patientTopics}>
-                  <strong>Topics:</strong> {session.topics.join(', ')}
-                </p>
-              </div>
-              <div style={styles.patientActions}>
-                {isFollowUpDue && (
-                  <span style={styles.badgeWarning}>Follow-up Due</span>
-                )}
-                <button
-                  style={{ ...styles.actionButton, ...styles.primaryButton }}
-                  onClick={() => viewSessionDetails(session.id)}
-                >
-                  View Details
-                </button>
-                {isFollowUpDue && (
+                <div style={styles.patientActions}>
+                  {isFollowUpDue && (
+                    <span style={styles.badgeWarning}>FOLLOW-UP DUE</span>
+                  )}
                   <button
-                    style={{ ...styles.actionButton, ...styles.successButton }}
-                    onClick={() => scheduleFollowUp(session.id)}
+                    style={{ ...styles.actionButton, ...styles.primaryButton }}
+                    onClick={() => viewSessionDetails(sessionId)}
                   >
-                    Schedule
+                    View Details
                   </button>
-                )}
+                  {isFollowUpDue && (
+                    <button
+                      style={{ ...styles.actionButton, ...styles.successButton }}
+                      onClick={() => scheduleFollowUp(sessionId)}
+                    >
+                      Schedule
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        ) : (
+          <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+            {sessions.length === 0 
+              ? 'No counseling sessions found. Check console for API response details.'
+              : `No sessions match your filters. Showing ${sessions.length} total session(s).`}
+          </div>
+        )}
       </div>
 
       {/* Add Session Modal */}
@@ -691,47 +923,84 @@ const Counseling = () => {
               <h2 style={styles.modalTitle}>Record Counseling Session</h2>
             </div>
             <form style={styles.form} onSubmit={handleSubmit}>
-              {/* Form content remains the same */}
+              <div style={styles.formGroup}>
+                <label style={styles.label} htmlFor="patient_id">
+                  Patient <span style={{ color: 'red' }}>*</span>
+                </label>
+                <select
+                  id="patient_id"
+                  name="patient_id"
+                  value={newSession.patient_id}
+                  onChange={handleInputChange}
+                  style={styles.select}
+                  required
+                >
+                  <option value="">Select Patient</option>
+                  {patients.map((patient) => (
+                    <option key={patient.patient_id || patient.id} value={patient.patient_id || patient.id}>
+                      {patient.patient_name || `${patient.first_name || patient.firstName} ${patient.last_name || patient.lastName}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label} htmlFor="counselor_id">
+                  Counselor <span style={{ color: 'red' }}>*</span>
+                </label>
+                <select
+                  id="counselor_id"
+                  name="counselor_id"
+                  value={newSession.counselor_id}
+                  onChange={handleInputChange}
+                  style={styles.select}
+                  required
+                >
+                  <option value="">Select Counselor</option>
+                  {physicians.map((physician) => (
+                    <option key={physician.user_id || physician.id} value={physician.user_id || physician.id}>
+                      {physician.full_name || physician.fullName || `${physician.first_name || physician.firstName || ''} ${physician.last_name || physician.lastName || ''}`.trim() || physician.username}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label} htmlFor="facility_id">
+                  MyHubCares Branch <span style={{ color: 'red' }}>*</span>
+                </label>
+                <select
+                  id="facility_id"
+                  name="facility_id"
+                  value={newSession.facility_id}
+                  onChange={handleInputChange}
+                  style={styles.select}
+                  required
+                >
+                  <option value="">Select MyHubCares Branch</option>
+                  {facilities.map((facility) => (
+                    <option key={facility.facility_id || facility.id} value={facility.facility_id || facility.id}>
+                      {facility.facility_name || facility.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div style={styles.formRow}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label} htmlFor="patientId">
-                    Patient
-                  </label>
-                  <select
-                    id="patientId"
-                    name="patientId"
-                    value={newSession.patientId}
-                    onChange={handleInputChange}
-                    style={styles.select}
-                    required
-                  >
-                    <option value="">Select Patient</option>
-                    {patients.map((patient) => (
-                      <option key={patient.id} value={patient.id}>
-                        {patient.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.label} htmlFor="sessionDate">
-                    Session Date
+                  <label style={styles.label} htmlFor="session_date">
+                    Session Date <span style={{ color: 'red' }}>*</span>
                   </label>
                   <input
                     type="date"
-                    id="sessionDate"
-                    name="sessionDate"
-                    value={newSession.sessionDate}
+                    id="session_date"
+                    name="session_date"
+                    value={newSession.session_date}
                     onChange={handleInputChange}
                     style={styles.input}
                     required
                   />
                 </div>
-              </div>
-              <div style={styles.formRow}>
                 <div style={styles.formGroup}>
                   <label style={styles.label} htmlFor="duration">
-                    Duration (minutes)
+                    Duration (minutes) <span style={{ color: 'red' }}>*</span>
                   </label>
                   <input
                     type="number"
@@ -739,42 +1008,38 @@ const Counseling = () => {
                     name="duration"
                     value={newSession.duration}
                     onChange={handleInputChange}
-                    min="15"
                     style={styles.input}
+                    min="15"
                     required
                   />
                 </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.label} htmlFor="sessionType">
-                    Session Type
-                  </label>
-                  <select
-                    id="sessionType"
-                    name="sessionType"
-                    value={newSession.sessionType}
-                    onChange={handleInputChange}
-                    style={styles.select}
-                    required
-                  >
-                    <option value="">Select Type</option>
-                    <option value="Adherence Counseling">
-                      Adherence Counseling
-                    </option>
-                    <option value="Mental Health Support">
-                      Mental Health Support
-                    </option>
-                    <option value="Pre-ART Counseling">
-                      Pre-ART Counseling
-                    </option>
-                    <option value="Disclosure Support">
-                      Disclosure Support
-                    </option>
-                  </select>
-                </div>
               </div>
               <div style={styles.formGroup}>
-                <label style={styles.label}>Topics Covered</label>
-                <div style={styles.checkboxGroup}>
+                <label style={styles.label} htmlFor="session_type">
+                  Session Type <span style={{ color: 'red' }}>*</span>
+                </label>
+                <select
+                  id="session_type"
+                  name="session_type"
+                  value={newSession.session_type}
+                  onChange={handleInputChange}
+                  style={styles.select}
+                  required
+                >
+                  <option value="">Select Type</option>
+                  <option value="Adherence Counseling">Adherence Counseling</option>
+                  <option value="Mental Health Support">Mental Health Support</option>
+                  <option value="Pre-ART Counseling">Pre-ART Counseling</option>
+                  <option value="Disclosure Support">Disclosure Support</option>
+                  <option value="Family Counseling">Family Counseling</option>
+                  <option value="Substance Abuse">Substance Abuse</option>
+                </select>
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>
+                  Topics Covered <span style={{ color: 'red' }}>*</span>
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {[
                     'Medication Adherence',
                     'Side Effect Management',
@@ -782,11 +1047,13 @@ const Counseling = () => {
                     'Mental Health',
                     'Stigma Management',
                     'Family Disclosure',
+                    'Safer Sex Practices',
+                    'Nutrition'
                   ].map((topic) => (
                     <label key={topic} style={styles.checkboxLabel}>
                       <input
                         type="checkbox"
-                        name="topics"
+                        name={`topic_${topic}`}
                         value={topic}
                         checked={newSession.topics.includes(topic)}
                         onChange={handleInputChange}
@@ -798,16 +1065,17 @@ const Counseling = () => {
                 </div>
               </div>
               <div style={styles.formGroup}>
-                <label style={styles.label} htmlFor="notes">
-                  Session Notes
+                <label style={styles.label} htmlFor="session_notes">
+                  Session Notes <span style={{ color: 'red' }}>*</span>
                 </label>
                 <textarea
-                  id="notes"
-                  name="notes"
-                  value={newSession.notes}
+                  id="session_notes"
+                  name="session_notes"
+                  value={newSession.session_notes}
                   onChange={handleInputChange}
                   placeholder="Document the counseling session..."
                   style={styles.textarea}
+                  rows="4"
                   required
                 />
               </div>
@@ -815,24 +1083,24 @@ const Counseling = () => {
                 <label style={styles.checkboxLabel}>
                   <input
                     type="checkbox"
-                    name="followUpRequired"
-                    checked={newSession.followUpRequired}
+                    name="follow_up_required"
+                    checked={newSession.follow_up_required}
                     onChange={handleInputChange}
                     style={styles.checkboxInput}
                   />
                   Follow-up session required
                 </label>
               </div>
-              {newSession.followUpRequired && (
+              {newSession.follow_up_required && (
                 <div style={styles.formGroup}>
-                  <label style={styles.label} htmlFor="followUpDate">
+                  <label style={styles.label} htmlFor="follow_up_date">
                     Follow-up Date
                   </label>
                   <input
                     type="date"
-                    id="followUpDate"
-                    name="followUpDate"
-                    value={newSession.followUpDate}
+                    id="follow_up_date"
+                    name="follow_up_date"
+                    value={newSession.follow_up_date}
                     onChange={handleInputChange}
                     style={styles.input}
                   />
@@ -868,7 +1136,7 @@ const Counseling = () => {
                 <label style={styles.label}>Patient Name</label>
                 <input
                   type="text"
-                  value={selectedSession.patientName}
+                  value={selectedSession.patient_name || 'N/A'}
                   readOnly
                   style={styles.input}
                 />
@@ -878,7 +1146,7 @@ const Counseling = () => {
                   <label style={styles.label}>Session Date</label>
                   <input
                     type="date"
-                    value={selectedSession.sessionDate}
+                    value={selectedSession.session_date || ''}
                     readOnly
                     style={styles.input}
                   />
@@ -887,7 +1155,7 @@ const Counseling = () => {
                   <label style={styles.label}>Counselor</label>
                   <input
                     type="text"
-                    value={selectedSession.counselorName}
+                    value={selectedSession.counselor_name || selectedSession.counselorName || 'N/A'}
                     readOnly
                     style={styles.input}
                   />
@@ -898,7 +1166,7 @@ const Counseling = () => {
                   <label style={styles.label}>Session Type</label>
                   <input
                     type="text"
-                    value={selectedSession.sessionType}
+                    value={sessionTypeDisplayMap[selectedSession.session_type] || selectedSession.session_type || 'N/A'}
                     readOnly
                     style={styles.input}
                   />
@@ -907,7 +1175,7 @@ const Counseling = () => {
                   <label style={styles.label}>Duration</label>
                   <input
                     type="text"
-                    value={`${selectedSession.duration} minutes`}
+                    value={`${getSessionDuration(selectedSession)} minutes`}
                     readOnly
                     style={styles.input}
                   />
@@ -915,47 +1183,54 @@ const Counseling = () => {
               </div>
               <div style={styles.formGroup}>
                 <label style={styles.label}>Topics Covered</label>
-                <div
-                  style={{
-                    padding: '10px',
-                    border: '1px solid #ced4da',
-                    borderRadius: '5px',
-                    backgroundColor: '#f8f9fa',
-                  }}
-                >
-                  {selectedSession.topics.map((topic, index) => (
-                    <span
-                      key={index}
-                      style={{
-                        display: 'inline-block',
-                        padding: '4px 8px',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        color: '#fff',
-                        backgroundColor: '#007bff',
-                        borderRadius: '4px',
-                        marginRight: '5px',
-                        marginBottom: '5px',
-                      }}
-                    >
-                      {topic}
-                    </span>
-                  ))}
+                <div style={{ padding: '10px', backgroundColor: '#f8f9fa', borderRadius: '5px', minHeight: '40px' }}>
+                  {getSessionTopics(selectedSession).length > 0 ? (
+                    getSessionTopics(selectedSession).map((topic) => (
+                      <span
+                        key={topic}
+                        style={{
+                          display: 'inline-block',
+                          padding: '4px 8px',
+                          margin: '2px',
+                          backgroundColor: '#007bff',
+                          color: 'white',
+                          borderRadius: '3px',
+                          fontSize: '12px',
+                        }}
+                      >
+                        {topic}
+                      </span>
+                    ))
+                  ) : (
+                    <span style={{ color: '#6c757d' }}>No topics recorded</span>
+                  )}
                 </div>
               </div>
               <div style={styles.formGroup}>
                 <label style={styles.label}>Session Notes</label>
                 <textarea
                   rows="4"
-                  value={selectedSession.notes}
+                  value={(() => {
+                    try {
+                      const notesData = selectedSession.session_notes ? JSON.parse(selectedSession.session_notes) : {};
+                      return notesData.notes || selectedSession.session_notes || '';
+                    } catch {
+                      return selectedSession.session_notes || '';
+                    }
+                  })()}
                   readOnly
                   style={styles.textarea}
                 />
               </div>
-              {selectedSession.followUpRequired && (
+              {selectedSession.follow_up_required && (
                 <div style={styles.alertInfo}>
                   <strong>Follow-up Required:</strong>{' '}
-                  {new Date(selectedSession.followUpDate).toLocaleDateString()}
+                  {selectedSession.follow_up_date ? new Date(selectedSession.follow_up_date).toLocaleDateString() : 'N/A'}
+                  {selectedSession.follow_up_reason && (
+                    <div style={{ marginTop: '8px' }}>
+                      <strong>Reason:</strong> {selectedSession.follow_up_reason}
+                    </div>
+                  )}
                 </div>
               )}
               <div style={styles.modalActions}>

@@ -2,44 +2,150 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Search } from 'lucide-react';
 
+const API_URL = 'http://localhost:5000/api';
+
 const Referrals = () => {
   const [referrals, setReferrals] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [facilities, setFacilities] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedReferral, setSelectedReferral] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Dummy referrals data matching the picture exactly
-  const dummyReferrals = [
-    {
-      id: 1,
-      patientName: 'John Doe',
-      fromBranch: 'My Hub Cares Ortigas Main',
-      toBranch: 'My Hub Cares Pasay',
-      referralDate: '10/20/2025',
-      reason: 'Requires specialized treatment for co-infection management',
-      status: 'ACCEPTED',
-      urgency: 'Urgent',
-      notes:
-        'Patient requires specialized care for co-infection management not available at current facility.',
-    },
-    {
-      id: 2,
-      patientName: 'Carlos Rodriguez',
-      fromBranch: 'My Hub Cares Pasay',
-      toBranch: 'My Hub Cares Alabang',
-      referralDate: '10/15/2025',
-      reason: 'Transfer request by patient - moving to Cebu',
-      status: 'ACCEPTED',
-      urgency: 'Routine',
-      notes: 'Patient relocating for work.',
-    },
-  ];
+  // Get auth token
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
+  };
+
+  // Load referrals from API
+  const loadReferrals = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setReferrals([]);
+        setLoading(false);
+        return;
+      }
+
+      const params = new URLSearchParams();
+      if (statusFilter !== 'all') {
+        params.append('status', statusFilter.toLowerCase());
+      }
+
+      const response = await fetch(`${API_URL}/referrals?${params.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setReferrals(data.referrals || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading referrals:', error);
+      setReferrals([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load patients
+  const loadPatients = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/patients`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setPatients(data.patients || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading patients:', error);
+    }
+  };
+
+  // Load facilities
+  const loadFacilities = async () => {
+    try {
+      const token = getAuthToken();
+      
+      // Build headers - facilities route doesn't require auth, but we'll send token if available
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_URL}/facilities?is_active=1`, {
+        headers: headers,
+      });
+
+      console.log('Facilities fetch response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to fetch facilities:', response.status, response.statusText);
+        console.error('Error response body:', errorText);
+        try {
+          const errorData = JSON.parse(errorText);
+          console.error('Error details:', errorData);
+        } catch (e) {
+          console.error('Could not parse error response as JSON');
+        }
+        return;
+      }
+
+      const data = await response.json();
+      console.log('Facilities API response:', data);
+      console.log('Response structure check:', {
+        hasSuccess: 'success' in data,
+        successValue: data.success,
+        hasData: 'data' in data,
+        dataType: Array.isArray(data.data) ? 'array' : typeof data.data,
+        dataLength: Array.isArray(data.data) ? data.data.length : 'N/A',
+      });
+      
+      if (data.success && Array.isArray(data.data)) {
+        // API returns { success: true, data: [...] }
+        const facilitiesList = data.data || [];
+        console.log('Loaded facilities:', facilitiesList.length);
+        console.log('First facility sample:', facilitiesList[0]);
+        setFacilities(facilitiesList);
+      } else if (data.success && Array.isArray(data.facilities)) {
+        // Fallback: in case API returns { success: true, facilities: [...] }
+        console.log('Using fallback: facilities property');
+        setFacilities(data.facilities || []);
+      } else {
+        console.error('API returned unexpected structure:', data);
+        setFacilities([]);
+      }
+    } catch (error) {
+      console.error('Error loading facilities:', error);
+      console.error('Error stack:', error.stack);
+      setFacilities([]);
+    }
+  };
 
   useEffect(() => {
-    setReferrals(dummyReferrals);
-  }, []);
+    loadReferrals();
+    loadPatients();
+    loadFacilities();
+  }, [statusFilter]);
 
   const handleViewDetails = (referral) => {
     setSelectedReferral(referral);
@@ -51,7 +157,26 @@ const Referrals = () => {
   };
 
   const renderReferralList = () => {
-    if (referrals.length === 0) {
+    let filtered = referrals;
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter((r) => {
+        const patientName = (r.patient_name || '').toLowerCase();
+        const reason = (r.referral_reason || '').toLowerCase();
+        return patientName.includes(searchTerm.toLowerCase()) || reason.includes(searchTerm.toLowerCase());
+      });
+    }
+
+    if (loading) {
+      return (
+        <p style={{ color: '#6c757d', textAlign: 'center', padding: '20px' }}>
+          Loading referrals...
+        </p>
+      );
+    }
+
+    if (filtered.length === 0) {
       return (
         <p style={{ color: '#6c757d', textAlign: 'center', padding: '20px' }}>
           No referrals found
@@ -59,9 +184,9 @@ const Referrals = () => {
       );
     }
 
-    return referrals.map((referral) => (
+    return filtered.map((referral) => (
       <div
-        key={referral.id}
+        key={referral.referral_id || referral.id}
         style={{
           background: 'white',
           padding: '16px',
@@ -87,7 +212,7 @@ const Referrals = () => {
                 fontWeight: '500',
               }}
             >
-              {referral.patientName}
+              {referral.patient_name || 'N/A'}
             </h3>
             <div
               style={{
@@ -98,13 +223,13 @@ const Referrals = () => {
               }}
             >
               <div style={{ color: '#0d6efd', fontSize: '14px' }}>
-                From: {referral.fromBranch}
+                From: {referral.from_facility_name || 'N/A'}
               </div>
               <div style={{ color: '#0d6efd', fontSize: '14px' }}>
-                To: {referral.toBranch}
+                To: {referral.to_facility_name || 'N/A'}
               </div>
               <div style={{ color: '#6c757d', fontSize: '14px' }}>
-                📅 {referral.referralDate}
+                📅 {referral.referred_at ? new Date(referral.referred_at).toLocaleDateString() : 'N/A'}
               </div>
             </div>
             <div
@@ -114,7 +239,7 @@ const Referrals = () => {
                 fontSize: '14px',
               }}
             >
-              Reason: {referral.reason}
+              Reason: {referral.referral_reason || 'N/A'}
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -128,7 +253,7 @@ const Referrals = () => {
                 color: '#0f5132',
               }}
             >
-              {referral.status}
+              {referral.status?.toUpperCase() || 'PENDING'}
             </span>
             <button
               onClick={() => handleViewDetails(referral)}
@@ -182,6 +307,11 @@ const Referrals = () => {
           </h2>
           <p style={{ margin: '0', color: '#6c757d', fontSize: '14px' }}>
             Manage patient referrals and care coordination
+            {facilities.length > 0 && (
+              <span style={{ marginLeft: '8px', color: '#0d6efd' }}>
+                ({facilities.length} {facilities.length === 1 ? 'branch' : 'branches'} available)
+              </span>
+            )}
           </p>
         </div>
         <button
@@ -259,7 +389,15 @@ const Referrals = () => {
 
       {/* Create Referral Modal */}
       {showCreateModal && (
-        <CreateReferralModal onClose={() => setShowCreateModal(false)} />
+        <CreateReferralModal 
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            setShowCreateModal(false);
+            loadReferrals();
+          }}
+          patients={patients}
+          facilities={facilities}
+        />
       )}
 
       {/* Referral Details Modal */}
@@ -273,7 +411,81 @@ const Referrals = () => {
   );
 };
 
-const CreateReferralModal = ({ onClose }) => {
+const CreateReferralModal = ({ onClose, onSuccess, patients = [], facilities = [] }) => {
+  const [formData, setFormData] = useState({
+    patient_id: '',
+    from_facility_id: '',
+    to_facility_id: '',
+    referral_reason: '',
+    urgency: 'routine',
+    clinical_notes: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Debug: Log facilities when modal opens
+  React.useEffect(() => {
+    console.log('CreateReferralModal - Facilities received:', facilities.length, facilities);
+  }, [facilities]);
+
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    if (!formData.patient_id || !formData.from_facility_id || !formData.to_facility_id || !formData.referral_reason) {
+      setError('Please fill in all required fields');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError('Please log in to create referrals');
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/referrals`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          patient_id: formData.patient_id,
+          from_facility_id: formData.from_facility_id,
+          to_facility_id: formData.to_facility_id,
+          referral_reason: formData.referral_reason,
+          urgency: formData.urgency,
+          clinical_notes: formData.clinical_notes || null,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          onSuccess();
+        } else {
+          setError(data.message || 'Failed to create referral');
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to create referral');
+      }
+    } catch (err) {
+      console.error('Error creating referral:', err);
+      setError('Error creating referral');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -323,7 +535,22 @@ const CreateReferralModal = ({ onClose }) => {
           </button>
         </div>
 
-        <form>
+        <form onSubmit={handleSubmit}>
+          {error && (
+            <div style={{ marginBottom: '16px', padding: '12px', background: '#f8d7da', color: '#721c24', borderRadius: '4px' }}>
+              {error}
+            </div>
+          )}
+          {facilities.length === 0 && (
+            <div style={{ marginBottom: '16px', padding: '12px', background: '#fff3cd', color: '#856404', borderRadius: '4px', fontSize: '14px' }}>
+              ⚠️ No facilities available. Please ensure facilities are added to the system.
+            </div>
+          )}
+          {facilities.length > 0 && (
+            <div style={{ marginBottom: '16px', padding: '8px 12px', background: '#d1e7dd', color: '#0f5132', borderRadius: '4px', fontSize: '14px' }}>
+              ✓ {facilities.length} {facilities.length === 1 ? 'branch' : 'branches'} available
+            </div>
+          )}
           <div style={{ marginBottom: '16px' }}>
             <label
               style={{
@@ -333,9 +560,12 @@ const CreateReferralModal = ({ onClose }) => {
                 fontSize: '14px',
               }}
             >
-              Patient
+              Patient <span style={{ color: 'red' }}>*</span>
             </label>
             <select
+              value={formData.patient_id}
+              onChange={(e) => setFormData({ ...formData, patient_id: e.target.value })}
+              required
               style={{
                 width: '100%',
                 padding: '8px 12px',
@@ -345,9 +575,11 @@ const CreateReferralModal = ({ onClose }) => {
               }}
             >
               <option value="">Select patient</option>
-              <option value="John Doe">John Doe</option>
-              <option value="Maria Santos">Maria Santos</option>
-              <option value="Carlos Rodriguez">Carlos Rodriguez</option>
+              {patients.map((p) => (
+                <option key={p.patient_id || p.id} value={p.patient_id || p.id}>
+                  {p.patient_name || `${p.first_name || p.firstName} ${p.last_name || p.lastName}`}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -361,9 +593,12 @@ const CreateReferralModal = ({ onClose }) => {
                   fontSize: '14px',
                 }}
               >
-                From MyHubCares Branch
+                From MyHubCares Branch <span style={{ color: 'red' }}>*</span>
               </label>
               <select
+                value={formData.from_facility_id}
+                onChange={(e) => setFormData({ ...formData, from_facility_id: e.target.value })}
+                required
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -373,13 +608,15 @@ const CreateReferralModal = ({ onClose }) => {
                 }}
               >
                 <option value="">Select branch</option>
-                <option value="My Hub Cares Ortigas Main">
-                  My Hub Cares Ortigas Main
-                </option>
-                <option value="My Hub Cares Pasay">My Hub Cares Pasay</option>
-                <option value="My Hub Cares Alabang">
-                  My Hub Cares Alabang
-                </option>
+                {facilities.length === 0 ? (
+                  <option value="" disabled>No branches available</option>
+                ) : (
+                  facilities.map((f) => (
+                    <option key={f.facility_id || f.id} value={f.facility_id || f.id}>
+                      {f.facility_name || f.name || 'Unnamed Branch'}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -392,9 +629,12 @@ const CreateReferralModal = ({ onClose }) => {
                   fontSize: '14px',
                 }}
               >
-                To MyHubCares Branch
+                To MyHubCares Branch <span style={{ color: 'red' }}>*</span>
               </label>
               <select
+                value={formData.to_facility_id}
+                onChange={(e) => setFormData({ ...formData, to_facility_id: e.target.value })}
+                required
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -404,13 +644,15 @@ const CreateReferralModal = ({ onClose }) => {
                 }}
               >
                 <option value="">Select branch</option>
-                <option value="My Hub Cares Ortigas Main">
-                  My Hub Cares Ortigas Main
-                </option>
-                <option value="My Hub Cares Pasay">My Hub Cares Pasay</option>
-                <option value="My Hub Cares Alabang">
-                  My Hub Cares Alabang
-                </option>
+                {facilities.length === 0 ? (
+                  <option value="" disabled>No branches available</option>
+                ) : (
+                  facilities.map((f) => (
+                    <option key={f.facility_id || f.id} value={f.facility_id || f.id}>
+                      {f.facility_name || f.name || 'Unnamed Branch'}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
           </div>
@@ -429,12 +671,15 @@ const CreateReferralModal = ({ onClose }) => {
               </label>
               <input
                 type="date"
+                value={formData.referral_date || new Date().toISOString().split('T')[0]}
+                readOnly
                 style={{
                   width: '100%',
                   padding: '8px 12px',
                   border: '1px solid #ced4da',
                   borderRadius: '4px',
                   fontSize: '14px',
+                  backgroundColor: '#f8f9fa',
                 }}
               />
             </div>
@@ -451,6 +696,8 @@ const CreateReferralModal = ({ onClose }) => {
                 Urgency Level
               </label>
               <select
+                value={formData.urgency}
+                onChange={(e) => setFormData({ ...formData, urgency: e.target.value })}
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -459,9 +706,9 @@ const CreateReferralModal = ({ onClose }) => {
                   fontSize: '14px',
                 }}
               >
-                <option value="Routine">Routine</option>
-                <option value="Urgent">Urgent</option>
-                <option value="Emergency">Emergency</option>
+                <option value="routine">Routine</option>
+                <option value="urgent">Urgent</option>
+                <option value="emergency">Emergency</option>
               </select>
             </div>
           </div>
@@ -475,10 +722,13 @@ const CreateReferralModal = ({ onClose }) => {
                 fontSize: '14px',
               }}
             >
-              Reason for Referral
+              Reason for Referral <span style={{ color: 'red' }}>*</span>
             </label>
             <textarea
               rows="3"
+              value={formData.referral_reason}
+              onChange={(e) => setFormData({ ...formData, referral_reason: e.target.value })}
+              required
               style={{
                 width: '100%',
                 padding: '8px 12px',
@@ -499,10 +749,12 @@ const CreateReferralModal = ({ onClose }) => {
                 fontSize: '14px',
               }}
             >
-              Additional Notes
+              Additional Notes (Clinical Notes)
             </label>
             <textarea
               rows="3"
+              value={formData.clinical_notes}
+              onChange={(e) => setFormData({ ...formData, clinical_notes: e.target.value })}
               style={{
                 width: '100%',
                 padding: '8px 12px',
@@ -538,17 +790,18 @@ const CreateReferralModal = ({ onClose }) => {
             </button>
             <button
               type="submit"
+              disabled={loading}
               style={{
                 padding: '8px 16px',
-                background: '#0d6efd',
+                background: loading ? '#6c757d' : '#0d6efd',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
-                cursor: 'pointer',
+                cursor: loading ? 'not-allowed' : 'pointer',
                 fontSize: '14px',
               }}
             >
-              Create Referral
+              {loading ? 'Creating...' : 'Create Referral'}
             </button>
           </div>
         </form>
@@ -629,7 +882,7 @@ const ReferralDetailsModal = ({ referral, onClose }) => {
                 fontSize: '14px',
               }}
             >
-              {referral.patientName}
+              {referral.patient_name || 'N/A'}
             </div>
           </div>
 
@@ -655,7 +908,7 @@ const ReferralDetailsModal = ({ referral, onClose }) => {
                   fontSize: '14px',
                 }}
               >
-                {referral.fromBranch}
+                {referral.from_facility_name || 'N/A'}
               </div>
             </div>
 
@@ -680,7 +933,7 @@ const ReferralDetailsModal = ({ referral, onClose }) => {
                   fontSize: '14px',
                 }}
               >
-                {referral.toBranch}
+                {referral.to_facility_name || 'N/A'}
               </div>
             </div>
           </div>
@@ -707,7 +960,7 @@ const ReferralDetailsModal = ({ referral, onClose }) => {
                   fontSize: '14px',
                 }}
               >
-                📅 {referral.referralDate}
+                📅 {referral.referred_at ? new Date(referral.referred_at).toLocaleDateString() : 'N/A'}
               </div>
             </div>
 
@@ -742,7 +995,7 @@ const ReferralDetailsModal = ({ referral, onClose }) => {
                     color: '#0f5132',
                   }}
                 >
-                  {referral.status}
+                  {referral.status?.toUpperCase() || 'PENDING'}
                 </span>
               </div>
             </div>
@@ -769,7 +1022,7 @@ const ReferralDetailsModal = ({ referral, onClose }) => {
                 fontSize: '14px',
               }}
             >
-              {referral.urgency}
+              {referral.urgency ? referral.urgency.charAt(0).toUpperCase() + referral.urgency.slice(1) : 'N/A'}
             </div>
           </div>
 
@@ -795,7 +1048,7 @@ const ReferralDetailsModal = ({ referral, onClose }) => {
                 minHeight: '60px',
               }}
             >
-              {referral.reason}
+              {referral.referral_reason || 'N/A'}
             </div>
           </div>
 
@@ -809,7 +1062,7 @@ const ReferralDetailsModal = ({ referral, onClose }) => {
                 color: '#6c757d',
               }}
             >
-              Additional Notes
+              Additional Notes (Clinical Notes)
             </label>
             <div
               style={{
@@ -821,7 +1074,7 @@ const ReferralDetailsModal = ({ referral, onClose }) => {
                 minHeight: '60px',
               }}
             >
-              {referral.notes}
+              {referral.clinical_notes || 'N/A'}
             </div>
           </div>
 

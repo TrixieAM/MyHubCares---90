@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Bell, Calendar } from 'lucide-react';
+import { X, Bell, Calendar, Check, XCircle } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 
 const NotificationSystem = ({ socket }) => {
@@ -12,6 +12,7 @@ const NotificationSystem = ({ socket }) => {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [selectedNotification, setSelectedNotification] = useState(null);
     const [loadingAppointment, setLoadingAppointment] = useState(false);
+    const [processingAction, setProcessingAction] = useState(null);
 
     // Get auth token
     const getAuthToken = () => {
@@ -63,44 +64,37 @@ const NotificationSystem = ({ socket }) => {
                 let allNotifications = [];
                 
                 // Process notifications from notifications table
-                if (data.success && data.data?.notifications) {
+                // Note: notifications table doesn't have payload column, so no appointment data here
+                if (data.success && data.data?.notifications && Array.isArray(data.data.notifications)) {
                     const notifs = data.data.notifications.map(notif => {
-                        const appointment_id = notif.appointment_id || null;
-                        const appointment_type = notif.appointment_type || null;
-                        const scheduled_start = notif.scheduled_start || null;
-                        
                         return {
                             id: notif.notification_id,
                             notification_id: notif.notification_id,
                             type: notif.type || 'system',
                             title: notif.title,
                             message: notif.message,
-                            appointment: appointment_id ? {
-                                appointment_id: appointment_id,
-                                appointment_type: appointment_type,
-                                scheduled_start: scheduled_start
-                            } : null,
-                            appointment_id: appointment_id,
+                            appointment: null, // notifications table doesn't store appointment data
+                            appointment_id: null,
                             requires_confirmation: false,
                             decline_reason: null,
                             timestamp: notif.created_at,
                             read: notif.is_read || false,
                             is_read: notif.is_read || false,
                             message_id: notif.notification_id,
-                            patient_id: notif.patient_id // Store patient_id for filtering
+                            patient_id: null
                         };
                     });
                     allNotifications = [...allNotifications, ...notifs];
                 }
                 
                 // Process in-app messages (for backward compatibility)
-                if (data.success && data.data?.in_app_messages) {
+                if (data.success && data.data?.in_app_messages && Array.isArray(data.data.in_app_messages)) {
                     const messages = data.data.in_app_messages.map(msg => {
                         let payload = null;
                         try {
                             payload = typeof msg.payload === 'string' ? JSON.parse(msg.payload) : msg.payload;
                         } catch (e) {
-                            payload = { type: 'appointment' };
+                            payload = null;
                         }
                         
                         return {
@@ -125,18 +119,114 @@ const NotificationSystem = ({ socket }) => {
                     allNotifications = [...allNotifications, ...messages];
                 }
                 
+                // Validate appointments exist before showing notifications
+                // Filter out notifications for appointments that no longer exist
+                const token = getAuthToken();
+                const validationPromises = allNotifications.map(async (notif) => {
+                    // If notification has an appointment_id, verify it exists
+                    if (notif.appointment_id) {
+                        try {
+                            const appointmentResponse = await fetch(`${API_BASE_URL}/appointments/${notif.appointment_id}`, {
+                                headers: { Authorization: `Bearer ${token}` }
+                            });
+                            
+                            // Only include notification if appointment exists
+                            if (appointmentResponse.ok) {
+                                const appointmentData = await appointmentResponse.json();
+                                if (appointmentData.success && appointmentData.data) {
+                                    // Include appointment status in notification
+                                    return {
+                                        ...notif,
+                                        appointment: notif.appointment ? {
+                                            ...notif.appointment,
+                                            status: appointmentData.data.status
+                                        } : null,
+                                        appointment_status: appointmentData.data.status
+                                    };
+                                }
+                            }
+                            // Appointment doesn't exist, return null to filter out
+                            return null;
+                        } catch (error) {
+                            // On error checking appointment, filter out to be safe
+                            console.warn('Error validating appointment for notification:', error);
+                            return null;
+                        }
+                    } else {
+                        // No appointment_id, include notification as-is
+                        return notif;
+                    }
+                });
+                
+                // Wait for all validations to complete in parallel
+                const validationResults = await Promise.all(validationPromises);
+                const validatedNotifications = validationResults.filter(notif => notif !== null);
+                
+                // Aggressive deduplication: keep only ONE notification per appointment_id
+                // Prefer in_app_messages (has message_id) over notifications table
+                const seenAppointments = new Map();
+                const deduplicatedNotifications = [];
+                
+                // Separate notifications by source: in_app_messages vs notifications table
+                const inAppMessages = validatedNotifications.filter(n => n.message_id);
+                const tableNotifications = validatedNotifications.filter(n => !n.message_id);
+                
+                // First, add all in_app_messages (preferred source)
+                for (const notif of inAppMessages) {
+                    if (notif.appointment_id) {
+                        const key = notif.appointment_id;
+                        if (!seenAppointments.has(key)) {
+                            seenAppointments.set(key, notif);
+                            deduplicatedNotifications.push(notif);
+                        }
+                    } else {
+                        // For notifications without appointment_id, deduplicate by title + message
+                        const key = `${notif.title || ''}_${notif.message?.substring(0, 50) || ''}`;
+                        if (!seenAppointments.has(key)) {
+                            seenAppointments.set(key, notif);
+                            deduplicatedNotifications.push(notif);
+                        }
+                    }
+                }
+                
+                // Then, only add notifications table entries if we don't already have that appointment_id
+                for (const notif of tableNotifications) {
+                    if (notif.appointment_id) {
+                        const key = notif.appointment_id;
+                        if (!seenAppointments.has(key)) {
+                            seenAppointments.set(key, notif);
+                            deduplicatedNotifications.push(notif);
+                        }
+                    } else {
+                        // For notifications without appointment_id, deduplicate by title + message
+                        const key = `${notif.title || ''}_${notif.message?.substring(0, 50) || ''}`;
+                        if (!seenAppointments.has(key)) {
+                            seenAppointments.set(key, notif);
+                            deduplicatedNotifications.push(notif);
+                        }
+                    }
+                }
+                
                 // Sort by timestamp (newest first)
-                allNotifications.sort((a, b) => {
+                deduplicatedNotifications.sort((a, b) => {
                     const dateA = new Date(a.timestamp || a.created_at || 0);
                     const dateB = new Date(b.timestamp || b.created_at || 0);
                     return dateB - dateA;
                 });
                 
-                setNotifications(allNotifications);
-                setUnreadCount(allNotifications.filter(n => !n.read && !n.is_read).length);
+                // Set notifications - only validated and deduplicated ones
+                setNotifications(deduplicatedNotifications);
+                setUnreadCount(deduplicatedNotifications.filter(n => !n.read && !n.is_read).length);
+            } else {
+                // If API call fails, clear notifications
+                setNotifications([]);
+                setUnreadCount(0);
             }
         } catch (error) {
             console.error('Error fetching notifications:', error);
+            // On error, clear notifications
+            setNotifications([]);
+            setUnreadCount(0);
         }
     };
 
@@ -308,15 +398,47 @@ const NotificationSystem = ({ socket }) => {
         setNotifications(prev => prev.filter(n => n.id !== id));
     };
 
+    // Handle appointment confirmation (accept/decline) for physicians and nurses
+    const handleAppointmentAction = async (appointmentId, action, reason = null) => {
+        setProcessingAction(appointmentId);
+        try {
+            const token = getAuthToken();
+            const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}/${action}`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: action === 'decline' ? JSON.stringify({ reason: reason || 'No reason provided' }) : undefined
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                await fetchNotifications();
+                alert(action === 'accept' ? 'Appointment accepted successfully' : 'Appointment declined');
+            } else {
+                alert(data.message || `Failed to ${action} appointment`);
+            }
+        } catch (error) {
+            console.error(`Error ${action}ing appointment:`, error);
+            alert(`Error ${action}ing appointment: ${error.message}`);
+        } finally {
+            setProcessingAction(null);
+        }
+    };
+
     const handleNotificationClick = async (notification) => {
         console.log('Notification clicked:', notification);
         console.log('Current user role:', currentUserRole);
         console.log('Has appointment_id:', notification.appointment_id);
         console.log('Notification type:', notification.type);
         
-        // Toggle read status (if unread, mark as read; if read, mark as unread)
+        // Only mark as read if currently unread (don't toggle)
         const isCurrentlyRead = notification.read || notification.is_read;
-        markAsRead(notification.id, !isCurrentlyRead);
+        if (!isCurrentlyRead) {
+            markAsRead(notification.id, true);
+        }
         
         // For appointment notifications, show details modal (view-only)
         if (notification.appointment_id) {
@@ -474,6 +596,30 @@ const NotificationSystem = ({ socket }) => {
                             ) : (
                                 notifications.map((notification) => {
                                     const isClickable = true; // All notifications are clickable now
+                                    // Show Accept/Decline buttons for physicians and nurses when requires_confirmation is true
+                                    // But disable if appointment is already accepted/confirmed (not 'scheduled' - that's the initial state)
+                                    const appointmentStatus = notification.appointment_status || notification.appointment?.status;
+                                    const isAppointmentFinalized = appointmentStatus === 'accepted' || 
+                                                                   appointmentStatus === 'confirmed';
+                                    const requiresAction = (currentUserRole === 'physician' || currentUserRole === 'nurse') &&
+                                                          notification.requires_confirmation && 
+                                                          notification.appointment_id &&
+                                                          (notification.type === 'appointment' || notification.type === 'appointment_created') &&
+                                                          !isAppointmentFinalized;
+                                    
+                                    // Debug logging for Accept/Decline button visibility
+                                    if (notification.appointment_id && (currentUserRole === 'physician' || currentUserRole === 'nurse')) {
+                                        console.log('[NotificationSystem] Button visibility check:', {
+                                            notification_id: notification.id,
+                                            currentUserRole,
+                                            requires_confirmation: notification.requires_confirmation,
+                                            appointment_id: notification.appointment_id,
+                                            notification_type: notification.type,
+                                            appointment_status: appointmentStatus,
+                                            isAppointmentFinalized,
+                                            requiresAction
+                                        });
+                                    }
                                     
                                     return (
                                     <div
@@ -547,7 +693,14 @@ const NotificationSystem = ({ socket }) => {
                                                         lineHeight: '1.5',
                                                     }}
                                                 >
-                                                    {notification.message}
+                                                    {notification.message.includes('has been accepted.') ? (
+                                                        <>
+                                                            {notification.message.split('has been accepted.')[0]}
+                                                            <strong>has been accepted.</strong>
+                                                        </>
+                                                    ) : (
+                                                        notification.message
+                                                    )}
                                                 </p>
                                                 {notification.appointment && (
                                                     <div
@@ -560,15 +713,69 @@ const NotificationSystem = ({ socket }) => {
                                                             color: '#6b7280',
                                                         }}
                                                     >
-                                                        <div>
-                                                            Type: {notification.appointment.appointment_type?.replace('_', ' ').toUpperCase()}
-                                                        </div>
-                                                        <div>
-                                                            Date: {new Date(notification.appointment.scheduled_start).toLocaleDateString()}
-                                                        </div>
-                                                        <div>
-                                                            Time: {new Date(notification.appointment.scheduled_start).toLocaleTimeString()}
-                                                        </div>
+                                                    <div>
+                                                        <strong>Type:</strong> {notification.appointment.appointment_type?.replace('_', ' ').toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <strong>Date:</strong> {new Date(notification.appointment.scheduled_start).toLocaleDateString()}
+                                                    </div>
+                                                    <div>
+                                                        <strong>Time:</strong> {new Date(notification.appointment.scheduled_start).toLocaleTimeString()}
+                                                    </div>
+                                                    </div>
+                                                )}
+                                                {/* Accept/Decline buttons for physicians and nurses */}
+                                                {requiresAction && (
+                                                    <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleAppointmentAction(notification.appointment_id, 'accept');
+                                                            }}
+                                                            disabled={processingAction === notification.appointment_id || isAppointmentFinalized}
+                                                            style={{
+                                                                padding: '6px 12px',
+                                                                background: (processingAction === notification.appointment_id || isAppointmentFinalized) ? '#9ca3af' : '#10b981',
+                                                                color: 'white',
+                                                                border: 'none',
+                                                                borderRadius: '6px',
+                                                                cursor: (processingAction === notification.appointment_id || isAppointmentFinalized) ? 'not-allowed' : 'pointer',
+                                                                fontSize: '12px',
+                                                                fontWeight: '600',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '4px',
+                                                            }}
+                                                        >
+                                                            <Check size={14} />
+                                                            Accept
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const reason = prompt('Please provide a reason for declining:');
+                                                                if (reason !== null) {
+                                                                    handleAppointmentAction(notification.appointment_id, 'decline', reason);
+                                                                }
+                                                            }}
+                                                            disabled={processingAction === notification.appointment_id || isAppointmentFinalized}
+                                                            style={{
+                                                                padding: '6px 12px',
+                                                                background: (processingAction === notification.appointment_id || isAppointmentFinalized) ? '#9ca3af' : '#ef4444',
+                                                                color: 'white',
+                                                                border: 'none',
+                                                                borderRadius: '6px',
+                                                                cursor: (processingAction === notification.appointment_id || isAppointmentFinalized) ? 'not-allowed' : 'pointer',
+                                                                fontSize: '12px',
+                                                                fontWeight: '600',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '4px',
+                                                            }}
+                                                        >
+                                                            <XCircle size={14} />
+                                                            Decline
+                                                        </button>
                                                     </div>
                                                 )}
                                                 {/* Read/Unread toggle button */}

@@ -1,15 +1,7 @@
 // web/src/components/Header.jsx
 import React from 'react';
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Avatar,
-  Box
-} from '@mui/material';
-import {
-  AccountCircle
-} from '@mui/icons-material';
+import { AppBar, Toolbar, Typography, Avatar, Box } from '@mui/material';
+import { AccountCircle } from '@mui/icons-material';
 import { Menu as MenuIcon } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import NotificationSystem from './NotificationSystem';
@@ -18,15 +10,15 @@ import NotificationSystemPatient from './NotificationSystemPatient';
 import logoImage from '../assets/logo.png';
 
 const Logo = () => (
-  <img 
-    src={logoImage} 
-    alt="My Hub Cares Logo" 
-    style={{ 
-      height: '40px', 
-      width: 'auto', 
+  <img
+    src={logoImage}
+    alt="My Hub Cares Logo"
+    style={{
+      height: '40px',
+      width: 'auto',
       marginRight: '10px',
-      objectFit: 'contain'
-    }} 
+      objectFit: 'contain',
+    }}
   />
 );
 
@@ -38,7 +30,7 @@ const pathNames = {
   '/appointments': 'Appointments',
   '/notifications': 'Notifications',
   '/settings': 'Settings',
-  '/profile': 'Profile'
+  '/profile': 'Profile',
 };
 
 const Header = ({ socket }) => {
@@ -74,13 +66,13 @@ const Header = ({ socket }) => {
   };
 
   return (
-    <AppBar 
-      position="fixed" 
-      sx={{ 
+    <AppBar
+      position="fixed"
+      sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
         backgroundColor: '#ffffff',
         color: '#B82132',
-        boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)'
+        boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
       }}
     >
       <Toolbar>
@@ -90,21 +82,19 @@ const Header = ({ socket }) => {
             My Hub Cares
           </Typography>
           <MenuIcon size={20} color="#000000" style={{ margin: '0 30px' }} />
-          <Typography variant="h6" noWrap component="div" color='black'>
+          <Typography variant="h6" noWrap component="div" color="black">
             {getCurrentPageName()}
           </Typography>
         </Box>
-        <Typography variant="body2" sx={{ mr: 2 }}>
-          Real-time system statistics and alerts
-        </Typography>
+
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {userRole === 'patient' ? (
             <NotificationSystemPatient socket={socket} />
           ) : (
             <NotificationSystemStaff socket={socket} />
           )}
-          <Avatar 
-            sx={{ 
+          <Avatar
+            sx={{
               bgcolor: '#D84040',
               ml: 1,
               cursor: 'default',

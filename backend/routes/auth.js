@@ -515,4 +515,118 @@ router.get("/me", authenticateToken, async (req, res) => {
   }
 });
 
+// POST /api/auth/change-password - Change user password
+router.post("/change-password", authenticateToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.user_id;
+
+    // Validate input
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password and new password are required",
+      });
+    }
+
+    // Validate new password strength
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 8 characters long",
+      });
+    }
+
+    // Get user from database
+    const [users] = await db.query(
+      "SELECT user_id, password_hash, full_name, role, username FROM users WHERE user_id = ?",
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const user = users[0];
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password_hash
+    );
+
+    if (!isCurrentPasswordValid) {
+      // Log failed password change attempt
+      await logAudit({
+        user_id: userId,
+        user_name: user.full_name || user.username,
+        user_role: user.role,
+        action: "UPDATE",
+        module: "Authentication",
+        entity_type: "user",
+        entity_id: userId,
+        record_id: userId,
+        change_summary: `Failed password change attempt: Invalid current password for ${user.username}`,
+        ip_address: getClientIp(req),
+        user_agent: req.headers["user-agent"] || "unknown",
+        status: "failed",
+        error_message: "Invalid current password",
+      });
+
+      return res.status(401).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+    }
+
+    // Check if new password is same as current password
+    const isSamePassword = await bcrypt.compare(newPassword, user.password_hash);
+    if (isSamePassword) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be different from current password",
+      });
+    }
+
+    // Hash new password
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    // Update password in database
+    await db.query(
+      "UPDATE users SET password_hash = ?, updated_at = NOW() WHERE user_id = ?",
+      [newPasswordHash, userId]
+    );
+
+    // Log successful password change
+    await logAudit({
+      user_id: userId,
+      user_name: user.full_name || user.username,
+      user_role: user.role,
+      action: "UPDATE",
+      module: "Authentication",
+      entity_type: "user",
+      entity_id: userId,
+      record_id: userId,
+      change_summary: `Password changed successfully for ${user.username}`,
+      ip_address: getClientIp(req),
+      user_agent: req.headers["user-agent"] || "unknown",
+      status: "success",
+    });
+
+    res.json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
 export default router;
