@@ -347,34 +347,6 @@ const HTSSessions = () => {
       backgroundColor: '#f5f5f5',
       minHeight: '100vh',
     },
-    header: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '20px',
-    },
-    headerTitle: {
-      margin: 0,
-      color: '#333',
-      fontSize: '24px',
-      fontWeight: 'bold',
-      marginTop: '70px',
-    },
-    headerSubtitle: {
-      margin: '5px 0 0 0',
-      color: '#666',
-      fontSize: '14px',
-    },
-    recordButton: {
-      backgroundColor: '#007bff',
-      color: 'white',
-      border: 'none',
-      padding: '10px 20px',
-      borderRadius: '5px',
-      fontSize: '14px',
-      cursor: 'pointer',
-      fontWeight: '500',
-    },
     card: {
       backgroundColor: 'white',
       borderRadius: '8px',
@@ -598,17 +570,52 @@ const HTSSessions = () => {
 
   return (
     <div style={styles.pageContainer}>
-      {/* Header */}
-      <div style={styles.header}>
-        <div>
-          <h1 style={styles.headerTitle}>HIV Testing Services (HTS)</h1>
-          <p style={styles.headerSubtitle}>
-            HIV testing sessions and counseling
-          </p>
+      {/* Header - Matching Dashboard Style */}
+      <div style={{ 
+        marginBottom: '30px', 
+        background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+        padding: '30px', 
+        borderRadius: '12px', 
+        boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>
+              HIV Testing Services (HTS)
+            </h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>
+              HIV testing sessions and counseling
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => setShowModal(true)}
+              style={{
+                padding: '10px 16px',
+                background: '#ECDCBF',
+                color: '#A31D1D',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#F8F2DE';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#ECDCBF';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              Record HTS Session
+            </button>
+          </div>
         </div>
-        <button style={styles.recordButton} onClick={() => setShowModal(true)}>
-          Record HTS Session
-        </button>
       </div>
 
       {/* Sessions Card */}
@@ -789,24 +796,22 @@ const HTSSessions = () => {
                         {f.facility_name || f.name}
                       </option>
                     ))}
-                  </select>
-                </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.label} htmlFor="tester_id">
-                    Tester/Counselor <span style={{ color: 'red' }}>*</span>
-                  </label>
-                  <select
-                    id="tester_id"
-                    name="tester_id"
-                    value={newSession.tester_id}
-                    onChange={handleInputChange}
-                    style={styles.select}
-                    required
-                  >
-                    <option value="">Select Tester/Counselor</option>
-                    {physicians.map((physician) => (
-                      <option key={physician.user_id || physician.id} value={physician.user_id || physician.id}>
-                        {physician.full_name || physician.fullName || `${physician.first_name || physician.firstName || ''} ${physician.last_name || physician.lastName || ''}`.trim() || physician.username}
+                    <option value="">My Hub Cares Ortigas Main</option>
+                    {facilities.map((f) => (
+                      <option key={f.facility_id || f.id} value={f.facility_id || f.id}>
+                        {f.facility_name || f.name}
+                      </option>
+                    ))}
+                    <option value="">My Hub Cares Pasay</option>
+                    {facilities.map((f) => (
+                      <option key={f.facility_id || f.id} value={f.facility_id || f.id}>
+                        {f.facility_name || f.name}
+                      </option>
+                    ))}
+                    <option value="">My Hub Cares Alabang</option>
+                    {facilities.map((f) => (
+                      <option key={f.facility_id || f.id} value={f.facility_id || f.id}>
+                        {f.facility_name || f.name}
                       </option>
                     ))}
                   </select>
@@ -828,6 +833,15 @@ const HTSSessions = () => {
                         {ct.type_name || ct.name}
                       </option>
                     ))}
+                    <option value="msm">Males Having Sex With Males</option>
+                    <option value="rfsw">Registered Female Sex Worker</option>
+                    <option value="ffsw">Freelance Female Sex Worker</option>
+                    <option value="transgender">Transgender</option>
+                    <option value="drug_users">Drug Users</option>
+                    <option value="pwid">Person Who Inject Drugs (PWID)</option>
+                    <option value="pregnant">Pregnant</option>
+                    <option value="tb_clients">TB Clients</option>
+                    <option value="others">Others</option>
                   </select>
                 </div>
 
@@ -861,9 +875,6 @@ const HTSSessions = () => {
 
                 <h4>Test Results</h4>
                 <div style={styles.formGroup}>
-                  <label style={styles.label} htmlFor="test_result">
-                    Test Result <span style={{ color: 'red' }}>*</span>
-                  </label>
                   <select
                     id="test_result"
                     name="test_result"
@@ -923,6 +934,21 @@ const HTSSessions = () => {
                     />
                   </div>
                 )}
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label} htmlFor="referral_destination">
+                    Referral Destination
+                  </label>
+                  <input
+                    type="text"
+                    id="referral_destination"
+                    name="referral_destination"
+                    value={newSession.referral_destination}
+                    onChange={handleInputChange}
+                    placeholder="e.g., ART Clinic"
+                    style={styles.input}
+                  />
+                </div>
 
                 <div style={styles.formGroup}>
                   <label style={styles.label} htmlFor="remarks">

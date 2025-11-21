@@ -1,3 +1,4 @@
+// web/src/pages/Education.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -90,7 +91,7 @@ const Education = ({ socket }) => {
     {
       id: 1,
       question: 'What is the difference between HIV and AIDS?',
-      answer: 'HIV (Human Immunodeficiency Virus) is the virus that causes HIV infection. AIDS (Acquired Immunodeficiency Syndrome) is the most advanced stage of HIV infection. HIV attacks and destroys CD4 cells, which are important for the immune system. When the immune system becomes severely damaged, HIV infection progresses to AIDS. Not everyone with HIV will develop AIDS. With proper treatment, people with HIV can live long, healthy lives without ever developing AIDS.',
+      answer: 'HIV (Human Immunodeficiency Virus) is a virus that causes HIV infection. AIDS (Acquired Immunodeficiency Syndrome) is the most advanced stage of HIV infection. HIV attacks and destroys CD4 cells, which are important for the immune system. When the immune system becomes severely damaged, HIV infection progresses to AIDS. Not everyone with HIV will develop AIDS. With proper treatment, people with HIV can live long, healthy lives without ever developing AIDS.',
     },
     {
       id: 2,
@@ -165,7 +166,7 @@ const Education = ({ socket }) => {
   // Get module icon - all icons standardized to same size
   const getModuleIcon = (category) => {
     const iconSize = 50; // Standard size for all icons
-    
+  
     if (category === 'BASICS') {
       // Three stacked squares in green, red, and light blue
       return (
@@ -356,6 +357,8 @@ const Education = ({ socket }) => {
               flexWrap: 'wrap',
               gap: 1,
               // <-- horizontally center all items
+              justifyContent: 'center',
+              width: '100%'
             }}
           >
 
@@ -367,9 +370,9 @@ const Education = ({ socket }) => {
                 flexDirection: 'column',
                 height: '390px',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                border: '1px solid #e0e0e0',
                 borderRadius: '8px',
                 overflow: 'hidden',
-                border: '1px solid #e0e0e0',
                 width: '280px'
               }}
             >
@@ -437,8 +440,8 @@ const Education = ({ socket }) => {
                     }}
                   />
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#666' }}>
-                    <TimeIcon sx={{ fontSize: 16, color: '#666' }} />
-                    <Typography variant="body2" sx={{ fontSize: '12px', color: '#666' }}>
+                    <TimeIcon sx={{ fontSize: 16 }} />
+                    <Typography variant="body2" sx={{ fontSize: '12px' }}>
                       {module.readTime}
                     </Typography>
                   </Box>
@@ -477,7 +480,9 @@ const Education = ({ socket }) => {
           p: 3,
           backgroundColor: 'white',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          borderRadius: '8px',
+          borderRadius: '10px',
+          border: '1px solid #ffff',
+          marginTop: '10px'
         }}
       >
         <Typography
@@ -532,7 +537,9 @@ const Education = ({ socket }) => {
           p: 3,
           backgroundColor: 'white',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          borderRadius: '8px',
+          borderRadius: '10px',
+          border: '1px solid #ffff',
+          marginTop: '10px'
         }}
       >
         <Box
@@ -554,21 +561,6 @@ const Education = ({ socket }) => {
           >
             Community Forum
           </Typography>
-          <Button
-            variant="contained"
-            onClick={() => setShowNewPostModal(true)}
-            sx={{
-              backgroundColor: '#1976d2',
-              color: 'white',
-              textTransform: 'none',
-              fontWeight: 500,
-              '&:hover': {
-                backgroundColor: '#1565c0',
-              },
-            }}
-          >
-            New Post
-          </Button>
         </Box>
 
         <Box
@@ -592,7 +584,7 @@ const Education = ({ socket }) => {
               key={post.id}
               sx={{
                 mb: 2,
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                 borderRadius: '8px',
               }}
             >
@@ -623,6 +615,7 @@ const Education = ({ socket }) => {
                         color: '#666',
                         mb: 2,
                         fontSize: '14px',
+                        lineHeight: 1.6,
                       }}
                     >
                       {post.content}
@@ -641,7 +634,7 @@ const Education = ({ socket }) => {
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#666' }}>
-                        <CalendarIcon sx={{ fontSize: 16 }} />
+                        <CalendarToday sx={{ fontSize: 16 }} />
                         <Typography variant="body2" sx={{ fontSize: '12px' }}>
                           {post.date}
                         </Typography>
@@ -746,22 +739,6 @@ const Education = ({ socket }) => {
               {getModuleIcon(selectedModule.category)}
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
-              <Chip
-                label={selectedModule.category}
-                size="small"
-                sx={{
-                  backgroundColor: '#e3f2fd',
-                  color: '#1976d2',
-                  fontWeight: 600,
-                }}
-              />
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#666' }}>
-                <TimeIcon sx={{ fontSize: 16 }} />
-                <Typography variant="body2">{selectedModule.readTime}</Typography>
-              </Box>
-            </Box>
-
             <Typography
               variant="h6"
               sx={{
@@ -804,45 +781,45 @@ const Education = ({ socket }) => {
                 <li>You are not alone in this journey</li>
               </Box>
             </Box>
-          </Box>
 
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: 2,
-              p: 3,
-              borderTop: '1px solid #e5e7eb',
-            }}
-          >
-            <Button
-              variant="outlined"
-              onClick={() => setShowModuleModal(false)}
+            <Box
               sx={{
-                textTransform: 'none',
-                borderColor: '#d0d0d0',
-                color: '#333',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: 2,
+                p: 3,
+                borderTop: '1px solid #e5e7eb',
               }}
             >
-              Close
-            </Button>
-            <Button
-              variant="contained"
-              onClick={() => {
-                setShowModuleModal(false);
-                setToast({ message: 'Module marked as complete!', type: 'success' });
-              }}
-              sx={{
-                backgroundColor: '#1976d2',
-                color: 'white',
-                textTransform: 'none',
-                '&:hover': {
-                  backgroundColor: '#1565c0',
-                },
-              }}
-            >
-              Mark as Complete
-            </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setShowModuleModal(false)}
+                sx={{
+                  textTransform: 'none',
+                  borderColor: '#d0d0d0',
+                  color: '#333',
+                }}
+              >
+                Close
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setShowModuleModal(false);
+                  setToast({ message: 'Module marked as complete!', type: 'success' });
+                }}
+                sx={{
+                  backgroundColor: '#1976d2',
+                  color: 'white',
+                  textTransform: 'none',
+                  '&:hover': {
+                    backgroundColor: '#1565c0',
+                  },
+                }}
+              >
+                Mark as Complete
+              </Button>
+            </Box>
           </Box>
         </Paper>
       </Box>
@@ -1008,188 +985,223 @@ const Education = ({ socket }) => {
           background: 'rgba(0,0,0,0.5)',
           display: 'flex',
           justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000,
-          p: 2,
-        }}
-      >
-        <Paper
-          sx={{
-            background: 'white',
-            borderRadius: '8px',
-            width: '100%',
-            maxWidth: '700px',
-            maxHeight: '90vh',
-            overflow: 'auto',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          }}
-        >
+              alignItems: 'center',
+              zIndex: 1000,
+              p: 2,
+            }}
+          >
+            <Paper
+              sx={{
+                background: 'white',
+                borderRadius: '8px',
+                width: '100%',
+                maxWidth: '700px',
+                maxHeight: '90vh',
+                overflow: 'auto',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  p: 3,
+                  borderBottom: '1px solid #e5e7eb',
+                }}
+              >
+                <Typography variant="h5" sx={{ fontWeight: 700, color: '#333' }}>
+                  Forum Discussion
+                </Typography>
+                <Button
+                  onClick={() => setShowPostModal(false)}
+                  sx={{
+                    minWidth: 'auto',
+                    p: 1,
+                    color: '#666',
+                    '&:hover': {
+                      backgroundColor: '#f3f4f6',
+                    },
+                  }}
+                >
+                  <CloseIcon />
+                </Button>
+              </Box>
+
+              <Box sx={{ p: 3 }}>
+                <Box
+                  sx={{
+                    p: 2,
+                    backgroundColor: '#e3f2fd',
+                    borderLeft: '4px solid #1976d2',
+                    borderRadius: '4px',
+                    mb: 3,
+                  }}
+                >
+                  <Typography sx={{ color: '#333', fontSize: '14px' }}>
+                    This is a simulated community forum post. In a production environment, this would
+                    display: full discussion thread.
+                  </Typography>
+                </Box>
+                <Typography sx={{ color: '#666' }}>Post content and replies would be displayed here.</Typography>
+              </Box>
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: 2,
+                  p: 3,
+                  borderTop: '1px solid #e5e7eb',
+                }}
+              >
+                <Button
+                  variant="outlined"
+                  onClick={() => setShowPostModal(false)}
+                  sx={{
+                    textTransform: 'none',
+                    borderColor: '#d0d0d0',
+                    color: '#333',
+                  }}
+                >
+                  Close
+                </Button>
+              </Box>
+            </Paper>
+          </Box>
+        );
+      };
+
+      if (loading) {
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+            <Typography>Loading...</Typography>
+          </Box>
+        );
+      }
+
+      return (
+        <div style={{ 
+          flexGrow: 1,
+          padding: '20px', 
+          minHeight: '100vh',
+          marginTop: '80px'
+        }}>
+          <div style={{ 
+            marginBottom: '24px', 
+            background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+            padding: '30px', 
+            borderRadius: '12px', 
+            boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>Education</h2>
+                <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>Learn about HIV management, treatment options, and prevention strategies</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabs Navigation Bar */}
           <Box
             sx={{
               display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              p: 3,
-              borderBottom: '1px solid #e5e7eb',
+              background: '#fffff',
+              padding: '12px 20px',
+              gap: '24px',
+              borderBottom: '1px solid #bdbdbd',
             }}
           >
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#333' }}>
-              Forum Discussion
-            </Typography>
-            <Button
-              onClick={() => setShowPostModal(false)}
+            <Typography
+              onClick={() => setActiveTab('modules')}
               sx={{
-                minWidth: 'auto',
-                p: 1,
-                color: '#666',
+                color: activeTab === 'modules' ? '#1976d2' : '#666',
+                fontWeight: 500,
+                cursor: 'pointer',
+                borderBottom: activeTab === 'modules' ? '2px solid #1976d2' : 'none',
+                paddingBottom: '4px',
                 '&:hover': {
-                  backgroundColor: '#f3f4f6',
+                  color: '#1976d2',
                 },
               }}
             >
-              <CloseIcon />
-            </Button>
-          </Box>
-
-          <Box sx={{ p: 3 }}>
-            <Box
+              Learning Modules
+            </Typography>
+            <Typography
+              onClick={() => setActiveTab('faqs')}
               sx={{
-                p: 2,
-                backgroundColor: '#e3f2fd',
-                borderLeft: '4px solid #1976d2',
-                borderRadius: '4px',
-                mb: 3,
+                color: activeTab === 'faqs' ? '#1976d2' : '#666',
+                fontWeight: 500,
+                cursor: 'pointer',
+                borderBottom: activeTab === 'faqs' ? '2px solid #1976d2' : 'none',
+                paddingBottom: '4px',
+                '&:hover': {
+                  color: '#1976d2',
+                },
               }}
             >
-              <Typography sx={{ color: '#333', fontSize: '14px' }}>
-                This is a simulated community forum post. In a production environment, this would
-                display the full discussion thread.
-              </Typography>
-            </Box>
-            <Typography sx={{ color: '#666' }}>Post content and replies would be displayed here.</Typography>
+              FAQs
+            </Typography>
+            <Typography
+              onClick={() => setActiveTab('forum')}
+              sx={{
+                color: activeTab === 'forum' ? '#1976d2' : '#666',
+                fontWeight: 500,
+                cursor: 'pointer',
+                borderBottom: activeTab === 'forum' ? '2px solid #1976d2' : 'none',
+                paddingBottom: '4px',
+                '&:hover': {
+                  color: '#1976d2',
+                },
+              }}
+            >
+              Community Forum
+            </Typography>
           </Box>
-        </Paper>
-      </Box>
-    );
-  };
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <Typography>Loading...</Typography>
-      </Box>
-    );
-  }
+          {/* Tab Content */}
+          <Box>
+            {activeTab === 'modules' && renderModulesTab()}
+            {activeTab === 'faqs' && renderFAQsTab()}
+            {activeTab === 'forum' && renderForumTab()}
+          </Box>
 
-  return (
-    <Box
-      sx={{
-        flexGrow: 1,
-        p: { xs: 2, sm: 3 },
-        backgroundColor: '#f5f5f5',
-        minHeight: '100vh',
-        marginTop: '100px',
-      }}
-    >
-      {/* Tabs Navigation Bar */}
-      <Box
-        sx={{
-          display: 'flex',
-          background: '#fffff',
-          padding: '12px 20px',
-          gap: '24px',
-          borderBottom: '1px solid #bdbdbd',
-        }}
-      >
-        <Typography
-          onClick={() => setActiveTab('modules')}
-          sx={{
-            color: activeTab === 'modules' ? '#1976d2' : '#666',
-            fontWeight: 500,
-            cursor: 'pointer',
-            borderBottom: activeTab === 'modules' ? '2px solid #1976d2' : 'none',
-            paddingBottom: '4px',
-            '&:hover': {
-              color: '#1976d2',
-            },
-          }}
-        >
-          Learning Modules
-        </Typography>
-        <Typography
-          onClick={() => setActiveTab('faqs')}
-          sx={{
-            color: activeTab === 'faqs' ? '#1976d2' : '#666',
-            fontWeight: 500,
-            cursor: 'pointer',
-            borderBottom: activeTab === 'faqs' ? '2px solid #1976d2' : 'none',
-            paddingBottom: '4px',
-            '&:hover': {
-              color: '#1976d2',
-            },
-          }}
-        >
-          FAQs
-        </Typography>
-        <Typography
-          onClick={() => setActiveTab('forum')}
-          sx={{
-            color: activeTab === 'forum' ? '#1976d2' : '#666',
-            fontWeight: 500,
-            cursor: 'pointer',
-            borderBottom: activeTab === 'forum' ? '2px solid #1976d2' : 'none',
-            paddingBottom: '4px',
-            '&:hover': {
-              color: '#1976d2',
-            },
-          }}
-        >
-          Community Forum
-        </Typography>
-      </Box>
+          {/* Modals */}
+          {renderModuleModal()}
+          {renderNewPostModal()}
+          {renderPostModal()}
 
-      {/* Tab Content */}
-      <Box>
-        {activeTab === 'modules' && renderModulesTab()}
-        {activeTab === 'faqs' && renderFAQsTab()}
-        {activeTab === 'forum' && renderForumTab()}
-      </Box>
+          {/* Toast Notification */}
+          {toast && (
+            <Box
+              sx={{
+                position: 'fixed',
+                bottom: 20,
+                right: 20,
+                backgroundColor:
+                  toast.type === 'success'
+                    ? '#4caf50'
+                    : toast.type === 'error'
+                    ? '#f44336'
+                    : '#1976d2',
+                color: 'white',
+                padding: '16px 20px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                minWidth: '300px',
+                animation: 'slideIn 0.3s ease',
+                zIndex: 9999,
+              }}
+            >
+              {/* Toast icon would go here */}
+              <Typography sx={{ fontSize: '14px' }}>{toast.message}</Typography>
+            </Box>
+          )}
+        </div>
+      );
+    };
 
-      {/* Modals */}
-      {renderModuleModal()}
-      {renderNewPostModal()}
-      {renderPostModal()}
-
-      {/* Toast Notification */}
-      {toast && (
-        <Box
-          sx={{
-            position: 'fixed',
-            bottom: 20,
-            right: 20,
-            backgroundColor:
-              toast.type === 'success'
-                ? '#4caf50'
-                : toast.type === 'error'
-                ? '#f44336'
-                : '#1976d2',
-            color: 'white',
-            padding: '12px 20px',
-            borderRadius: '4px',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            minWidth: '300px',
-            zIndex: 9999,
-          }}
-        >
-          <Typography sx={{ fontSize: '14px' }}>{toast.message}</Typography>
-        </Box>
-      )}
-    </Box>
-  );
-};
-
-export default Education;
-
+    export default Education;

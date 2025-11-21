@@ -1,3 +1,4 @@
+// web/src/components/BranchManagement.jsx
 import React, { useState, useEffect } from 'react';
 import {
   X,
@@ -25,7 +26,6 @@ const BranchManagement = () => {
   const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch branches from API
   // Fetch branches from API
   const fetchBranches = async () => {
     try {
@@ -112,6 +112,8 @@ const BranchManagement = () => {
         province: '',
       },
       regionId: '',
+      regionName: '',
+      regionCode: '',
       contactPerson: '',
       contactNumber: '',
       email: '',
@@ -122,7 +124,19 @@ const BranchManagement = () => {
   };
 
   const handleEditBranch = (branch) => {
-    setSelectedBranch({ ...branch });
+    setSelectedBranch({
+      id: branch.id,
+      branchName: branch.branchName,
+      facilityType: branch.facilityType,
+      address: branch.address,
+      regionId: branch.regionId,
+      regionName: branch.regionName,
+      regionCode: branch.regionCode,
+      contactPerson: branch.contactPerson,
+      contactNumber: branch.contactNumber,
+      email: branch.email,
+      isActive: branch.isActive,
+    });
     setModalType('edit');
     setShowModal(true);
   };
@@ -159,74 +173,6 @@ const BranchManagement = () => {
     }
   };
 
-  const handleSaveBranch = async () => {
-    // Validation
-    if (!selectedBranch.branchName || !selectedBranch.facilityType) {
-      setToast({
-        message: 'Please fill in all required fields',
-        type: 'error',
-      });
-      return;
-    }
-
-    try {
-      const payload = {
-        facility_name: selectedBranch.branchName,
-        facility_type: selectedBranch.facilityType,
-        address: selectedBranch.address,
-        region_id: selectedBranch.regionId || null,
-        contact_person: selectedBranch.contactPerson,
-        contact_number: selectedBranch.contactNumber,
-        email: selectedBranch.email,
-        is_active: selectedBranch.isActive ? 1 : 0,
-      };
-
-      let response;
-      if (modalType === 'add') {
-        response = await fetch(`${API_URL}/facilities`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        response = await fetch(`${API_URL}/facilities/${selectedBranch.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        setToast({
-          message:
-            modalType === 'add'
-              ? 'Branch added successfully.'
-              : 'Branch updated successfully.',
-          type: 'success',
-        });
-        setShowModal(false);
-        fetchBranches(); // Refresh list
-      } else {
-        setToast({
-          message: data.message || 'Failed to save branch',
-          type: 'error',
-        });
-      }
-    } catch (error) {
-      console.error('Error saving branch:', error);
-      setToast({
-        message: 'Failed to save branch',
-        type: 'error',
-      });
-    }
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name.includes('address.')) {
@@ -247,21 +193,16 @@ const BranchManagement = () => {
   };
 
   const getFilteredBranches = () => {
-    let filtered = branches;
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (branch) =>
-          branch.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          branch.contactPerson
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          branch.contactNumber?.includes(searchTerm) ||
-          branch.email?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    return filtered;
+    if (!searchTerm) return branches;
+    return branches.filter(
+      (branch) =>
+        branch.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        branch.contactPerson
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        branch.contactNumber?.includes(searchTerm) ||
+        branch.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   };
 
   const renderBranchList = () => {
@@ -404,7 +345,13 @@ const BranchManagement = () => {
                       <div style={{ fontSize: '14px', color: '#333' }}>
                         {branch.address?.street}
                       </div>
-                      <div style={{ fontSize: '13px', color: '#6c757d' }}>
+                      <div
+                        style={{
+                          fontSize: '13px',
+                          color: '#6c757d',
+                          marginTop: '2px',
+                        }}
+                      >
                         {branch.address?.city}, {branch.address?.province}
                       </div>
                     </div>
@@ -414,7 +361,13 @@ const BranchManagement = () => {
                   <div style={{ fontSize: '14px', color: '#333' }}>
                     {branch.regionName || '-'}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#6c757d' }}>
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      color: '#6c757d',
+                      marginTop: '2px',
+                    }}
+                  >
                     {branch.regionCode || ''}
                   </div>
                 </td>
@@ -430,7 +383,7 @@ const BranchManagement = () => {
                       color="#6c757d"
                       style={{ marginRight: '5px' }}
                     />
-                    <span style={{ fontSize: '14px' }}>
+                    <span style={{ fontSize: '14px', color: '#333' }}>
                       {branch.contactNumber || '-'}
                     </span>
                   </div>
@@ -440,11 +393,11 @@ const BranchManagement = () => {
                     textAlign: 'center',
                     fontWeight: '500',
                     color: branch.isActive === 'Active' ? '#28a745' : '#dc3545',
+                    padding: '8px 0',
                   }}
                 >
                   {branch.isActive}
                 </td>
-
                 <td style={{ padding: '15px' }}>
                   <div
                     style={{
@@ -485,6 +438,7 @@ const BranchManagement = () => {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '4px',
+                        marginLeft: '5px',
                       }}
                       title="Delete"
                     >
@@ -526,8 +480,7 @@ const BranchManagement = () => {
             borderRadius: '8px',
             width: '90%',
             maxWidth: '600px',
-            maxHeight: '80vh',
-            overflow: 'auto',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
           }}
         >
           <div
@@ -538,10 +491,8 @@ const BranchManagement = () => {
               marginBottom: '20px',
             }}
           >
-            <h2 style={{ margin: 0 }}>
-              {modalType === 'add'
-                ? 'Add New MyHubCares Branch'
-                : 'Edit MyHubCares Branch'}
+            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>
+              {modalType === 'add' ? 'Add New Branch' : 'Edit Branch'}
             </h2>
             <button
               onClick={() => setShowModal(false)}
@@ -550,7 +501,6 @@ const BranchManagement = () => {
                 border: 'none',
                 cursor: 'pointer',
                 padding: '5px',
-                borderRadius: '4px',
               }}
             >
               <X size={24} color="#6c757d" />
@@ -570,6 +520,7 @@ const BranchManagement = () => {
                   display: 'block',
                   marginBottom: '5px',
                   fontSize: '14px',
+                  fontWeight: '500',
                 }}
               >
                 Branch Name <span style={{ color: 'red' }}>*</span>
@@ -595,6 +546,7 @@ const BranchManagement = () => {
                   display: 'block',
                   marginBottom: '5px',
                   fontSize: '14px',
+                  fontWeight: '500',
                 }}
               >
                 Facility Type <span style={{ color: 'red' }}>*</span>
@@ -617,12 +569,13 @@ const BranchManagement = () => {
                 <option value="external">External</option>
               </select>
             </div>
-            <div>
+            <div style={{ gridColumn: '1 / -1' }}>
               <label
                 style={{
                   display: 'block',
                   marginBottom: '5px',
                   fontSize: '14px',
+                  fontWeight: '500',
                 }}
               >
                 Region
@@ -675,6 +628,8 @@ const BranchManagement = () => {
                           setSelectedBranch({
                             ...selectedBranch,
                             regionId: region.id,
+                            regionName: region.name,
+                            regionCode: region.code,
                           });
                           setShowRegionDropdown(false);
                         }}
@@ -704,6 +659,7 @@ const BranchManagement = () => {
                   display: 'block',
                   marginBottom: '5px',
                   fontSize: '14px',
+                  fontWeight: '500',
                 }}
               >
                 Street Address
@@ -729,6 +685,7 @@ const BranchManagement = () => {
                   display: 'block',
                   marginBottom: '5px',
                   fontSize: '14px',
+                  fontWeight: '500',
                 }}
               >
                 City
@@ -754,6 +711,7 @@ const BranchManagement = () => {
                   display: 'block',
                   marginBottom: '5px',
                   fontSize: '14px',
+                  fontWeight: '500',
                 }}
               >
                 Province
@@ -773,12 +731,13 @@ const BranchManagement = () => {
                 placeholder="e.g., Metro Manila"
               />
             </div>
-            <div>
+            <div style={{ gridColumn: '1 / -1' }}>
               <label
                 style={{
                   display: 'block',
                   marginBottom: '5px',
                   fontSize: '14px',
+                  fontWeight: '500',
                 }}
               >
                 Contact Person
@@ -798,12 +757,13 @@ const BranchManagement = () => {
                 placeholder="e.g., Juan Dela Cruz"
               />
             </div>
-            <div>
+            <div style={{ gridColumn: '1 / -1' }}>
               <label
                 style={{
                   display: 'block',
                   marginBottom: '5px',
                   fontSize: '14px',
+                  fontWeight: '500',
                 }}
               >
                 Contact Number
@@ -829,6 +789,7 @@ const BranchManagement = () => {
                   display: 'block',
                   marginBottom: '5px',
                   fontSize: '14px',
+                  fontWeight: '500',
                 }}
               >
                 Email
@@ -848,23 +809,24 @@ const BranchManagement = () => {
                 placeholder="e.g., branch@myhubcares.com"
               />
             </div>
-            <div>
+            <div style={{ gridColumn: '1 / -1' }}>
               <label
                 style={{
                   display: 'block',
                   marginBottom: '5px',
                   fontSize: '14px',
+                  fontWeight: '500',
                 }}
               >
                 Status
               </label>
               <select
                 name="isActive"
-                value={selectedBranch.isActive ? 'Active' : 'Inactive'}
+                value={selectedBranch.isActive}
                 onChange={(e) =>
                   setSelectedBranch({
                     ...selectedBranch,
-                    isActive: e.target.value === 'Active',
+                    isActive: e.target.value,
                   })
                 }
                 style={{
@@ -898,6 +860,7 @@ const BranchManagement = () => {
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
+                fontSize: '14px',
               }}
             >
               Cancel
@@ -911,6 +874,7 @@ const BranchManagement = () => {
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',
+                fontSize: '14px',
               }}
             >
               {modalType === 'add' ? 'Add Branch' : 'Update Branch'}
@@ -922,43 +886,51 @@ const BranchManagement = () => {
   };
 
   return (
-    <div style={{ padding: '20px', paddingTop: '80px' }}>
+    <div style={{ padding: '20px', paddingTop: '100px' }}>
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
           marginBottom: '30px',
+          background: 'linear-gradient(to right, #D84040, #A31D1D)',
+          padding: '30px',
+          borderRadius: '12px',
+          boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)',
         }}
       >
-        <div>
-          <h2 style={{ margin: 0, color: '#333', fontSize: '24px' }}>
-            MyHubCares Branch Management
-          </h2>
-          <p
-            style={{ margin: '5px 0 0 0', color: '#6c757d', fontSize: '14px' }}
-          >
-            Manage MyHubCares clinic branches
-          </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>🏢 MyHubCares Branch Management</h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>Manage MyHubCares clinic branches and locations</p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={handleAddBranch}
+              style={{
+                padding: '10px 16px',
+                background: '#ECDCBF',
+                color: '#A31D1D',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#F8F2DE';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#ECDCBF';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              <Plus size={16} />
+              Add New Branch
+            </button>
+          </div>
         </div>
-        <button
-          onClick={handleAddBranch}
-          style={{
-            padding: '10px 16px',
-            background: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          <Plus size={16} />
-          Add New Branch
-        </button>
       </div>
 
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
@@ -983,6 +955,7 @@ const BranchManagement = () => {
               border: '1px solid #ced4da',
               borderRadius: '4px',
               width: '100%',
+              fontSize: '14px',
             }}
           />
         </div>
@@ -996,14 +969,14 @@ const BranchManagement = () => {
         <div
           style={{
             position: 'fixed',
-            bottom: '20px',
-            right: '20px',
+            bottom: 20,
+            right: 20,
             backgroundColor:
               toast.type === 'success'
-                ? '#28a745'
+                ? '#4caf50'
                 : toast.type === 'error'
-                ? '#dc3545'
-                : '#17a2b8',
+                ? '#f44336'
+                : '#1976d2',
             color: 'white',
             padding: '16px 20px',
             borderRadius: '8px',

@@ -718,50 +718,54 @@ const CareTasks = ({ socket }) => {
   }
 
   return (
-    <div style={{ padding: '20px', paddingTop: '80px', backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
-      {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-        }}
-      >
-        <div>
-          <h2
-            style={{
-              margin: '0 0 4px 0',
-              color: '#212529',
-              fontSize: '24px',
-              fontWeight: '600',
-            }}
-          >
-            Care Tasks
-          </h2>
-          <p style={{ margin: '0', color: '#6c757d', fontSize: '14px' }}>
-            Manage care coordination tasks
-          </p>
+    <div style={{ 
+      padding: '20px', 
+      backgroundColor: 'white', 
+      minHeight: '100vh', 
+      paddingTop: '100px' 
+    }}>
+      <div style={{ 
+        marginBottom: '30px', 
+        background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+        padding: '30px', 
+        borderRadius: '12px', 
+        boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>Care Tasks</h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>Manage care coordination tasks</p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={handleShowAddModal}
+              style={{
+                padding: '10px 16px',
+                background: '#ECDCBF',
+                color: '#A31D1D',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#F8F2DE';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#ECDCBF';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              <Plus size={16} />
+              Create Task
+            </button>
+          </div>
         </div>
-        <button
-          onClick={handleShowAddModal}
-          style={{
-            padding: '8px 16px',
-            background: '#0d6efd',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '400',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          <Plus size={16} />
-          Create Task
-        </button>
       </div>
 
       {/* Search and Filters */}
@@ -1025,7 +1029,7 @@ const CareTasks = ({ socket }) => {
                         </span>
                       </td>
                       <td style={{ padding: '12px', fontSize: '14px' }}>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                           <button
                             onClick={() => handleViewTask(taskId)}
                             style={{
@@ -1928,4 +1932,3 @@ const CareTasks = ({ socket }) => {
 };
 
 export default CareTasks;
-

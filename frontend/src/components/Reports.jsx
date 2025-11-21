@@ -147,38 +147,26 @@ const Reports = ({ socket }) => {
   };
 
   return (
-    <Box
-      sx={{
-        flexGrow: 1,
-        p: { xs: 2, sm: 3 },
-        backgroundColor: '#f5f5f5',
-        minHeight: '100vh',
-      }}
-    >
-      {/* Header Section */}
-            <Box sx={{ mb: 3 }}>
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 700,
-                  color: '#333',
-                  mb: 0.5,
-                  fontSize: { xs: '24px', sm: '28px' },
-                  marginTop: '80px'
-                }}
-              >
-                System Reports
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                  color: '#666',
-                  fontSize: '14px',
-                }}
-              >
-                Comprehensive analytics and visualizations
-              </Typography>
-            </Box>
+    <div style={{ 
+      padding: '20px', 
+      backgroundColor: 'white', 
+      minHeight: '100vh', 
+      paddingTop: '100px' 
+    }}>
+      <div style={{ 
+        marginBottom: '30px', 
+        background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+        padding: '30px', 
+        borderRadius: '12px', 
+        boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>System Reports</h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>Comprehensive analytics and visualizations</p>
+          </div>
+        </div>
+      </div>
 
       {/* System Reports Section - Charts */}
       <Grid container spacing={1} sx={{ mb: 4, maxWidth: '1900px', mx: 'auto' }}>
@@ -211,18 +199,18 @@ const Reports = ({ socket }) => {
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
                   <Pie
-                    data={patientDemographicsData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name} (${value}%)`}
-                    outerRadius={75}
-                    fill="#8884d8"
-                    dataKey="value"
+                        data={patientDemographicsData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, value }) => `${name} (${value}%)`}
+                        outerRadius={75}
+                        fill="#8884d8"
+                        dataKey="value"
                   >
-                    {patientDemographicsData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
+                        {patientDemographicsData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
                   </Pie>
                   <Tooltip />
                 </PieChart>
@@ -272,17 +260,17 @@ const Reports = ({ socket }) => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                   <XAxis dataKey="name" stroke="#666" />
                   <YAxis
-                    domain={[0, 100]}
-                    stroke="#666"
-                    label={{ value: 'Adherence Rate (%)', angle: -90, position: 'insideLeft' }}
+                        domain={[0, 100]}
+                        stroke="#666"
+                        label={{ value: 'Adherence Rate (%)', angle: -90, position: 'insideLeft' }}
                   />
                   <Tooltip />
                   <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#4caf50"
-                    strokeWidth={2}
-                    dot={{ fill: '#4caf50', r: 4 }}
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#4caf50"
+                        strokeWidth={2}
+                        dot={{ fill: '#4caf50', r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -320,17 +308,17 @@ const Reports = ({ socket }) => {
                 <BarChart data={inventoryLevelsData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                   <XAxis
-                    dataKey="name"
-                    stroke="#666"
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                    fontSize={10}
+                        dataKey="name"
+                        stroke="#666"
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                        fontSize={10}
                   />
                   <YAxis
-                    domain={[0, 800]}
-                    stroke="#666"
-                    label={{ value: 'Stock Levels', angle: 90, position: 'insideLeft' }}
+                        domain={[0, 800]}
+                        stroke="#666"
+                        label={{ value: 'Stock Levels', angle: 90, position: 'insideLeft' }}
                   />
                   <Tooltip />
                   <Bar dataKey="value" fill="#ff9800" />
@@ -369,18 +357,18 @@ const Reports = ({ socket }) => {
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
                   <Pie
-                    data={appointmentAttendanceData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name} (${value}%)`}
-                    outerRadius={75}
-                    fill="#8884d8"
-                    dataKey="value"
+                        data={appointmentAttendanceData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, value }) => `${name} (${value}%)`}
+                        outerRadius={75}
+                        fill="#8884d8"
+                        dataKey="value"
                   >
-                    {appointmentAttendanceData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
+                        {appointmentAttendanceData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
                   </Pie>
                   <Tooltip />
                 </PieChart>
@@ -548,7 +536,6 @@ const Reports = ({ socket }) => {
                   color: '#333',
                   mb: 1,
                   fontSize: '18px',
-                  
                 }}
               >
                 Inventory Report
@@ -655,9 +642,9 @@ const Reports = ({ socket }) => {
                 ? '#f44336'
                 : '#1976d2',
             color: 'white',
-            padding: '12px 20px',
-            borderRadius: '4px',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+            padding: '16px 20px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
@@ -683,7 +670,7 @@ const Reports = ({ socket }) => {
           }
         }
       `}</style>
-    </Box>
+    </div>
   );
 };
 

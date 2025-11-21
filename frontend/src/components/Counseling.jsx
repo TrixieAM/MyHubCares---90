@@ -1,3 +1,4 @@
+// web/src/pages/Counseling.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -759,37 +760,57 @@ const Counseling = () => {
   };
 
   return (
-    <div style={styles.pageContainer}>
-      {/* Top Bar for User and Notifications */}
-      <div style={styles.topBar}>
-        <span style={styles.adminUser}>Admin User</span>
-        <div style={styles.notificationIcon}>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
-          <span style={styles.notificationBadge}>3</span>
+    <div style={{ 
+      padding: '20px', 
+      backgroundColor: 'white', 
+      minHeight: '100vh', 
+      paddingTop: '100px' 
+    }}>
+      <div style={{ 
+        marginBottom: '30px', 
+        background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+        padding: '30px', 
+        borderRadius: '12px', 
+        boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>Counseling Sessions</h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>Manage patient counseling and support sessions</p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => setShowModal(true)}
+              style={{
+                padding: '10px 16px',
+                background: '#ECDCBF',
+                color: '#A31D1D',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#F8F2DE';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#ECDCBF';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Record Session
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* Header Section */}
-      <div style={styles.headerSection}>
-        <div>
-          <h1 style={styles.headerTitle}>Counseling Sessions</h1>
-          <p style={styles.headerSubtitle}>
-            Manage patient counseling and support sessions
-          </p>
-        </div>
-        <button style={styles.addButton} onClick={() => setShowModal(true)}>
-          Record Session
-        </button>
       </div>
 
       {/* Alert for follow-ups needed */}
@@ -1073,7 +1094,7 @@ const Counseling = () => {
                   name="session_notes"
                   value={newSession.session_notes}
                   onChange={handleInputChange}
-                  placeholder="Document the counseling session..."
+                  placeholder="Document counseling session..."
                   style={styles.textarea}
                   rows="4"
                   required

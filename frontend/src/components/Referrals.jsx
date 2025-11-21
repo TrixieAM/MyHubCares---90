@@ -277,62 +277,54 @@ const Referrals = () => {
   };
 
   return (
-    <div
-      style={{
-        padding: '20px',
-        paddingTop: '80px',
-        backgroundColor: '#f8f9fa',
-        minHeight: '100vh',
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-        }}
-      >
-        <div>
-          <h2
-            style={{
-              margin: '0 0 4px 0',
-              color: '#212529',
-              fontSize: '24px',
-              fontWeight: '600',
-            }}
-          >
-            Patient Referrals
-          </h2>
-          <p style={{ margin: '0', color: '#6c757d', fontSize: '14px' }}>
-            Manage patient referrals and care coordination
-            {facilities.length > 0 && (
-              <span style={{ marginLeft: '8px', color: '#0d6efd' }}>
-                ({facilities.length} {facilities.length === 1 ? 'branch' : 'branches'} available)
-              </span>
-            )}
-          </p>
+    <div style={{ 
+      padding: '20px', 
+      backgroundColor: 'white', 
+      minHeight: '100vh', 
+      paddingTop: '100px' 
+    }}>
+      <div style={{ 
+        marginBottom: '30px', 
+        background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+        padding: '30px', 
+        borderRadius: '12px', 
+        boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>Patient Referrals</h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>Manage patient referrals and care coordination</p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={handleCreateReferral}
+              style={{
+                padding: '10px 16px',
+                background: '#ECDCBF',
+                color: '#A31D1D',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#F8F2DE';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#ECDCBF';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              <Plus size={16} />
+              Create Referral
+            </button>
+          </div>
         </div>
-        <button
-          onClick={handleCreateReferral}
-          style={{
-            padding: '8px 16px',
-            background: '#0d6efd',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '400',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          <Plus size={16} />
-          Create Referral
-        </button>
       </div>
 
       {/* Search and Filter */}
@@ -543,7 +535,7 @@ const CreateReferralModal = ({ onClose, onSuccess, patients = [], facilities = [
           )}
           {facilities.length === 0 && (
             <div style={{ marginBottom: '16px', padding: '12px', background: '#fff3cd', color: '#856404', borderRadius: '4px', fontSize: '14px' }}>
-              ⚠️ No facilities available. Please ensure facilities are added to the system.
+              ⚠️ No facilities available. Please ensure facilities are added to system.
             </div>
           )}
           {facilities.length > 0 && (

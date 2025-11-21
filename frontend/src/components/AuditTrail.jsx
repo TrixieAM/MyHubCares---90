@@ -298,65 +298,28 @@ const AuditTrail = ({ socket }) => {
   const pageTitle = isAdmin ? 'Audit Trail (All Users)' : 'My Activity Log';
 
   return (
-    <Box
-      sx={{
-        flexGrow: 1,
-        p: { xs: 2, sm: 3 },
-        backgroundColor: '#f5f5f5',
-        minHeight: '100vh',
-        paddingTop: '100px',
-      }}
-    >
-      {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 700,
-            color: '#333',
-            fontSize: { xs: '24px', sm: '28px' },
-            mb: 2,
-          }}
-        >
-          📋 {pageTitle}
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={handleExportLog}
-            sx={{
-              textTransform: 'none',
-              borderColor: '#d0d0d0',
-              color: '#333',
-              '&:hover': {
-                borderColor: '#999',
-                backgroundColor: 'rgba(0,0,0,0.05)',
-              },
-            }}
-          >
-            Export Log
-          </Button>
-          {isAdmin && (
-            <Button
-              variant="outlined"
-              startIcon={<DeleteIcon />}
-              onClick={handleClearOldLogs}
-              sx={{
-                textTransform: 'none',
-                borderColor: '#d0d0d0',
-                color: '#333',
-                '&:hover': {
-                  borderColor: '#999',
-                  backgroundColor: 'rgba(0,0,0,0.05)',
-                },
-              }}
-            >
-              Clear Old Logs
-            </Button>
-          )}
-        </Box>
-      </Box>
+    <div style={{ 
+      padding: '20px', 
+      backgroundColor: 'white', 
+      minHeight: '100vh', 
+      paddingTop: '100px' 
+    }}>
+      <div style={{ 
+        marginBottom: '30px', 
+        background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+        padding: '30px', 
+        borderRadius: '12px', 
+        boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>📋 {pageTitle}</h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>
+              {isAdmin ? 'System-wide activity tracking and security monitoring' : 'Your personal activity history and access logs'}
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Main Card */}
       <Paper
@@ -503,7 +466,7 @@ const AuditTrail = ({ socket }) => {
                         borderTop: '1px solid #e5e7eb',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 2,
+                        gap: 0.5,
                         fontSize: '11px',
                         color: '#6b7280',
                         fontFamily: 'sans-serif',
@@ -592,22 +555,22 @@ const AuditTrail = ({ socket }) => {
                 ? '#f44336'
                 : '#1976d2',
             color: 'white',
-            padding: '12px 20px',
-            borderRadius: '4px',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+            padding: '16px 20px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
             minWidth: '300px',
             zIndex: 9999,
+            animation: 'slideIn 0.3s ease',
           }}
         >
           <Typography sx={{ fontSize: '14px' }}>{toast.message}</Typography>
         </Box>
       )}
-    </Box>
+    </div>
   );
 };
 
 export default AuditTrail;
-

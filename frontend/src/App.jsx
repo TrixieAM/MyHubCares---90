@@ -19,7 +19,6 @@ import ClinicalVisits from './components/ClinicalVisit.jsx';
 import Inventory from './components/Inventory.jsx';
 import Prescriptions from './components/Prescriptions.jsx';
 import ARTRegimenManagement from './components/ArtRegimentManagement.jsx';
-import VaccinationProgram from './components/VaccinationProgram.jsx';
 import LabTests from './components/LabTest.jsx';
 import HTSSessions from './components/HTSSessions.jsx';
 import Counseling from './components/Counseling.jsx';
@@ -162,14 +161,6 @@ export default function App() {
             element={
               <MainLayout socket={socket}>
                 <ARTRegimenManagement socket={socket} />
-              </MainLayout>
-            }
-          />
-          <Route
-            path="/vaccination-program"
-            element={
-              <MainLayout socket={socket}>
-                <VaccinationProgram socket={socket} />
               </MainLayout>
             }
           />

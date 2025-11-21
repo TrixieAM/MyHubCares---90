@@ -100,7 +100,7 @@ const Inventory = () => {
           type: 'success',
         });
         setShowModal(false);
-        fetchInventory(); // Refresh the inventory list
+        fetchInventory(); // Refresh inventory list
       } else {
         throw new Error(data.message);
       }
@@ -137,7 +137,7 @@ const Inventory = () => {
         });
         setShowEditModal(false);
         setEditingItem(null);
-        fetchInventory(); // Refresh the inventory list
+        fetchInventory(); // Refresh inventory list
       } else {
         throw new Error(data.message);
       }
@@ -174,7 +174,7 @@ const Inventory = () => {
         });
         setShowRestockModal(false);
         setRestockingItem(null);
-        fetchInventory(); // Refresh the inventory list
+        fetchInventory(); // Refresh inventory list
       } else {
         throw new Error(data.message);
       }
@@ -201,7 +201,7 @@ const Inventory = () => {
             message: 'Inventory item deleted successfully',
             type: 'success',
           });
-          fetchInventory(); // Refresh the inventory list
+          fetchInventory(); // Refresh inventory list
         } else {
           throw new Error(data.message);
         }
@@ -532,66 +532,79 @@ const Inventory = () => {
   };
 
   return (
-    <div style={{ padding: '20px', paddingTop: '80px' }}>
-      {/* Header with Title */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '30px',
-        }}
-      >
-        <div>
-          <h2 style={{ margin: 0, color: '#333', fontSize: '24px' }}>
-            Inventory Management
-          </h2>
-          <p
-            style={{ margin: '5px 0 0 0', color: '#6c757d', fontSize: '14px' }}
-          >
-            Manage medication stock and supplies
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          {activeTab === 'inventory' ? (
-            <button
-              onClick={handleShowAddItemModal}
-              style={{
-                padding: '10px 16px',
-                background: '#007bff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <Plus size={16} />
-              Add New Item
-            </button>
-          ) : (
-            <button
-              onClick={handleShowAddMedicationModal}
-              style={{
-                padding: '10px 16px',
-                background: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <Plus size={16} />
-              Add Medication
-            </button>
-          )}
+    <div style={{ padding: '20px', backgroundColor: 'white', minHeight: '100vh', paddingTop: '100px' }}>
+      {/* Header with Title - Consistent with Patients.jsx */}
+      <div style={{ 
+        marginBottom: '30px', 
+        background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+        padding: '30px', 
+        borderRadius: '12px', 
+        boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>Inventory Management</h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>Manage medication stock and supplies</p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            {activeTab === 'inventory' ? (
+              <button
+                onClick={handleShowAddItemModal}
+                style={{
+                  padding: '10px 16px',
+                  background: '#ECDCBF',
+                  color: '#A31D1D',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#F8F2DE';
+                  e.target.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#ECDCBF';
+                  e.target.style.transform = 'translateY(0)';
+                }}
+              >
+                <Plus size={16} />
+                Add New Item
+              </button>
+            ) : (
+              <button
+                onClick={handleShowAddMedicationModal}
+                style={{
+                  padding: '10px 16px',
+                  background: '#ECDCBF',
+                  color: '#A31D1D',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#F8F2DE';
+                  e.target.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#ECDCBF';
+                  e.target.style.transform = 'translateY(0)';
+                }}
+              >
+                <Plus size={16} />
+                Add Medication
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -611,8 +624,8 @@ const Inventory = () => {
             background: 'none',
             border: 'none',
             borderBottom:
-              activeTab === 'inventory' ? '3px solid #007bff' : '3px solid transparent',
-            color: activeTab === 'inventory' ? '#007bff' : '#6c757d',
+              activeTab === 'inventory' ? '3px solid #A31D1D' : '3px solid transparent',
+            color: activeTab === 'inventory' ? '#A31D1D' : '#6c757d',
             fontWeight: activeTab === 'inventory' ? 'bold' : 'normal',
             cursor: 'pointer',
             fontSize: '14px',
@@ -628,9 +641,9 @@ const Inventory = () => {
             border: 'none',
             borderBottom:
               activeTab === 'medications'
-                ? '3px solid #007bff'
+                ? '3px solid #A31D1D'
                 : '3px solid transparent',
-            color: activeTab === 'medications' ? '#007bff' : '#6c757d',
+            color: activeTab === 'medications' ? '#A31D1D' : '#6c757d',
             fontWeight: activeTab === 'medications' ? 'bold' : 'normal',
             cursor: 'pointer',
             fontSize: '14px',

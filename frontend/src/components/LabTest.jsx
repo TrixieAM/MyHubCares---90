@@ -1278,7 +1278,7 @@ const LabTests = () => {
         style={{
           background: 'linear-gradient(to right, #D84040, #A31D1D)',
           padding: '30px',
-          borderRadius: '8px',
+          borderRadius: '12px',
           marginBottom: '30px',
         }}
       >

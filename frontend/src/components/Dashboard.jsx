@@ -25,6 +25,8 @@ import {
   Medication as PrescriptionIcon,
   CalendarMonth as CalendarIcon,
   Notifications as BellIcon,
+  Refresh as RefreshIcon,
+  Download as DownloadIcon,
 } from '@mui/icons-material';
 import {
   PieChart,
@@ -317,40 +319,67 @@ const Dashboard = ({ socket }) => {
     const prescriptionsCount = activePrescriptions.length;
 
     return (
-      <Box
-        sx={{
-          flexGrow: 1,
-          p: { xs: 2, sm: 3 },
+      <div
+        style={{
+          padding: '20px',
           backgroundColor: 'white',
           minHeight: '100vh',
-          width: '100%',
+          paddingTop: '100px',
         }}
       >
-        {/* Welcome Header */}
-        <Box sx={{ mb: { xs: 3, sm: 4 } }}>
-          <Typography
-            variant="h4"
-            sx={{ fontWeight: 700, color: '#A31D1D', mb: 1 }}
-          >
-            Welcome back, {userName.split(' ')[0]}!
-          </Typography>
-          <Typography
-            variant="body1"
-            sx={{ color: '#A31D1D', fontSize: '1.1rem' }}
-          >
-            Here's your health summary
-          </Typography>
-        </Box>
+        {/* Header with Title - Consistent with Patients.jsx */}
+        <div style={{ 
+          marginBottom: '30px', 
+          background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+          padding: '30px', 
+          borderRadius: '12px', 
+          boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>
+                Welcome back, {userName.split(' ')[0]}!
+              </h2>
+              <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>
+                Here's your health summary
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => navigate('/my-appointments')}
+                style={{
+                  padding: '10px 16px',
+                  background: '#ECDCBF',
+                  color: '#A31D1D',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#F8F2DE';
+                  e.target.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#ECDCBF';
+                  e.target.style.transform = 'translateY(0)';
+                }}
+              >
+                Book Appointment
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Summary Cards */}
-        <Grid
-          container
-          spacing={{ xs: 2, sm: 3 }}
-          sx={{ mb: { xs: 3, sm: 4 } }}
-        >
-          <Grid item xs={12} sm={6} md={4}>
-            <Card
-              sx={{
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '30px' }}>
+          <div style={{ flex: '1', minWidth: '300px' }}>
+            <div
+              style={{
                 backgroundColor: '#FFFFFF',
                 borderRadius: '12px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -359,28 +388,27 @@ const Dashboard = ({ socket }) => {
                 flexDirection: 'column',
               }}
             >
-              <CardContent
-                sx={{
+              <div
+                style={{
                   flexGrow: 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  p: { xs: 2, sm: 3 },
+                  padding: '20px',
                 }}
               >
-                <Box>
-                  <Typography
-                    variant="h3"
-                    sx={{ fontWeight: 700, color: '#A31D1D', mb: 1 }}
+                <div>
+                  <h3
+                    style={{ fontWeight: 700, color: '#A31D1D', margin: '0 0 5px 0', fontSize: '32px' }}
                   >
                     {upcomingCount}
-                  </Typography>
-                  <Typography variant="body1" sx={{ color: '#666' }}>
+                  </h3>
+                  <p style={{ color: '#666', margin: 0 }}>
                     Upcoming Appointments
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
+                  </p>
+                </div>
+                <div
+                  style={{
                     width: 48,
                     height: 48,
                     borderRadius: '12px',
@@ -392,14 +420,14 @@ const Dashboard = ({ socket }) => {
                   }}
                 >
                   <CalendarIcon sx={{ color: '#FFFFFF', fontSize: 28 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          <Grid item xs={12} sm={6} md={4}>
-            <Card
-              sx={{
+          <div style={{ flex: '1', minWidth: '300px' }}>
+            <div
+              style={{
                 backgroundColor: '#FFFFFF',
                 borderRadius: '12px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -408,28 +436,27 @@ const Dashboard = ({ socket }) => {
                 flexDirection: 'column',
               }}
             >
-              <CardContent
-                sx={{
+              <div
+                style={{
                   flexGrow: 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  p: { xs: 2, sm: 3 },
+                  padding: '20px',
                 }}
               >
-                <Box>
-                  <Typography
-                    variant="h3"
-                    sx={{ fontWeight: 700, color: '#A31D1D', mb: 1 }}
+                <div>
+                  <h3
+                    style={{ fontWeight: 700, color: '#A31D1D', margin: '0 0 5px 0', fontSize: '32px' }}
                   >
                     {remindersCount}
-                  </Typography>
-                  <Typography variant="body1" sx={{ color: '#666' }}>
+                  </h3>
+                  <p style={{ color: '#666', margin: 0 }}>
                     Active Reminders
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
+                  </p>
+                </div>
+                <div
+                  style={{
                     width: 48,
                     height: 48,
                     borderRadius: '12px',
@@ -441,14 +468,14 @@ const Dashboard = ({ socket }) => {
                   }}
                 >
                   <BellIcon sx={{ color: '#FFFFFF', fontSize: 28 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          <Grid item xs={12} sm={6} md={4}>
-            <Card
-              sx={{
+          <div style={{ flex: '1', minWidth: '300px' }}>
+            <div
+              style={{
                 backgroundColor: '#FFFFFF',
                 borderRadius: '12px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -457,28 +484,27 @@ const Dashboard = ({ socket }) => {
                 flexDirection: 'column',
               }}
             >
-              <CardContent
-                sx={{
+              <div
+                style={{
                   flexGrow: 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  p: { xs: 2, sm: 3 },
+                  padding: '20px',
                 }}
               >
-                <Box>
-                  <Typography
-                    variant="h3"
-                    sx={{ fontWeight: 700, color: '#A31D1D', mb: 1 }}
+                <div>
+                  <h3
+                    style={{ fontWeight: 700, color: '#A31D1D', margin: '0 0 5px 0', fontSize: '32px' }}
                   >
                     {prescriptionsCount}
-                  </Typography>
-                  <Typography variant="body1" sx={{ color: '#666' }}>
+                  </h3>
+                  <p style={{ color: '#666', margin: 0 }}>
                     Active Prescriptions
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
+                  </p>
+                </div>
+                <div
+                  style={{
                     width: 48,
                     height: 48,
                     borderRadius: '12px',
@@ -490,19 +516,19 @@ const Dashboard = ({ socket }) => {
                   }}
                 >
                   <PrescriptionIcon sx={{ color: '#FFFFFF', fontSize: 28 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Main Content Sections */}
-        <Grid container spacing={{ xs: 2, sm: 3 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
           {/* Upcoming Appointments */}
-          <Grid item xs={12} lg={6}>
-            <Paper
-              sx={{
-                p: { xs: 2, sm: 3 },
+          <div style={{ flex: '1', minWidth: '300px' }}>
+            <div
+              style={{
+                padding: '20px',
                 backgroundColor: '#FFFFFF',
                 borderRadius: '12px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -511,64 +537,60 @@ const Dashboard = ({ socket }) => {
                 flexDirection: 'column',
               }}
             >
-              <Box
-                sx={{
+              <div
+                style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  mb: 2,
+                  marginBottom: '15px',
                   flexWrap: 'wrap',
-                  gap: 1,
+                  gap: '10px',
                 }}
               >
-                <Typography
-                  variant="h6"
-                  sx={{ fontWeight: 700, color: '#333' }}
+                <h3
+                  style={{ fontWeight: 700, color: '#333', margin: 0 }}
                 >
                   Upcoming Appointments
-                </Typography>
-                <Button
-                  variant="contained"
+                </h3>
+                <button
                   onClick={() => navigate('/my-appointments')}
-                  sx={{
-                    backgroundColor: '#D84040',
+                  style={{
+                    padding: '8px 16px',
+                    background: '#D84040',
                     color: '#FFFFFF',
+                    border: 'none',
                     borderRadius: '8px',
-                    textTransform: 'none',
-                    px: 2,
-                    '&:hover': {
-                      backgroundColor: '#B82D2D',
-                    },
+                    cursor: 'pointer',
+                    fontWeight: '500',
                   }}
                 >
-                  Book Appointment
-                </Button>
-              </Box>
+                  View All
+                </button>
+              </div>
               {upcomingAppointments.length === 0 ? (
-                <Typography sx={{ color: '#666', mt: 2 }}>
+                <p style={{ color: '#666', marginTop: '15px' }}>
                   No upcoming appointments
-                </Typography>
+                </p>
               ) : (
-                <Box>
+                <div>
                   {upcomingAppointments.slice(0, 3).map((apt, index) => {
                     const aptDate = new Date(apt.scheduled_start);
                     return (
-                      <Box
+                      <div
                         key={apt.appointment_id || index}
-                        sx={{
-                          mb: 2,
-                          p: 2,
+                        style={{
+                          marginBottom: '15px',
+                          padding: '15px',
                           backgroundColor: '#F8F2DE',
                           borderRadius: '8px',
                         }}
                       >
-                        <Typography
-                          variant="body1"
-                          sx={{ fontWeight: 600, color: '#333', mb: 0.5 }}
+                        <h4
+                          style={{ fontWeight: 600, color: '#333', margin: '0 0 5px 0' }}
                         >
                           {apt.facility_name || 'Appointment'}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#666' }}>
+                        </h4>
+                        <p style={{ color: '#666', margin: 0 }}>
                           {aptDate.toLocaleDateString('en-US', {
                             weekday: 'long',
                             month: 'long',
@@ -579,20 +601,20 @@ const Dashboard = ({ socket }) => {
                             hour: '2-digit',
                             minute: '2-digit',
                           })}
-                        </Typography>
-                      </Box>
+                        </p>
+                      </div>
                     );
                   })}
-                </Box>
+                </div>
               )}
-            </Paper>
-          </Grid>
+            </div>
+          </div>
 
           {/* Today's Medications */}
-          <Grid item xs={12} lg={6}>
-            <Paper
-              sx={{
-                p: { xs: 2, sm: 3 },
+          <div style={{ flex: '1', minWidth: '300px' }}>
+            <div
+              style={{
+                padding: '20px',
                 backgroundColor: '#FFFFFF',
                 borderRadius: '12px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -601,112 +623,98 @@ const Dashboard = ({ socket }) => {
                 flexDirection: 'column',
               }}
             >
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 700, color: '#A31D1D', mb: 2 }}
+              <h3
+                style={{ fontWeight: 700, color: '#A31D1D', margin: '0 0 15px 0' }}
               >
                 Today's Medications
-              </Typography>
+              </h3>
               {todayMedications.length === 0 ? (
-                <Typography sx={{ color: '#666', mt: 2 }}>
+                <p style={{ color: '#666', marginTop: '15px' }}>
                   No medications scheduled for today
-                </Typography>
+                </p>
               ) : (
-                <Box>
+                <div>
                   {todayMedications.map((med, index) => (
-                    <Box
+                    <div
                       key={index}
-                      sx={{
-                        mb: 2,
-                        p: 2,
+                      style={{
+                        marginBottom: '15px',
+                        padding: '15px',
                         backgroundColor: '#F8F2DE',
                         borderRadius: '8px',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         flexWrap: 'wrap',
-                        gap: 1,
+                        gap: '10px',
                       }}
                     >
-                      <Box>
-                        <Typography
-                          variant="body1"
-                          sx={{ fontWeight: 600, color: '#333', mb: 0.5 }}
+                      <div>
+                        <h4
+                          style={{ fontWeight: 600, color: '#333', margin: '0 0 5px 0' }}
                         >
                           {med.medication_name}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#666' }}>
+                        </h4>
+                        <p style={{ color: '#666', margin: 0 }}>
                           Take at {med.reminder_time} daily
-                        </Typography>
-                      </Box>
-                      <Typography
-                        variant="h6"
-                        sx={{
+                        </p>
+                      </div>
+                      <h4
+                        style={{
                           color: '#D84040',
                           fontWeight: 700,
                           fontSize: '1.1rem',
+                          margin: 0,
                         }}
                       >
                         {med.reminder_time}
-                      </Typography>
-                    </Box>
+                      </h4>
+                    </div>
                   ))}
-                </Box>
+                </div>
               )}
-            </Paper>
-          </Grid>
-        </Grid>
-      </Box>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
-  // Admin/Staff Dashboard (existing)
+  // Admin/Staff Dashboard
   return (
-    <Box
-      sx={{
-        flexGrow: 1,
-        p: { xs: 2, sm: 3 },
-        width: '100%',
-        overflowX: 'hidden',
-        backgroundColor: '#f5f5f5',
+    <div
+      style={{
+        padding: '20px',
+        backgroundColor: 'white',
         minHeight: '100vh',
+        paddingTop: '100px',
       }}
     >
-      {/* Header Section */}
-      <Box sx={{ mb: 3 }}>
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 700,
-            color: '#333',
-            mb: 0.5,
-            fontSize: { xs: '24px', sm: '28px' },
-            marginTop: '80px'
-          }}
-        >
-          Dashboard Overview
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{
-            color: '#666',
-            fontSize: '14px',
-          }}
-        >
-          Real-time system statistics and alerts
-        </Typography>
-      </Box>
+      <div style={{ 
+        marginBottom: '30px', 
+        background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+        padding: '30px', 
+        borderRadius: '12px', 
+        boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>Dashboard Overview</h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>Real-time system statistics and alerts</p>
+          </div>
+        </div>
+      </div>
 
       <Grid container spacing={{ xs: 1, sm: 1 }}>
         {/* Statistics Cards */}
         <Grid item xs={12} sm={6} lg={3} sx={{ ml: 12.5 }}>
-  <StatCard
-    title="Total Patients"
-    value={stats.totalPatients}
-    icon={<PeopleIcon sx={{ fontSize: 40, width: '112px' }} />}
-    color="#9c27b0"
-  />
-</Grid>
+          <StatCard
+            title="Total Patients"
+            value={stats.totalPatients}
+            icon={<PeopleIcon sx={{ fontSize: 40, width: '112px' }} />}
+            color="#9c27b0"
+          />
+        </Grid>
 
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
@@ -769,7 +777,7 @@ const Dashboard = ({ socket }) => {
           </Paper>
         </Grid>
 
-          <Grid item xs={12} lg={6} sx={{ mt: 1 }}>
+        <Grid item xs={12} lg={6} sx={{ mt: 1 }}>
           <Paper sx={{ 
             p: 3, 
             height: { xs: 300, sm: 350, md: 400 },
@@ -951,7 +959,7 @@ const Dashboard = ({ socket }) => {
               backgroundColor: 'white',
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
               borderRadius: '8px',
-               width: '1009px',
+              width: '1009px',
               marginLeft: '100px',
               marginTop: '5px'
             }}
@@ -1010,7 +1018,7 @@ const Dashboard = ({ socket }) => {
           </Paper>
         </Grid>
       </Grid>
-    </Box>
+    </div>
   );
 };
 

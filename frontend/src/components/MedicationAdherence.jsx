@@ -270,7 +270,7 @@ const MedicationAdherence = () => {
     }
   };
 
-  // Load adherence records for the patient
+  // Load adherence records for patient
   const loadAdherenceRecords = async (patientId) => {
     try {
       const token = getAuthToken();
@@ -435,7 +435,7 @@ const MedicationAdherence = () => {
     const diff = Math.abs(reminderDate - now);
     const diffMinutes = Math.floor(diff / (1000 * 60));
     
-    // Allow clicking within the time window (before or after the scheduled time)
+    // Allow clicking within the time window (before or after scheduled time)
     return diffMinutes <= timeWindowMinutes;
   };
 
@@ -448,7 +448,7 @@ const MedicationAdherence = () => {
       const reminderTime = reminder.reminder_time || reminder.time;
       if (!isTimeNearReminder(reminderTime)) {
         setToast({
-          message: 'Cannot record adherence: Time is not near the scheduled medication time (must be within 30 minutes)',
+          message: 'Cannot record adherence: Time is not near scheduled medication time (must be within 30 minutes)',
           type: 'error',
         });
         setLoading(false);
@@ -499,7 +499,7 @@ const MedicationAdherence = () => {
         return;
       }
       
-      // Find the prescription for this reminder
+      // Find prescription for this reminder
       const prescription = prescriptions.find(p => 
         p.prescription_id === reminder.prescription_id
       );
@@ -605,7 +605,7 @@ const MedicationAdherence = () => {
     const reminderTime = reminder.reminder_time || reminder.time;
     if (!isTimeNearReminder(reminderTime)) {
       setToast({
-        message: 'You can only mark as taken when the time is near the scheduled medication time (within 30 minutes)',
+        message: 'You can only mark as taken when time is near the scheduled medication time (within 30 minutes)',
         type: 'error',
       });
       return;
@@ -617,7 +617,7 @@ const MedicationAdherence = () => {
     const reminderTime = reminder.reminder_time || reminder.time;
     if (!isTimeNearReminder(reminderTime)) {
       setToast({
-        message: 'You can only mark as missed when the time is near the scheduled medication time (within 30 minutes)',
+        message: 'You can only mark as missed when time is near the scheduled medication time (within 30 minutes)',
         type: 'error',
       });
       return;
@@ -858,7 +858,7 @@ const MedicationAdherence = () => {
         <div style={{
           background: 'white',
           padding: '20px',
-          borderRadius: '8px',
+          borderRadius: '12px',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           display: 'flex',
           alignItems: 'center',
@@ -1001,7 +1001,7 @@ const MedicationAdherence = () => {
                      (reminder.frequency || '').toLowerCase().includes('once');
       const canRecordToday = !todayRecord && isDaily;
       
-      // Check if current time is near the reminder time
+      // Check if current time is near reminder time
       const isNearTime = isTimeNearReminder(reminderTime);
       const canClickButtons = canRecordToday && isNearTime;
 
@@ -1067,7 +1067,7 @@ const MedicationAdherence = () => {
                       gap: '4px',
                       opacity: (loading || !isNearTime) ? 0.6 : 1,
                     }}
-                    title={!isNearTime ? 'You can only mark as taken when the time is near the scheduled medication time (within 30 minutes)' : ''}
+                    title={!isNearTime ? 'You can only mark as taken when time is near scheduled medication time (within 30 minutes)' : ''}
                   >
                     <Check size={12} />
                     Taken
@@ -1088,7 +1088,7 @@ const MedicationAdherence = () => {
                       gap: '4px',
                       opacity: (loading || !isNearTime) ? 0.6 : 1,
                     }}
-                    title={!isNearTime ? 'You can only mark as missed when the time is near the scheduled medication time (within 30 minutes)' : ''}
+                    title={!isNearTime ? 'You can only mark as missed when time is near scheduled medication time (within 30 minutes)' : ''}
                   >
                     <AlertCircle size={12} />
                     Missed
@@ -1160,7 +1160,7 @@ const MedicationAdherence = () => {
   // Show loading state while fetching user
   if (loading && !currentUser) {
     return (
-      <div style={{ padding: '20px', paddingTop: '80px' }}>
+      <div style={{ padding: '20px', backgroundColor: 'white', minHeight: '100vh', paddingTop: '100px' }}>
         <div style={{
           padding: '15px',
           backgroundColor: '#d1ecf1',
@@ -1178,7 +1178,7 @@ const MedicationAdherence = () => {
   // Check if user is a patient
   if (!currentUser) {
     return (
-      <div style={{ padding: '20px', paddingTop: '80px' }}>
+      <div style={{ padding: '20px', backgroundColor: 'white', minHeight: '100vh', paddingTop: '100px' }}>
         <div style={{
           padding: '15px',
           backgroundColor: '#f8d7da',
@@ -1197,7 +1197,7 @@ const MedicationAdherence = () => {
   
   if (currentUser.role !== 'patient' && currentUser.role !== 'admin') {
     return (
-      <div style={{ padding: '20px', paddingTop: '80px' }}>
+      <div style={{ padding: '20px', backgroundColor: 'white', minHeight: '100vh', paddingTop: '100px' }}>
         <div style={{
           padding: '15px',
           backgroundColor: '#f8d7da',
@@ -1213,7 +1213,7 @@ const MedicationAdherence = () => {
 
   if (!patientId && currentUser.role === 'patient') {
     return (
-      <div style={{ padding: '20px', paddingTop: '80px' }}>
+      <div style={{ padding: '20px', backgroundColor: 'white', minHeight: '100vh', paddingTop: '100px' }}>
         <div style={{
           padding: '15px',
           backgroundColor: '#fff3cd',
@@ -1228,42 +1228,50 @@ const MedicationAdherence = () => {
   }
 
   return (
-    <div style={{ padding: '20px', paddingTop: '80px' }}>
-      {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '30px',
-        }}
-      >
-        <div>
-          <h2 style={{ margin: 0, color: '#333', fontSize: '24px' }}>
-            Medication Adherence
-          </h2>
-          <p style={{ margin: '5px 0 0 0', color: '#6c757d', fontSize: '14px' }}>
-            Track your medication adherence and view your progress
-          </p>
+    <div style={{ padding: '20px', backgroundColor: 'white', minHeight: '100vh', paddingTop: '100px' }}>
+      {/* Header with Title - Consistent with Patients.jsx */}
+      <div style={{ 
+        marginBottom: '30px', 
+        background: 'linear-gradient(to right, #D84040, #A31D1D)', 
+        padding: '30px', 
+        borderRadius: '12px', 
+        boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>Medication Adherence</h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>Track your medication adherence and view your progress</p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => setShowAddModal(true)}
+              style={{
+                padding: '10px 16px',
+                background: '#ECDCBF',
+                color: '#A31D1D',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#F8F2DE';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#ECDCBF';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              <Plus size={16} />
+              Add Reminder
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          style={{
-            padding: '10px 16px',
-            background: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          <Plus size={16} />
-          Add Reminder
-        </button>
       </div>
 
       {/* Adherence Card - Step 5: Display updated → Progress rings and percentages updated */}

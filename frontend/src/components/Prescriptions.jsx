@@ -1206,8 +1206,8 @@ const Prescriptions = () => {
         style={{
           background: 'linear-gradient(to right, #D84040, #A31D1D)',
           padding: '30px',
-          borderRadius: '8px',
-          marginBottom: '30px',
+          borderRadius: '12px',
+          marginBottom: '10px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
