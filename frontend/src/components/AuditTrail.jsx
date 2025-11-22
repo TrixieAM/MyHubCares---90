@@ -124,18 +124,24 @@ const AuditTrail = ({ socket }) => {
 
     // Filter by action
     if (actionFilter) {
-      filtered = filtered.filter((log) => log.action.toLowerCase() === actionFilter.toLowerCase());
+      filtered = filtered.filter(
+        (log) => log.action.toLowerCase() === actionFilter.toLowerCase()
+      );
     }
 
     // Filter by module
     if (moduleFilter) {
-      filtered = filtered.filter((log) => log.module.toLowerCase() === moduleFilter.toLowerCase());
+      filtered = filtered.filter(
+        (log) => log.module.toLowerCase() === moduleFilter.toLowerCase()
+      );
     }
 
     // Filter by date
     if (dateFilter) {
       filtered = filtered.filter((log) => {
-        const logDate = new Date(log.timestamp || log.created_at).toISOString().split('T')[0];
+        const logDate = new Date(log.timestamp || log.created_at)
+          .toISOString()
+          .split('T')[0];
         return logDate === dateFilter;
       });
     }
@@ -148,7 +154,14 @@ const AuditTrail = ({ socket }) => {
     });
 
     setFilteredLogs(filtered);
-  }, [actionFilter, moduleFilter, dateFilter, auditLogs, userRole, currentUser]);
+  }, [
+    actionFilter,
+    moduleFilter,
+    dateFilter,
+    auditLogs,
+    userRole,
+    currentUser,
+  ]);
 
   // Auto-hide toast
   useEffect(() => {
@@ -213,9 +226,19 @@ const AuditTrail = ({ socket }) => {
       logString += ` ${log.change_summary}.`;
     } else if (log.old_value && log.new_value) {
       try {
-        const oldVal = typeof log.old_value === 'string' ? JSON.parse(log.old_value) : log.old_value;
-        const newVal = typeof log.new_value === 'string' ? JSON.parse(log.new_value) : log.new_value;
-        logString += ` <span style="color: #dc2626;">${JSON.stringify(oldVal)}</span> → <span style="color: #10b981;">${JSON.stringify(newVal)}</span>.`;
+        const oldVal =
+          typeof log.old_value === 'string'
+            ? JSON.parse(log.old_value)
+            : log.old_value;
+        const newVal =
+          typeof log.new_value === 'string'
+            ? JSON.parse(log.new_value)
+            : log.new_value;
+        logString += ` <span style="color: #dc2626;">${JSON.stringify(
+          oldVal
+        )}</span> → <span style="color: #10b981;">${JSON.stringify(
+          newVal
+        )}</span>.`;
       } catch (e) {
         logString += ` ${log.old_value} → ${log.new_value}.`;
       }
@@ -241,11 +264,20 @@ const AuditTrail = ({ socket }) => {
 
   // Export audit log
   const handleExportLog = () => {
-    let csv = 'Timestamp,User,Role,Action,Module,Record ID,Change Summary,IP Address,Device,Status\n';
+    let csv =
+      'Timestamp,User,Role,Action,Module,Record ID,Change Summary,IP Address,Device,Status\n';
 
     filteredLogs.forEach((log) => {
-      const timestamp = new Date(log.timestamp || log.created_at).toLocaleString();
-      csv += `"${timestamp}","${log.user_name || 'Unknown'}","${log.user_role || 'N/A'}","${log.action || 'N/A'}","${log.module || 'N/A'}","${log.record_id || 'N/A'}","${log.change_summary || 'N/A'}","${log.ip_address || 'N/A'}","${log.device_type || 'N/A'}","${log.status || 'success'}"\n`;
+      const timestamp = new Date(
+        log.timestamp || log.created_at
+      ).toLocaleString();
+      csv += `"${timestamp}","${log.user_name || 'Unknown'}","${
+        log.user_role || 'N/A'
+      }","${log.action || 'N/A'}","${log.module || 'N/A'}","${
+        log.record_id || 'N/A'
+      }","${log.change_summary || 'N/A'}","${log.ip_address || 'N/A'}","${
+        log.device_type || 'N/A'
+      }","${log.status || 'success'}"\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -256,12 +288,19 @@ const AuditTrail = ({ socket }) => {
     a.click();
     window.URL.revokeObjectURL(url);
 
-    setToast({ message: 'Audit trail exported successfully!', type: 'success' });
+    setToast({
+      message: 'Audit trail exported successfully!',
+      type: 'success',
+    });
   };
 
   // Clear old logs
   const handleClearOldLogs = () => {
-    if (!window.confirm('Are you sure you want to clear logs older than 90 days?\n\nThis action cannot be undone.')) {
+    if (
+      !window.confirm(
+        'Are you sure you want to clear logs older than 90 days?\n\nThis action cannot be undone.'
+      )
+    ) {
       return;
     }
 
@@ -277,7 +316,10 @@ const AuditTrail = ({ socket }) => {
     setAuditLogs(filtered);
     localStorage.setItem('auditLogs', JSON.stringify(filtered));
 
-    setToast({ message: `${removed} old log entries cleared successfully!`, type: 'success' });
+    setToast({
+      message: `${removed} old log entries cleared successfully!`,
+      type: 'success',
+    });
   };
 
   // Refresh logs
@@ -288,7 +330,14 @@ const AuditTrail = ({ socket }) => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+        }}
+      >
         <Typography>Loading...</Typography>
       </Box>
     );
@@ -298,24 +347,46 @@ const AuditTrail = ({ socket }) => {
   const pageTitle = isAdmin ? 'Audit Trail (All Users)' : 'My Activity Log';
 
   return (
-    <div style={{ 
-      padding: '20px', 
-      backgroundColor: 'white', 
-      minHeight: '100vh', 
-      paddingTop: '100px' 
-    }}>
-      <div style={{ 
-        marginBottom: '30px', 
-        background: 'linear-gradient(to right, #D84040, #A31D1D)', 
-        padding: '30px', 
-        borderRadius: '12px', 
-        boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div
+      style={{
+        padding: '20px',
+        backgroundColor: 'white',
+        minHeight: '100vh',
+        paddingTop: '100px',
+      }}
+    >
+      <div
+        style={{
+          marginBottom: '30px',
+          background: 'linear-gradient(to right, #D84040, #A31D1D)',
+          padding: '30px',
+          borderRadius: '12px',
+          boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <div>
-            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>📋 {pageTitle}</h2>
+            <h2
+              style={{
+                margin: '0 0 5px 0',
+                color: 'white',
+                fontSize: '24px',
+                fontWeight: 'bold',
+              }}
+            >
+              {' '}
+              {pageTitle}
+            </h2>
             <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>
-              {isAdmin ? 'System-wide activity tracking and security monitoring' : 'Your personal activity history and access logs'}
+              {isAdmin
+                ? 'System-wide activity tracking and security monitoring'
+                : 'Your personal activity history and access logs'}
             </p>
           </div>
         </div>
@@ -350,7 +421,14 @@ const AuditTrail = ({ socket }) => {
           >
             {isAdmin ? 'System Activity Log' : 'My Activity History'}
           </Typography>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              alignItems: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
             <FormControl size="small" sx={{ minWidth: 180 }}>
               <InputLabel id="action-filter-label">All Actions</InputLabel>
               <Select
@@ -427,7 +505,9 @@ const AuditTrail = ({ socket }) => {
                 No audit logs found
               </Typography>
               <Typography variant="body2" sx={{ color: '#999' }}>
-                {isAdmin ? 'System activities will be logged here' : 'Your activities will be logged here'}
+                {isAdmin
+                  ? 'System activities will be logged here'
+                  : 'Your activities will be logged here'}
               </Typography>
             </Box>
           ) : (
@@ -486,9 +566,13 @@ const AuditTrail = ({ socket }) => {
                           },
                         }}
                       />
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                      >
                         {status === 'success' ? (
-                          <CheckCircleIcon sx={{ fontSize: 14, color: '#10b981' }} />
+                          <CheckCircleIcon
+                            sx={{ fontSize: 14, color: '#10b981' }}
+                          />
                         ) : (
                           <CancelIcon sx={{ fontSize: 14, color: '#ef4444' }} />
                         )}
@@ -518,7 +602,10 @@ const AuditTrail = ({ socket }) => {
           <Typography sx={{ color: '#666', fontSize: '14px' }}>
             <strong>Total Logs:</strong> {filteredLogs.length}{' '}
             <span style={{ color: '#999' }}>
-              | {actionFilter || moduleFilter || dateFilter ? `Showing ${filteredLogs.length} of ${auditLogs.length} entries` : 'Showing all entries'}
+              |{' '}
+              {actionFilter || moduleFilter || dateFilter
+                ? `Showing ${filteredLogs.length} of ${auditLogs.length} entries`
+                : 'Showing all entries'}
             </span>
           </Typography>
           <Button

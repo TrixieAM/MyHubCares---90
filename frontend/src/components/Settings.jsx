@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Users, Shield, Lock, Info, HelpCircle } from 'lucide-react';
+import {
+  Settings as SettingsIcon,
+  Users,
+  Shield,
+  Lock,
+  Info,
+  HelpCircle,
+} from 'lucide-react';
 import UserManagement from './UserManagement';
 import RolePermissionManagement from './RolePermissionManagement';
 import ChangePassword from './ChangePassword';
@@ -58,30 +65,58 @@ const Settings = () => {
   const isPatient = userRole === 'patient';
 
   return (
-    <div style={{ padding: '20px', paddingTop: '20px' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '30px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-          <SettingsIcon size={28} color="#D84040" />
-          <h2 style={{ margin: 0, color: '#333', fontSize: '28px' }}>Settings</h2>
+    <div style={{ padding: '20px', paddingTop: '100px' }}>
+      <div
+        style={{
+          marginBottom: '30px',
+          background: 'linear-gradient(to right, #D84040, #A31D1D)',
+          padding: '30px',
+          borderRadius: '12px',
+          boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div>
+            <h2
+              style={{
+                margin: '0 0 5px 0',
+                color: 'white',
+                fontSize: '24px',
+                fontWeight: 'bold',
+              }}
+            >
+              Settings
+            </h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>
+              {isPatient
+                ? 'Manage your account settings and password'
+                : 'Manage system settings, users, roles, and permissions'}
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <SettingsIcon size={28} color="#FFFFFF" />
+          </div>
         </div>
-        <p style={{ margin: '5px 0 0 0', color: '#6c757d', fontSize: '14px' }}>
-          {isPatient
-            ? 'Manage your account settings and password'
-            : 'Manage system settings, users, roles, and permissions'}
-        </p>
       </div>
 
       {/* Tabs */}
-      <div style={{ 
-        display: 'flex', 
-        gap: '0', 
-        marginBottom: '30px', 
-        borderBottom: '2px solid #dee2e6',
-        background: 'white',
-        borderRadius: '8px 8px 0 0',
-        padding: '0 20px',
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '0',
+          marginBottom: '30px',
+          borderBottom: '2px solid #dee2e6',
+          background: 'white',
+          borderRadius: '8px 8px 0 0',
+          padding: '0 20px',
+        }}
+      >
         {!isPatient && (
           <>
             <button
@@ -90,7 +125,10 @@ const Settings = () => {
                 padding: '16px 24px',
                 border: 'none',
                 background: 'transparent',
-                borderBottom: activeTab === 'users' ? '3px solid #D84040' : '3px solid transparent',
+                borderBottom:
+                  activeTab === 'users'
+                    ? '3px solid #D84040'
+                    : '3px solid transparent',
                 color: activeTab === 'users' ? '#D84040' : '#6c757d',
                 fontWeight: activeTab === 'users' ? 600 : 400,
                 cursor: 'pointer',
@@ -110,7 +148,10 @@ const Settings = () => {
                 padding: '16px 24px',
                 border: 'none',
                 background: 'transparent',
-                borderBottom: activeTab === 'roles' ? '3px solid #D84040' : '3px solid transparent',
+                borderBottom:
+                  activeTab === 'roles'
+                    ? '3px solid #D84040'
+                    : '3px solid transparent',
                 color: activeTab === 'roles' ? '#D84040' : '#6c757d',
                 fontWeight: activeTab === 'roles' ? 600 : 400,
                 cursor: 'pointer',
@@ -132,7 +173,10 @@ const Settings = () => {
             padding: '16px 24px',
             border: 'none',
             background: 'transparent',
-            borderBottom: activeTab === 'password' ? '3px solid #D84040' : '3px solid transparent',
+            borderBottom:
+              activeTab === 'password'
+                ? '3px solid #D84040'
+                : '3px solid transparent',
             color: activeTab === 'password' ? '#D84040' : '#6c757d',
             fontWeight: activeTab === 'password' ? 600 : 400,
             cursor: 'pointer',
@@ -152,7 +196,10 @@ const Settings = () => {
             padding: '16px 24px',
             border: 'none',
             background: 'transparent',
-            borderBottom: activeTab === 'about' ? '3px solid #D84040' : '3px solid transparent',
+            borderBottom:
+              activeTab === 'about'
+                ? '3px solid #D84040'
+                : '3px solid transparent',
             color: activeTab === 'about' ? '#D84040' : '#6c757d',
             fontWeight: activeTab === 'about' ? 600 : 400,
             cursor: 'pointer',
@@ -172,7 +219,10 @@ const Settings = () => {
             padding: '16px 24px',
             border: 'none',
             background: 'transparent',
-            borderBottom: activeTab === 'faqs' ? '3px solid #D84040' : '3px solid transparent',
+            borderBottom:
+              activeTab === 'faqs'
+                ? '3px solid #D84040'
+                : '3px solid transparent',
             color: activeTab === 'faqs' ? '#D84040' : '#6c757d',
             fontWeight: activeTab === 'faqs' ? 600 : 400,
             cursor: 'pointer',
@@ -189,13 +239,15 @@ const Settings = () => {
       </div>
 
       {/* Tab Content */}
-      <div style={{ 
-        background: 'white', 
-        borderRadius: '0 8px 8px 8px',
-        minHeight: '500px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        overflow: 'hidden',
-      }}>
+      <div
+        style={{
+          background: 'white',
+          borderRadius: '0 8px 8px 8px',
+          minHeight: '500px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          overflow: 'hidden',
+        }}
+      >
         {activeTab === 'users' && !isPatient ? (
           <UserManagement />
         ) : activeTab === 'roles' && !isPatient ? (
@@ -215,4 +267,3 @@ const Settings = () => {
 };
 
 export default Settings;
-

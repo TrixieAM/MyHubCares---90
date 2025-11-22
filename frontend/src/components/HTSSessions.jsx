@@ -66,9 +66,17 @@ const HTSSessions = () => {
           setSessions([]);
         }
       } else {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        console.error('Failed to load HTS sessions:', response.status, errorData);
-        alert(`Failed to load HTS sessions: ${errorData.message || response.status}`);
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: 'Unknown error' }));
+        console.error(
+          'Failed to load HTS sessions:',
+          response.status,
+          errorData
+        );
+        alert(
+          `Failed to load HTS sessions: ${errorData.message || response.status}`
+        );
         setSessions([]);
       }
     } catch (error) {
@@ -165,7 +173,10 @@ const HTSSessions = () => {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          console.log('Loaded physicians for HTS:', data.providers?.length || 0);
+          console.log(
+            'Loaded physicians for HTS:',
+            data.providers?.length || 0
+          );
           setPhysicians(data.providers || []);
         } else {
           console.error('API returned success=false for providers:', data);
@@ -200,22 +211,33 @@ const HTSSessions = () => {
     if (resultFilter !== 'all') {
       filtered = filtered.filter((session) => {
         const result = (session.test_result || '').toLowerCase();
-        if (resultFilter === 'Positive') return result === 'positive' || result === 'reactive';
-        if (resultFilter === 'Reactive') return result === 'positive' || result === 'reactive';
-        if (resultFilter === 'Non-reactive') return result === 'negative' || result === 'non-reactive';
+        if (resultFilter === 'Positive')
+          return result === 'positive' || result === 'reactive';
+        if (resultFilter === 'Reactive')
+          return result === 'positive' || result === 'reactive';
+        if (resultFilter === 'Non-reactive')
+          return result === 'negative' || result === 'non-reactive';
         return true;
       });
     }
 
-    console.log('Filtered HTS sessions:', filtered.length, 'out of', sessions.length);
+    console.log(
+      'Filtered HTS sessions:',
+      filtered.length,
+      'out of',
+      sessions.length
+    );
     setFilteredSessions(filtered);
   }, [searchTerm, resultFilter, sessions]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     // If test result is positive or reactive, automatically refer for linkage
-    if (name === 'test_result' && (value === 'positive' || value === 'Positive' || value === 'Reactive')) {
+    if (
+      name === 'test_result' &&
+      (value === 'positive' || value === 'Positive' || value === 'Reactive')
+    ) {
       setNewSession((prev) => ({
         ...prev,
         [name]: value,
@@ -232,7 +254,13 @@ const HTSSessions = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!newSession.patient_id || !newSession.facility_id || !newSession.tester_id || !newSession.session_date || !newSession.test_result) {
+    if (
+      !newSession.patient_id ||
+      !newSession.facility_id ||
+      !newSession.tester_id ||
+      !newSession.session_date ||
+      !newSession.test_result
+    ) {
       alert('Please fill in all required fields');
       return;
     }
@@ -269,7 +297,9 @@ const HTSSessions = () => {
           pre_test_counseling: newSession.pre_test_counseling || false,
           post_test_counseling: newSession.post_test_counseling || false,
           linked_to_care: newSession.linkage_referred || false,
-          care_link_date: newSession.linkage_referred ? new Date().toISOString().split('T')[0] : null,
+          care_link_date: newSession.linkage_referred
+            ? new Date().toISOString().split('T')[0]
+            : null,
           notes: JSON.stringify(notesData),
         }),
       });
@@ -570,17 +600,33 @@ const HTSSessions = () => {
 
   return (
     <div style={styles.pageContainer}>
-      {/* Header - Matching Dashboard Style */}
-      <div style={{ 
-        marginBottom: '30px', 
-        background: 'linear-gradient(to right, #D84040, #A31D1D)', 
-        padding: '30px', 
-        borderRadius: '12px', 
-        boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)' 
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* Header - Matching Dashboard Style Exactly */}
+      <div
+        style={{
+          marginBottom: '30px',
+          background: 'linear-gradient(to right, #D84040, #A31D1D)',
+          padding: '30px',
+          borderRadius: '12px',
+          boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)',
+          marginTop: '80px',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <div>
-            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>
+            <h2
+              style={{
+                margin: '0 0 5px 0',
+                color: 'white',
+                fontSize: '24px',
+                fontWeight: 'bold',
+              }}
+            >
               HIV Testing Services (HTS)
             </h2>
             <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>
@@ -601,7 +647,7 @@ const HTSSessions = () => {
                 fontWeight: '500',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '5px'
+                gap: '5px',
               }}
               onMouseEnter={(e) => {
                 e.target.style.background = '#F8F2DE';
@@ -643,28 +689,43 @@ const HTSSessions = () => {
         </div>
         <div style={styles.cardBody}>
           {loading ? (
-            <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+            <div
+              style={{ padding: '20px', textAlign: 'center', color: '#666' }}
+            >
               Loading sessions...
             </div>
           ) : filteredSessions.length > 0 ? (
             filteredSessions.map((session) => {
               const sessionId = session.hts_id || session.id;
               const testResult = (session.test_result || '').toLowerCase();
-              const isPositive = testResult === 'positive' || testResult === 'reactive';
-              
+              const isPositive =
+                testResult === 'positive' || testResult === 'reactive';
+
               return (
                 <div key={sessionId} style={styles.sessionCard}>
                   <div style={styles.sessionInfo}>
-                    <h3 style={styles.patientName}>{session.patient_name || 'N/A'}</h3>
+                    <h3 style={styles.patientName}>
+                      {session.patient_name || 'N/A'}
+                    </h3>
                     <div style={styles.patientMeta}>
                       <div style={styles.metaItem}>
-                        📅 {session.test_date ? new Date(session.test_date).toLocaleDateString() : 'N/A'}
+                        📅{' '}
+                        {session.test_date
+                          ? new Date(session.test_date).toLocaleDateString()
+                          : 'N/A'}
                       </div>
                       <div style={styles.metaItem}>
-                        🏥 {(() => {
+                        🏥{' '}
+                        {(() => {
                           try {
-                            const notesData = session.notes ? JSON.parse(session.notes) : {};
-                            return notesData.session_type || session.test_type || 'N/A';
+                            const notesData = session.notes
+                              ? JSON.parse(session.notes)
+                              : {};
+                            return (
+                              notesData.session_type ||
+                              session.test_type ||
+                              'N/A'
+                            );
                           } catch {
                             return session.test_type || 'N/A';
                           }
@@ -674,7 +735,8 @@ const HTSSessions = () => {
                         ✓ Pre-test: {session.pre_test_counseling ? 'Yes' : 'No'}
                       </div>
                       <div style={styles.metaItem}>
-                        ✓ Post-test: {session.post_test_counseling ? 'Yes' : 'No'}
+                        ✓ Post-test:{' '}
+                        {session.post_test_counseling ? 'Yes' : 'No'}
                       </div>
                     </div>
                   </div>
@@ -682,10 +744,15 @@ const HTSSessions = () => {
                     <span
                       style={{
                         ...styles.badge,
-                        ...(isPositive ? styles.badgePositive : styles.badgeNegative),
+                        ...(isPositive
+                          ? styles.badgePositive
+                          : styles.badgeNegative),
                       }}
                     >
-                      {session.test_result ? session.test_result.charAt(0).toUpperCase() + session.test_result.slice(1) : 'N/A'}
+                      {session.test_result
+                        ? session.test_result.charAt(0).toUpperCase() +
+                          session.test_result.slice(1)
+                        : 'N/A'}
                     </span>
                     <button
                       style={styles.viewButton}
@@ -701,7 +768,7 @@ const HTSSessions = () => {
             <div
               style={{ padding: '20px', textAlign: 'center', color: '#666' }}
             >
-              {sessions.length === 0 
+              {sessions.length === 0
                 ? 'No HTS sessions found. Check console for API response details.'
                 : `No sessions match your filters. Showing ${sessions.length} total session(s).`}
             </div>
@@ -738,8 +805,14 @@ const HTSSessions = () => {
                   >
                     <option value="">Select Patient</option>
                     {patients.map((p) => (
-                      <option key={p.patient_id || p.id} value={p.patient_id || p.id}>
-                        {p.patient_name || `${p.first_name || p.firstName} ${p.last_name || p.lastName}`}
+                      <option
+                        key={p.patient_id || p.id}
+                        value={p.patient_id || p.id}
+                      >
+                        {p.patient_name ||
+                          `${p.first_name || p.firstName} ${
+                            p.last_name || p.lastName
+                          }`}
                       </option>
                     ))}
                   </select>
@@ -792,25 +865,37 @@ const HTSSessions = () => {
                   >
                     <option value="">Select MyHubCares Branch</option>
                     {facilities.map((f) => (
-                      <option key={f.facility_id || f.id} value={f.facility_id || f.id}>
+                      <option
+                        key={f.facility_id || f.id}
+                        value={f.facility_id || f.id}
+                      >
                         {f.facility_name || f.name}
                       </option>
                     ))}
                     <option value="">My Hub Cares Ortigas Main</option>
                     {facilities.map((f) => (
-                      <option key={f.facility_id || f.id} value={f.facility_id || f.id}>
+                      <option
+                        key={f.facility_id || f.id}
+                        value={f.facility_id || f.id}
+                      >
                         {f.facility_name || f.name}
                       </option>
                     ))}
                     <option value="">My Hub Cares Pasay</option>
                     {facilities.map((f) => (
-                      <option key={f.facility_id || f.id} value={f.facility_id || f.id}>
+                      <option
+                        key={f.facility_id || f.id}
+                        value={f.facility_id || f.id}
+                      >
                         {f.facility_name || f.name}
                       </option>
                     ))}
                     <option value="">My Hub Cares Alabang</option>
                     {facilities.map((f) => (
-                      <option key={f.facility_id || f.id} value={f.facility_id || f.id}>
+                      <option
+                        key={f.facility_id || f.id}
+                        value={f.facility_id || f.id}
+                      >
                         {f.facility_name || f.name}
                       </option>
                     ))}
@@ -829,7 +914,10 @@ const HTSSessions = () => {
                   >
                     <option value="">Select Type</option>
                     {clientTypes.map((ct) => (
-                      <option key={ct.client_type_id || ct.id} value={ct.client_type_id || ct.id}>
+                      <option
+                        key={ct.client_type_id || ct.id}
+                        value={ct.client_type_id || ct.id}
+                      >
                         {ct.type_name || ct.name}
                       </option>
                     ))}
@@ -1005,7 +1093,9 @@ const HTSSessions = () => {
                 <div style={styles.formGroupHalf}>
                   <div style={styles.detailsLabel}>Session Date</div>
                   <div style={styles.detailsValue}>
-                    {selectedSession.test_date ? new Date(selectedSession.test_date).toLocaleDateString() : 'N/A'}
+                    {selectedSession.test_date
+                      ? new Date(selectedSession.test_date).toLocaleDateString()
+                      : 'N/A'}
                   </div>
                 </div>
                 <div style={styles.formGroupHalf}>
@@ -1013,8 +1103,14 @@ const HTSSessions = () => {
                   <div style={styles.detailsValue}>
                     {(() => {
                       try {
-                        const notesData = selectedSession.notes ? JSON.parse(selectedSession.notes) : {};
-                        return notesData.session_type || selectedSession.test_type || 'N/A';
+                        const notesData = selectedSession.notes
+                          ? JSON.parse(selectedSession.notes)
+                          : {};
+                        return (
+                          notesData.session_type ||
+                          selectedSession.test_type ||
+                          'N/A'
+                        );
                       } catch {
                         return selectedSession.test_type || 'N/A';
                       }
@@ -1052,7 +1148,9 @@ const HTSSessions = () => {
                   type="checkbox"
                   checked={(() => {
                     try {
-                      const notesData = selectedSession.notes ? JSON.parse(selectedSession.notes) : {};
+                      const notesData = selectedSession.notes
+                        ? JSON.parse(selectedSession.notes)
+                        : {};
                       return notesData.consent_given || false;
                     } catch {
                       return false;
@@ -1068,7 +1166,10 @@ const HTSSessions = () => {
               <div style={styles.detailsGroup}>
                 <div style={styles.detailsLabel}>Result</div>
                 <div style={styles.detailsValue}>
-                  {selectedSession.test_result ? selectedSession.test_result.charAt(0).toUpperCase() + selectedSession.test_result.slice(1) : 'N/A'}
+                  {selectedSession.test_result
+                    ? selectedSession.test_result.charAt(0).toUpperCase() +
+                      selectedSession.test_result.slice(1)
+                    : 'N/A'}
                 </div>
               </div>
 
@@ -1093,11 +1194,15 @@ const HTSSessions = () => {
               </div>
               {(() => {
                 try {
-                  const notesData = selectedSession.notes ? JSON.parse(selectedSession.notes) : {};
+                  const notesData = selectedSession.notes
+                    ? JSON.parse(selectedSession.notes)
+                    : {};
                   if (notesData.referral_destination) {
                     return (
                       <div style={styles.detailsGroup}>
-                        <div style={styles.detailsLabel}>Referral Destination</div>
+                        <div style={styles.detailsLabel}>
+                          Referral Destination
+                        </div>
                         <div style={styles.detailsValue}>
                           {notesData.referral_destination}
                         </div>
@@ -1110,7 +1215,9 @@ const HTSSessions = () => {
 
               {(() => {
                 try {
-                  const notesData = selectedSession.notes ? JSON.parse(selectedSession.notes) : {};
+                  const notesData = selectedSession.notes
+                    ? JSON.parse(selectedSession.notes)
+                    : {};
                   if (notesData.remarks) {
                     return (
                       <div style={styles.detailsGroup}>

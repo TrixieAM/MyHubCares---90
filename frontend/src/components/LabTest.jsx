@@ -5,29 +5,29 @@ const API_BASE_URL = 'http://localhost:5000/api';
 const LabTests = () => {
   // State for active tab
   const [activeTab, setActiveTab] = useState('results');
-  
+
   // State for search and filters
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [testFilter, setTestFilter] = useState('all');
-  
+
   // State for loading and toast notifications
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
-  
+
   // State for patients and facilities (for forms)
   const [patients, setPatients] = useState([]);
   const [facilities, setFacilities] = useState([]);
-  
+
   // State for test results
   const [testResults, setTestResults] = useState([]);
-  
+
   // State for lab orders
   const [labOrders, setLabOrders] = useState([]);
-  
+
   // State for lab files
   const [labFiles, setLabFiles] = useState([]);
-  
+
   // State to track deleting files (to disable delete buttons)
   const [deletingFiles, setDeletingFiles] = useState(new Set());
 
@@ -97,7 +97,7 @@ const LabTests = () => {
 
       const data = await response.json();
       let patientsArray = [];
-      
+
       if (data.success && data.patients) {
         patientsArray = data.patients;
       } else if (Array.isArray(data)) {
@@ -128,7 +128,7 @@ const LabTests = () => {
 
       const data = await response.json();
       let facilitiesArray = [];
-      
+
       if (data.success && data.data) {
         facilitiesArray = data.data;
       } else if (Array.isArray(data)) {
@@ -159,10 +159,13 @@ const LabTests = () => {
 
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
-      if (testFilter && testFilter !== 'all') params.append('test_name', testFilter);
+      if (testFilter && testFilter !== 'all')
+        params.append('test_name', testFilter);
 
       const queryString = params.toString();
-      const url = `${API_BASE_URL}/lab-results${queryString ? `?${queryString}` : ''}`;
+      const url = `${API_BASE_URL}/lab-results${
+        queryString ? `?${queryString}` : ''
+      }`;
 
       console.log('Fetching lab results from:', url);
 
@@ -172,7 +175,9 @@ const LabTests = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
       }
 
       const data = await response.json();
@@ -217,7 +222,9 @@ const LabTests = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
       }
 
       const data = await response.json();
@@ -258,10 +265,13 @@ const LabTests = () => {
 
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
-      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
+      if (statusFilter && statusFilter !== 'all')
+        params.append('status', statusFilter);
 
       const queryString = params.toString();
-      const url = `${API_BASE_URL}/lab-orders${queryString ? `?${queryString}` : ''}`;
+      const url = `${API_BASE_URL}/lab-orders${
+        queryString ? `?${queryString}` : ''
+      }`;
 
       console.log('Fetching lab orders from:', url);
 
@@ -271,7 +281,9 @@ const LabTests = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
       }
 
       const data = await response.json();
@@ -300,7 +312,7 @@ const LabTests = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('addResult'); // 'addResult', 'addOrder', 'viewResult', 'editResult', 'uploadFile'
   const [selectedItem, setSelectedItem] = useState(null);
-  
+
   // Form state
   const [newTest, setNewTest] = useState({
     order_id: '',
@@ -314,9 +326,9 @@ const LabTests = () => {
     reference_range_min: '',
     reference_range_max: '',
     reference_range_text: '',
-    notes: ''
+    notes: '',
   });
-  
+
   const [newOrder, setNewOrder] = useState({
     patient_id: '',
     test_panel: '',
@@ -325,18 +337,18 @@ const LabTests = () => {
     status: 'ordered',
     priority: 'routine',
     collection_date: '',
-    notes: ''
+    notes: '',
   });
-  
+
   const [newFile, setNewFile] = useState({
     result_id: '',
-    file: null
+    file: null,
   });
 
   // Handle input changes for forms
   const handleInputChange = (e, formType = 'test') => {
     const { name, value } = e.target;
-    
+
     if (formType === 'test') {
       setNewTest((prev) => ({
         ...prev,
@@ -354,12 +366,12 @@ const LabTests = () => {
       }));
     }
   };
-  
+
   // Handle file selection
   const handleFileChange = (e) => {
-    setNewFile(prev => ({
+    setNewFile((prev) => ({
       ...prev,
-      file: e.target.files[0]
+      file: e.target.files[0],
     }));
   };
 
@@ -370,12 +382,23 @@ const LabTests = () => {
       setLoading(true);
       const token = getAuthToken();
       if (!token) {
-        setToast({ message: 'Please login to create lab results', type: 'error' });
+        setToast({
+          message: 'Please login to create lab results',
+          type: 'error',
+        });
         return;
       }
 
-      if (!newTest.order_id || !newTest.patient_id || !newTest.test_name || !newTest.result_value) {
-        setToast({ message: 'Please fill in all required fields', type: 'error' });
+      if (
+        !newTest.order_id ||
+        !newTest.patient_id ||
+        !newTest.test_name ||
+        !newTest.result_value
+      ) {
+        setToast({
+          message: 'Please fill in all required fields',
+          type: 'error',
+        });
         return;
       }
 
@@ -388,16 +411,23 @@ const LabTests = () => {
         body: JSON.stringify({
           order_id: newTest.order_id,
           patient_id: newTest.patient_id,
-          test_code: newTest.test_code || newTest.test_name.substring(0, 10).toUpperCase().replace(/\s/g, ''),
+          test_code:
+            newTest.test_code ||
+            newTest.test_name.substring(0, 10).toUpperCase().replace(/\s/g, ''),
           test_name: newTest.test_name,
           result_value: newTest.result_value,
           unit: newTest.unit || null,
-          reference_range_min: newTest.reference_range_min ? parseFloat(newTest.reference_range_min) : null,
-          reference_range_max: newTest.reference_range_max ? parseFloat(newTest.reference_range_max) : null,
+          reference_range_min: newTest.reference_range_min
+            ? parseFloat(newTest.reference_range_min)
+            : null,
+          reference_range_max: newTest.reference_range_max
+            ? parseFloat(newTest.reference_range_max)
+            : null,
           reference_range_text: newTest.reference_range_text || null,
           collected_at: newTest.collected_at || null,
-          reported_at: newTest.reported_at || new Date().toISOString().split('T')[0],
-          notes: newTest.notes || null
+          reported_at:
+            newTest.reported_at || new Date().toISOString().split('T')[0],
+          notes: newTest.notes || null,
         }),
       });
 
@@ -408,11 +438,11 @@ const LabTests = () => {
       }
 
       if (data.success) {
-        setToast({ 
-          message: data.is_critical 
-            ? 'Lab result created successfully (CRITICAL VALUE DETECTED!)' 
-            : 'Lab result created successfully', 
-          type: data.is_critical ? 'error' : 'success' 
+        setToast({
+          message: data.is_critical
+            ? 'Lab result created successfully (CRITICAL VALUE DETECTED!)'
+            : 'Lab result created successfully',
+          type: data.is_critical ? 'error' : 'success',
         });
         resetTestForm();
         setShowModal(false);
@@ -422,24 +452,37 @@ const LabTests = () => {
       }
     } catch (error) {
       console.error('Error creating lab result:', error);
-      setToast({ message: `Failed to create lab result: ${error.message}`, type: 'error' });
+      setToast({
+        message: `Failed to create lab result: ${error.message}`,
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
   };
-  
+
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
       const token = getAuthToken();
       if (!token) {
-        setToast({ message: 'Please login to create lab orders', type: 'error' });
+        setToast({
+          message: 'Please login to create lab orders',
+          type: 'error',
+        });
         return;
       }
 
-      if (!newOrder.patient_id || !newOrder.test_panel || !newOrder.facility_id) {
-        setToast({ message: 'Please fill in all required fields', type: 'error' });
+      if (
+        !newOrder.patient_id ||
+        !newOrder.test_panel ||
+        !newOrder.facility_id
+      ) {
+        setToast({
+          message: 'Please fill in all required fields',
+          type: 'error',
+        });
         return;
       }
 
@@ -452,12 +495,13 @@ const LabTests = () => {
         body: JSON.stringify({
           patient_id: newOrder.patient_id,
           test_panel: newOrder.test_panel,
-          order_date: newOrder.order_date || new Date().toISOString().split('T')[0],
+          order_date:
+            newOrder.order_date || new Date().toISOString().split('T')[0],
           facility_id: newOrder.facility_id,
           priority: newOrder.priority,
           status: newOrder.status,
           collection_date: newOrder.collection_date || null,
-          notes: newOrder.notes || null
+          notes: newOrder.notes || null,
         }),
       });
 
@@ -468,7 +512,10 @@ const LabTests = () => {
       }
 
       if (data.success) {
-        setToast({ message: 'Lab order created successfully', type: 'success' });
+        setToast({
+          message: 'Lab order created successfully',
+          type: 'success',
+        });
         resetOrderForm();
         setShowModal(false);
         fetchLabOrders(); // Refresh the list
@@ -477,19 +524,25 @@ const LabTests = () => {
       }
     } catch (error) {
       console.error('Error creating lab order:', error);
-      setToast({ message: `Failed to create lab order: ${error.message}`, type: 'error' });
+      setToast({
+        message: `Failed to create lab order: ${error.message}`,
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
   };
-  
+
   const handleSubmitFile = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
       const token = getAuthToken();
       if (!token) {
-        setToast({ message: 'Please login to upload lab files', type: 'error' });
+        setToast({
+          message: 'Please login to upload lab files',
+          type: 'error',
+        });
         return;
       }
 
@@ -517,7 +570,10 @@ const LabTests = () => {
       }
 
       if (data.success) {
-        setToast({ message: 'Lab file uploaded successfully', type: 'success' });
+        setToast({
+          message: 'Lab file uploaded successfully',
+          type: 'success',
+        });
         resetFileForm();
         setShowModal(false);
         fetchLabFiles(); // Refresh the list
@@ -526,7 +582,10 @@ const LabTests = () => {
       }
     } catch (error) {
       console.error('Error uploading lab file:', error);
-      setToast({ message: `Failed to upload lab file: ${error.message}`, type: 'error' });
+      setToast({
+        message: `Failed to upload lab file: ${error.message}`,
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -546,10 +605,10 @@ const LabTests = () => {
       reference_range_min: '',
       reference_range_max: '',
       reference_range_text: '',
-      notes: ''
+      notes: '',
     });
   };
-  
+
   const resetOrderForm = () => {
     setNewOrder({
       patient_id: '',
@@ -559,14 +618,14 @@ const LabTests = () => {
       status: 'ordered',
       priority: 'routine',
       collection_date: '',
-      notes: ''
+      notes: '',
     });
   };
-  
+
   const resetFileForm = () => {
     setNewFile({
       result_id: '',
-      file: null
+      file: null,
     });
   };
 
@@ -574,7 +633,7 @@ const LabTests = () => {
   const openModal = (type, item = null) => {
     setModalType(type);
     setSelectedItem(item);
-    
+
     if (type === 'editResult' && item) {
       setNewTest({
         order_id: item.order_id || '',
@@ -588,18 +647,18 @@ const LabTests = () => {
         reference_range_min: item.reference_range_min || '',
         reference_range_max: item.reference_range_max || '',
         reference_range_text: item.reference_range_text || '',
-        notes: item.notes || ''
+        notes: item.notes || '',
       });
     } else if (type === 'uploadFile' && item) {
       setNewFile({
         result_id: item.result_id || item.id,
-        file: null
+        file: null,
       });
     }
-    
+
     setShowModal(true);
   };
-  
+
   const closeModal = () => {
     setShowModal(false);
     resetTestForm();
@@ -607,24 +666,27 @@ const LabTests = () => {
     resetFileForm();
     setSelectedItem(null);
   };
-  
+
   // Delete functions
   const deleteResult = async (id) => {
     if (!window.confirm('Are you sure you want to delete this test result?')) {
       return;
     }
 
-    const resultId = typeof id === 'object' ? (id.result_id || id.id) : id;
+    const resultId = typeof id === 'object' ? id.result_id || id.id : id;
 
     // Add to deleting set to disable button
-    setDeletingFiles(prev => new Set(prev).add(resultId));
+    setDeletingFiles((prev) => new Set(prev).add(resultId));
 
     try {
       setLoading(true);
       const token = getAuthToken();
       if (!token) {
-        setToast({ message: 'Please login to delete lab results', type: 'error' });
-        setDeletingFiles(prev => {
+        setToast({
+          message: 'Please login to delete lab results',
+          type: 'error',
+        });
+        setDeletingFiles((prev) => {
           const newSet = new Set(prev);
           newSet.delete(resultId);
           return newSet;
@@ -646,11 +708,16 @@ const LabTests = () => {
       }
 
       if (data.success) {
-        setToast({ message: 'Lab result deleted successfully', type: 'success' });
+        setToast({
+          message: 'Lab result deleted successfully',
+          type: 'success',
+        });
         // Optimistically remove from list immediately
-        setTestResults(prev => prev.filter(r => (r.result_id || r.id) !== resultId));
+        setTestResults((prev) =>
+          prev.filter((r) => (r.result_id || r.id) !== resultId)
+        );
         // Remove from deleting set
-        setDeletingFiles(prev => {
+        setDeletingFiles((prev) => {
           const newSet = new Set(prev);
           newSet.delete(resultId);
           return newSet;
@@ -662,9 +729,12 @@ const LabTests = () => {
       }
     } catch (error) {
       console.error('Error deleting lab result:', error);
-      setToast({ message: `Failed to delete lab result: ${error.message}`, type: 'error' });
+      setToast({
+        message: `Failed to delete lab result: ${error.message}`,
+        type: 'error',
+      });
       // Remove from deleting set on error so button can be clicked again
-      setDeletingFiles(prev => {
+      setDeletingFiles((prev) => {
         const newSet = new Set(prev);
         newSet.delete(resultId);
         return newSet;
@@ -673,21 +743,24 @@ const LabTests = () => {
       setLoading(false);
     }
   };
-  
+
   const deleteOrder = async (id) => {
     if (!window.confirm('Are you sure you want to cancel this lab order?')) {
       return;
     }
 
     // Add to deleting set to disable button
-    setDeletingFiles(prev => new Set(prev).add(id));
+    setDeletingFiles((prev) => new Set(prev).add(id));
 
     try {
       setLoading(true);
       const token = getAuthToken();
       if (!token) {
-        setToast({ message: 'Please login to delete lab orders', type: 'error' });
-        setDeletingFiles(prev => {
+        setToast({
+          message: 'Please login to delete lab orders',
+          type: 'error',
+        });
+        setDeletingFiles((prev) => {
           const newSet = new Set(prev);
           newSet.delete(id);
           return newSet;
@@ -709,11 +782,14 @@ const LabTests = () => {
       }
 
       if (data.success) {
-        setToast({ message: 'Lab order cancelled successfully', type: 'success' });
+        setToast({
+          message: 'Lab order cancelled successfully',
+          type: 'success',
+        });
         // Optimistically remove from list immediately
-        setLabOrders(prev => prev.filter(o => (o.order_id || o.id) !== id));
+        setLabOrders((prev) => prev.filter((o) => (o.order_id || o.id) !== id));
         // Remove from deleting set
-        setDeletingFiles(prev => {
+        setDeletingFiles((prev) => {
           const newSet = new Set(prev);
           newSet.delete(id);
           return newSet;
@@ -725,9 +801,12 @@ const LabTests = () => {
       }
     } catch (error) {
       console.error('Error deleting lab order:', error);
-      setToast({ message: `Failed to cancel lab order: ${error.message}`, type: 'error' });
+      setToast({
+        message: `Failed to cancel lab order: ${error.message}`,
+        type: 'error',
+      });
       // Remove from deleting set on error so button can be clicked again
-      setDeletingFiles(prev => {
+      setDeletingFiles((prev) => {
         const newSet = new Set(prev);
         newSet.delete(id);
         return newSet;
@@ -736,23 +815,26 @@ const LabTests = () => {
       setLoading(false);
     }
   };
-  
+
   const deleteFile = async (id) => {
     if (!window.confirm('Are you sure you want to delete this file?')) {
       return;
     }
 
-    const fileId = typeof id === 'object' ? (id.file_id || id.id) : id;
+    const fileId = typeof id === 'object' ? id.file_id || id.id : id;
 
     // Add to deleting set to disable button
-    setDeletingFiles(prev => new Set(prev).add(fileId));
+    setDeletingFiles((prev) => new Set(prev).add(fileId));
 
     try {
       setLoading(true);
       const token = getAuthToken();
       if (!token) {
-        setToast({ message: 'Please login to delete lab files', type: 'error' });
-        setDeletingFiles(prev => {
+        setToast({
+          message: 'Please login to delete lab files',
+          type: 'error',
+        });
+        setDeletingFiles((prev) => {
           const newSet = new Set(prev);
           newSet.delete(fileId);
           return newSet;
@@ -776,9 +858,11 @@ const LabTests = () => {
       if (data.success) {
         setToast({ message: 'Lab file deleted successfully', type: 'success' });
         // Optimistically remove from list immediately
-        setLabFiles(prev => prev.filter(f => (f.file_id || f.id) !== fileId));
+        setLabFiles((prev) =>
+          prev.filter((f) => (f.file_id || f.id) !== fileId)
+        );
         // Remove from deleting set
-        setDeletingFiles(prev => {
+        setDeletingFiles((prev) => {
           const newSet = new Set(prev);
           newSet.delete(fileId);
           return newSet;
@@ -790,9 +874,12 @@ const LabTests = () => {
       }
     } catch (error) {
       console.error('Error deleting lab file:', error);
-      setToast({ message: `Failed to delete lab file: ${error.message}`, type: 'error' });
+      setToast({
+        message: `Failed to delete lab file: ${error.message}`,
+        type: 'error',
+      });
       // Remove from deleting set on error so button can be clicked again
-      setDeletingFiles(prev => {
+      setDeletingFiles((prev) => {
         const newSet = new Set(prev);
         newSet.delete(fileId);
         return newSet;
@@ -801,7 +888,7 @@ const LabTests = () => {
       setLoading(false);
     }
   };
-  
+
   // Update result function
   const updateResult = async (e) => {
     e.preventDefault();
@@ -811,7 +898,10 @@ const LabTests = () => {
       setLoading(true);
       const token = getAuthToken();
       if (!token) {
-        setToast({ message: 'Please login to update lab results', type: 'error' });
+        setToast({
+          message: 'Please login to update lab results',
+          type: 'error',
+        });
         return;
       }
 
@@ -828,12 +918,16 @@ const LabTests = () => {
           test_name: newTest.test_name,
           result_value: newTest.result_value,
           unit: newTest.unit || null,
-          reference_range_min: newTest.reference_range_min ? parseFloat(newTest.reference_range_min) : null,
-          reference_range_max: newTest.reference_range_max ? parseFloat(newTest.reference_range_max) : null,
+          reference_range_min: newTest.reference_range_min
+            ? parseFloat(newTest.reference_range_min)
+            : null,
+          reference_range_max: newTest.reference_range_max
+            ? parseFloat(newTest.reference_range_max)
+            : null,
           reference_range_text: newTest.reference_range_text || null,
           collected_at: newTest.collected_at || null,
           reported_at: newTest.reported_at || null,
-          notes: newTest.notes || null
+          notes: newTest.notes || null,
         }),
       });
 
@@ -844,7 +938,10 @@ const LabTests = () => {
       }
 
       if (data.success) {
-        setToast({ message: 'Lab result updated successfully', type: 'success' });
+        setToast({
+          message: 'Lab result updated successfully',
+          type: 'success',
+        });
         resetTestForm();
         setShowModal(false);
         fetchLabResults(); // Refresh the list
@@ -853,24 +950,28 @@ const LabTests = () => {
       }
     } catch (error) {
       console.error('Error updating lab result:', error);
-      setToast({ message: `Failed to update lab result: ${error.message}`, type: 'error' });
+      setToast({
+        message: `Failed to update lab result: ${error.message}`,
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
   };
-  
+
   // Filter functions
-  const filteredResults = testResults.filter(result => {
-    const matchesSearch = searchTerm === '' || 
+  const filteredResults = testResults.filter((result) => {
+    const matchesSearch =
+      searchTerm === '' ||
       result.patient.toLowerCase().includes(searchTerm.toLowerCase()) ||
       result.testName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       result.result.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesTest = testFilter === 'all' || result.testName === testFilter;
-    
+
     return matchesSearch && matchesTest;
   });
-  
+
   // Fetch lab orders when orders tab is active or filters change
   useEffect(() => {
     if (activeTab === 'orders') {
@@ -898,9 +999,11 @@ const LabTests = () => {
 
   // Filter orders (client-side filtering as backup, but API handles most filtering)
   const filteredOrders = labOrders;
-  
+
   // Get unique test names for filter
-  const uniqueTestNames = [...new Set(testResults.map(result => result.testName))];
+  const uniqueTestNames = [
+    ...new Set(testResults.map((result) => result.testName)),
+  ];
 
   // Styles
   const styles = {
@@ -1265,10 +1368,14 @@ const LabTests = () => {
     <div style={styles.pageContainer}>
       {/* Toast Notification */}
       {toast && (
-        <div style={{
-          ...styles.toast,
-          ...(toast.type === 'success' ? styles.toastSuccess : styles.toastError)
-        }}>
+        <div
+          style={{
+            ...styles.toast,
+            ...(toast.type === 'success'
+              ? styles.toastSuccess
+              : styles.toastError),
+          }}
+        >
           {toast.message}
         </div>
       )}
@@ -1292,20 +1399,29 @@ const LabTests = () => {
 
       {/* Tabs */}
       <div style={styles.tabsContainer}>
-        <div 
-          style={{...styles.tab, ...(activeTab === 'results' ? styles.activeTab : {})}}
+        <div
+          style={{
+            ...styles.tab,
+            ...(activeTab === 'results' ? styles.activeTab : {}),
+          }}
           onClick={() => setActiveTab('results')}
         >
           Lab Results
         </div>
-        <div 
-          style={{...styles.tab, ...(activeTab === 'orders' ? styles.activeTab : {})}}
+        <div
+          style={{
+            ...styles.tab,
+            ...(activeTab === 'orders' ? styles.activeTab : {}),
+          }}
           onClick={() => setActiveTab('orders')}
         >
           Lab Orders
         </div>
-        <div 
-          style={{...styles.tab, ...(activeTab === 'files' ? styles.activeTab : {})}}
+        <div
+          style={{
+            ...styles.tab,
+            ...(activeTab === 'files' ? styles.activeTab : {}),
+          }}
           onClick={() => setActiveTab('files')}
         >
           Lab Files
@@ -1319,8 +1435,8 @@ const LabTests = () => {
           <>
             <div style={styles.cardHeader}>
               <h1 style={styles.cardTitle}>Laboratory Test Results</h1>
-              <button 
-                style={styles.addButton} 
+              <button
+                style={styles.addButton}
                 onClick={() => openModal('addResult')}
                 onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
                 onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
@@ -1328,23 +1444,25 @@ const LabTests = () => {
                 Add Test Result
               </button>
             </div>
-            
+
             <div style={styles.filterContainer}>
-              <input
+              {/* <input
                 type="text"
                 placeholder="Search results..."
                 style={styles.searchInput}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-              />
+              /> */}
               <select
                 style={styles.filterSelect}
                 value={testFilter}
                 onChange={(e) => setTestFilter(e.target.value)}
               >
                 <option value="all">All Tests</option>
-                {uniqueTestNames.map(name => (
-                  <option key={name} value={name}>{name}</option>
+                {uniqueTestNames.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -1366,7 +1484,9 @@ const LabTests = () => {
                   <tr>
                     <td colSpan="7" style={styles.tableCell}>
                       <div style={styles.emptyState}>
-                        <div style={styles.emptyStateText}>Loading lab results...</div>
+                        <div style={styles.emptyStateText}>
+                          Loading lab results...
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -1375,7 +1495,9 @@ const LabTests = () => {
                     <td colSpan="7" style={styles.tableCell}>
                       <div style={styles.emptyState}>
                         <div style={styles.emptyStateIcon}>📋</div>
-                        <div style={styles.emptyStateText}>No lab results found</div>
+                        <div style={styles.emptyStateText}>
+                          No lab results found
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -1396,61 +1518,111 @@ const LabTests = () => {
                       <td style={styles.tableCell}>{result.result}</td>
                       <td style={styles.tableCell}>{result.date}</td>
                       <td style={styles.tableCell}>
-                        <span style={{
-                          ...styles.statusBadge,
-                          ...(result.status === 'completed' ? styles.completedStatus : 
-                              result.status === 'ordered' ? styles.orderedStatus : 
-                              styles.inProgressStatus)
-                        }}>
+                        <span
+                          style={{
+                            ...styles.statusBadge,
+                            ...(result.status === 'completed'
+                              ? styles.completedStatus
+                              : result.status === 'ordered'
+                              ? styles.orderedStatus
+                              : styles.inProgressStatus),
+                          }}
+                        >
                           {result.status}
                         </span>
                       </td>
                       <td style={styles.tableCell}>
-                        <span style={{
-                          ...styles.priorityBadge,
-                          ...(result.priority === 'routine' ? styles.routinePriority : 
-                              styles.urgentPriority)
-                        }}>
+                        <span
+                          style={{
+                            ...styles.priorityBadge,
+                            ...(result.priority === 'routine'
+                              ? styles.routinePriority
+                              : styles.urgentPriority),
+                          }}
+                        >
                           {result.priority}
                         </span>
                       </td>
                       <td style={styles.tableCell}>
                         <div style={styles.actionsCell}>
-                          <button 
-                            style={{...styles.actionButton, ...styles.viewButton}}
+                          <button
+                            style={{
+                              ...styles.actionButton,
+                              ...styles.viewButton,
+                            }}
                             onClick={() => openModal('viewResult', result)}
-                            onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
-                            onMouseLeave={(e) => (e.target.style.background = '#D84040')}
+                            onMouseEnter={(e) =>
+                              (e.target.style.background = '#A31D1D')
+                            }
+                            onMouseLeave={(e) =>
+                              (e.target.style.background = '#D84040')
+                            }
                           >
                             View
                           </button>
-                          <button 
-                            style={{...styles.actionButton, ...styles.editButton}}
+                          <button
+                            style={{
+                              ...styles.actionButton,
+                              ...styles.editButton,
+                            }}
                             onClick={() => openModal('editResult', result)}
-                            onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
-                            onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
+                            onMouseEnter={(e) =>
+                              (e.target.style.background = '#F8F2DE')
+                            }
+                            onMouseLeave={(e) =>
+                              (e.target.style.background = '#ECDCBF')
+                            }
                           >
                             Edit
                           </button>
-                          <button 
+                          <button
                             style={{
-                              ...styles.actionButton, 
+                              ...styles.actionButton,
                               ...styles.deleteButton,
-                              opacity: deletingFiles.has(result.result_id || result.id) ? 0.5 : 1,
-                              cursor: deletingFiles.has(result.result_id || result.id) ? 'not-allowed' : 'pointer'
+                              opacity: deletingFiles.has(
+                                result.result_id || result.id
+                              )
+                                ? 0.5
+                                : 1,
+                              cursor: deletingFiles.has(
+                                result.result_id || result.id
+                              )
+                                ? 'not-allowed'
+                                : 'pointer',
                             }}
-                            onClick={() => deleteResult(result.result_id || result.id)}
-                            disabled={deletingFiles.has(result.result_id || result.id)}
-                            onMouseEnter={(e) => !deletingFiles.has(result.result_id || result.id) && (e.target.style.background = '#D84040')}
-                            onMouseLeave={(e) => !deletingFiles.has(result.result_id || result.id) && (e.target.style.background = '#A31D1D')}
+                            onClick={() =>
+                              deleteResult(result.result_id || result.id)
+                            }
+                            disabled={deletingFiles.has(
+                              result.result_id || result.id
+                            )}
+                            onMouseEnter={(e) =>
+                              !deletingFiles.has(
+                                result.result_id || result.id
+                              ) && (e.target.style.background = '#D84040')
+                            }
+                            onMouseLeave={(e) =>
+                              !deletingFiles.has(
+                                result.result_id || result.id
+                              ) && (e.target.style.background = '#A31D1D')
+                            }
                           >
-                            {deletingFiles.has(result.result_id || result.id) ? 'Deleting...' : 'Delete'}
+                            {deletingFiles.has(result.result_id || result.id)
+                              ? 'Deleting...'
+                              : 'Delete'}
                           </button>
-                          <button 
-                            style={{...styles.actionButton, ...styles.uploadButton}}
+                          <button
+                            style={{
+                              ...styles.actionButton,
+                              ...styles.uploadButton,
+                            }}
                             onClick={() => openModal('uploadFile', result)}
-                            onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
-                            onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
+                            onMouseEnter={(e) =>
+                              (e.target.style.background = '#F8F2DE')
+                            }
+                            onMouseLeave={(e) =>
+                              (e.target.style.background = '#ECDCBF')
+                            }
                           >
                             Upload
                           </button>
@@ -1463,14 +1635,14 @@ const LabTests = () => {
             </table>
           </>
         )}
-        
+
         {/* Lab Orders Tab */}
         {activeTab === 'orders' && (
           <>
             <div style={styles.cardHeader}>
               <h1 style={styles.cardTitle}>Laboratory Orders</h1>
-              <button 
-                style={styles.addButton} 
+              <button
+                style={styles.addButton}
                 onClick={() => openModal('addOrder')}
                 onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
                 onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
@@ -1478,7 +1650,7 @@ const LabTests = () => {
                 Add Lab Order
               </button>
             </div>
-            
+
             <div style={styles.filterContainer}>
               <input
                 type="text"
@@ -1518,7 +1690,9 @@ const LabTests = () => {
                   <tr>
                     <td colSpan="7" style={styles.tableCell}>
                       <div style={styles.emptyState}>
-                        <div style={styles.emptyStateText}>Loading lab orders...</div>
+                        <div style={styles.emptyStateText}>
+                          Loading lab orders...
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -1527,7 +1701,9 @@ const LabTests = () => {
                     <td colSpan="7" style={styles.tableCell}>
                       <div style={styles.emptyState}>
                         <div style={styles.emptyStateIcon}>📋</div>
-                        <div style={styles.emptyStateText}>No lab orders found</div>
+                        <div style={styles.emptyStateText}>
+                          No lab orders found
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -1547,51 +1723,92 @@ const LabTests = () => {
                       <td style={styles.tableCell}>{order.testName}</td>
                       <td style={styles.tableCell}>{order.date}</td>
                       <td style={styles.tableCell}>
-                        <span style={{
-                          ...styles.statusBadge,
-                          ...(order.status === 'completed' ? styles.completedStatus : 
-                              order.status === 'ordered' ? styles.orderedStatus : 
-                              order.status === 'collected' ? styles.orderedStatus :
-                              order.status === 'cancelled' ? { backgroundColor: '#f8d7da', color: '#721c24' } :
-                              styles.inProgressStatus)
-                        }}>
+                        <span
+                          style={{
+                            ...styles.statusBadge,
+                            ...(order.status === 'completed'
+                              ? styles.completedStatus
+                              : order.status === 'ordered'
+                              ? styles.orderedStatus
+                              : order.status === 'collected'
+                              ? styles.orderedStatus
+                              : order.status === 'cancelled'
+                              ? { backgroundColor: '#f8d7da', color: '#721c24' }
+                              : styles.inProgressStatus),
+                          }}
+                        >
                           {order.status.replace('_', ' ')}
                         </span>
                       </td>
                       <td style={styles.tableCell}>
-                        <span style={{
-                          ...styles.priorityBadge,
-                          ...(order.priority === 'routine' ? styles.routinePriority : 
-                              order.priority === 'stat' ? { backgroundColor: '#f8d7da', color: '#721c24', fontWeight: 'bold' } :
-                              styles.urgentPriority)
-                        }}>
+                        <span
+                          style={{
+                            ...styles.priorityBadge,
+                            ...(order.priority === 'routine'
+                              ? styles.routinePriority
+                              : order.priority === 'stat'
+                              ? {
+                                  backgroundColor: '#f8d7da',
+                                  color: '#721c24',
+                                  fontWeight: 'bold',
+                                }
+                              : styles.urgentPriority),
+                          }}
+                        >
                           {order.priority.toUpperCase()}
                         </span>
                       </td>
                       <td style={styles.tableCell}>{order.orderedBy}</td>
                       <td style={styles.tableCell}>
                         <div style={styles.actionsCell}>
-                          <button 
-                            style={{...styles.actionButton, ...styles.viewButton}}
+                          <button
+                            style={{
+                              ...styles.actionButton,
+                              ...styles.viewButton,
+                            }}
                             onClick={() => openModal('viewOrder', order)}
-                            onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
-                            onMouseLeave={(e) => (e.target.style.background = '#D84040')}
+                            onMouseEnter={(e) =>
+                              (e.target.style.background = '#A31D1D')
+                            }
+                            onMouseLeave={(e) =>
+                              (e.target.style.background = '#D84040')
+                            }
                           >
                             View
                           </button>
-                          <button 
+                          <button
                             style={{
-                              ...styles.actionButton, 
+                              ...styles.actionButton,
                               ...styles.deleteButton,
-                              opacity: deletingFiles.has(order.order_id || order.id) ? 0.5 : 1,
-                              cursor: deletingFiles.has(order.order_id || order.id) ? 'not-allowed' : 'pointer'
+                              opacity: deletingFiles.has(
+                                order.order_id || order.id
+                              )
+                                ? 0.5
+                                : 1,
+                              cursor: deletingFiles.has(
+                                order.order_id || order.id
+                              )
+                                ? 'not-allowed'
+                                : 'pointer',
                             }}
-                            onClick={() => deleteOrder(order.order_id || order.id)}
-                            disabled={deletingFiles.has(order.order_id || order.id)}
-                            onMouseEnter={(e) => !deletingFiles.has(order.order_id || order.id) && (e.target.style.background = '#D84040')}
-                            onMouseLeave={(e) => !deletingFiles.has(order.order_id || order.id) && (e.target.style.background = '#A31D1D')}
+                            onClick={() =>
+                              deleteOrder(order.order_id || order.id)
+                            }
+                            disabled={deletingFiles.has(
+                              order.order_id || order.id
+                            )}
+                            onMouseEnter={(e) =>
+                              !deletingFiles.has(order.order_id || order.id) &&
+                              (e.target.style.background = '#D84040')
+                            }
+                            onMouseLeave={(e) =>
+                              !deletingFiles.has(order.order_id || order.id) &&
+                              (e.target.style.background = '#A31D1D')
+                            }
                           >
-                            {deletingFiles.has(order.order_id || order.id) ? 'Deleting...' : 'Delete'}
+                            {deletingFiles.has(order.order_id || order.id)
+                              ? 'Deleting...'
+                              : 'Delete'}
                           </button>
                         </div>
                       </td>
@@ -1602,7 +1819,7 @@ const LabTests = () => {
             </table>
           </>
         )}
-        
+
         {/* Lab Files Tab */}
         {activeTab === 'files' && (
           <>
@@ -1626,7 +1843,9 @@ const LabTests = () => {
                   <tr>
                     <td colSpan="6" style={styles.tableCell}>
                       <div style={styles.emptyState}>
-                        <div style={styles.emptyStateText}>Loading lab files...</div>
+                        <div style={styles.emptyStateText}>
+                          Loading lab files...
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -1635,7 +1854,9 @@ const LabTests = () => {
                     <td colSpan="6" style={styles.tableCell}>
                       <div style={styles.emptyState}>
                         <div style={styles.emptyStateIcon}>📁</div>
-                        <div style={styles.emptyStateText}>No lab files found</div>
+                        <div style={styles.emptyStateText}>
+                          No lab files found
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -1651,47 +1872,80 @@ const LabTests = () => {
                           (e.currentTarget.style.backgroundColor = '#f8f9fa')
                         }
                         onMouseLeave={(e) =>
-                          (e.currentTarget.style.backgroundColor = 'transparent')
+                          (e.currentTarget.style.backgroundColor =
+                            'transparent')
                         }
                       >
-                        <td style={styles.tableCell}>{file.fileName || file.file_name}</td>
                         <td style={styles.tableCell}>
-                          {file.patient && file.testName ? `${file.patient} - ${file.testName}` : 'N/A'}
+                          {file.fileName || file.file_name}
                         </td>
-                        <td style={styles.tableCell}>{file.fileSize || '0 KB'}</td>
-                        <td style={styles.tableCell}>{file.uploadedAt || file.uploaded_at}</td>
-                        <td style={styles.tableCell}>{file.uploadedBy || 'Unknown'}</td>
+                        <td style={styles.tableCell}>
+                          {file.patient && file.testName
+                            ? `${file.patient} - ${file.testName}`
+                            : 'N/A'}
+                        </td>
+                        <td style={styles.tableCell}>
+                          {file.fileSize || '0 KB'}
+                        </td>
+                        <td style={styles.tableCell}>
+                          {file.uploadedAt || file.uploaded_at}
+                        </td>
+                        <td style={styles.tableCell}>
+                          {file.uploadedBy || 'Unknown'}
+                        </td>
                         <td style={styles.tableCell}>
                           <div style={styles.actionsCell}>
-                            <button 
-                              style={{...styles.actionButton, ...styles.viewButton}}
-                              onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
-                              onMouseLeave={(e) => (e.target.style.background = '#D84040')}
+                            <button
+                              style={{
+                                ...styles.actionButton,
+                                ...styles.viewButton,
+                              }}
+                              onMouseEnter={(e) =>
+                                (e.target.style.background = '#A31D1D')
+                              }
+                              onMouseLeave={(e) =>
+                                (e.target.style.background = '#D84040')
+                              }
                               onClick={async () => {
                                 try {
                                   const token = getAuthToken();
                                   if (!token) {
-                                    setToast({ message: 'Please login to download files', type: 'error' });
+                                    setToast({
+                                      message: 'Please login to download files',
+                                      type: 'error',
+                                    });
                                     return;
                                   }
 
-                                  const response = await fetch(`${API_BASE_URL}/lab-files/${fileId}/download`, {
-                                    headers: {
-                                      Authorization: `Bearer ${token}`,
-                                    },
-                                  });
+                                  const response = await fetch(
+                                    `${API_BASE_URL}/lab-files/${fileId}/download`,
+                                    {
+                                      headers: {
+                                        Authorization: `Bearer ${token}`,
+                                      },
+                                    }
+                                  );
 
                                   if (!response.ok) {
                                     throw new Error('Failed to download file');
                                   }
 
                                   // Get filename from Content-Disposition header or use file name
-                                  const contentDisposition = response.headers.get('Content-Disposition');
-                                  let filename = file.fileName || file.file_name || 'download';
+                                  const contentDisposition =
+                                    response.headers.get('Content-Disposition');
+                                  let filename =
+                                    file.fileName ||
+                                    file.file_name ||
+                                    'download';
                                   if (contentDisposition) {
-                                    const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+                                    const filenameMatch =
+                                      contentDisposition.match(
+                                        /filename="?(.+)"?/i
+                                      );
                                     if (filenameMatch) {
-                                      filename = decodeURIComponent(filenameMatch[1]);
+                                      filename = decodeURIComponent(
+                                        filenameMatch[1]
+                                      );
                                     }
                                   }
 
@@ -1706,24 +1960,36 @@ const LabTests = () => {
                                   window.URL.revokeObjectURL(url);
                                   document.body.removeChild(a);
                                 } catch (error) {
-                                  console.error('Error downloading file:', error);
-                                  setToast({ message: `Failed to download file: ${error.message}`, type: 'error' });
+                                  console.error(
+                                    'Error downloading file:',
+                                    error
+                                  );
+                                  setToast({
+                                    message: `Failed to download file: ${error.message}`,
+                                    type: 'error',
+                                  });
                                 }
                               }}
                             >
                               Download
                             </button>
-                            <button 
+                            <button
                               style={{
-                                ...styles.actionButton, 
+                                ...styles.actionButton,
                                 ...styles.deleteButton,
                                 opacity: isDeleting ? 0.5 : 1,
-                                cursor: isDeleting ? 'not-allowed' : 'pointer'
+                                cursor: isDeleting ? 'not-allowed' : 'pointer',
                               }}
                               onClick={() => deleteFile(fileId)}
                               disabled={isDeleting}
-                              onMouseEnter={(e) => !isDeleting && (e.target.style.background = '#D84040')}
-                              onMouseLeave={(e) => !isDeleting && (e.target.style.background = '#A31D1D')}
+                              onMouseEnter={(e) =>
+                                !isDeleting &&
+                                (e.target.style.background = '#D84040')
+                              }
+                              onMouseLeave={(e) =>
+                                !isDeleting &&
+                                (e.target.style.background = '#A31D1D')
+                              }
                             >
                               {isDeleting ? 'Deleting...' : 'Delete'}
                             </button>
@@ -1752,12 +2018,19 @@ const LabTests = () => {
                 {modalType === 'viewOrder' && 'View Lab Order'}
                 {modalType === 'uploadFile' && 'Upload File'}
               </h2>
-              <button style={styles.closeButton} onClick={closeModal}>×</button>
+              <button style={styles.closeButton} onClick={closeModal}>
+                ×
+              </button>
             </div>
-            
+
             {/* Add/Edit Result Form */}
             {(modalType === 'addResult' || modalType === 'editResult') && (
-              <form style={styles.form} onSubmit={modalType === 'addResult' ? handleSubmitResult : updateResult}>
+              <form
+                style={styles.form}
+                onSubmit={
+                  modalType === 'addResult' ? handleSubmitResult : updateResult
+                }
+              >
                 {modalType === 'addResult' && (
                   <div style={styles.formGroup}>
                     <label style={styles.label} htmlFor="order_id">
@@ -1768,13 +2041,15 @@ const LabTests = () => {
                       name="order_id"
                       value={newTest.order_id}
                       onChange={(e) => {
-                        const selectedOrder = labOrders.find(o => o.order_id === e.target.value);
+                        const selectedOrder = labOrders.find(
+                          (o) => o.order_id === e.target.value
+                        );
                         if (selectedOrder) {
-                          setNewTest(prev => ({
+                          setNewTest((prev) => ({
                             ...prev,
                             order_id: e.target.value,
                             patient_id: selectedOrder.patient_id,
-                            test_name: selectedOrder.testName
+                            test_name: selectedOrder.testName,
                           }));
                         } else {
                           handleInputChange(e, 'test');
@@ -1784,11 +2059,17 @@ const LabTests = () => {
                       required={modalType === 'addResult'}
                     >
                       <option value="">Select Lab Order</option>
-                      {labOrders.filter(o => o.status !== 'completed' && o.status !== 'cancelled').map((order) => (
-                        <option key={order.order_id} value={order.order_id}>
-                          {order.patient} - {order.testName} ({order.status}) - {order.date}
-                        </option>
-                      ))}
+                      {labOrders
+                        .filter(
+                          (o) =>
+                            o.status !== 'completed' && o.status !== 'cancelled'
+                        )
+                        .map((order) => (
+                          <option key={order.order_id} value={order.order_id}>
+                            {order.patient} - {order.testName} ({order.status})
+                            - {order.date}
+                          </option>
+                        ))}
                     </select>
                   </div>
                 )}
@@ -1809,8 +2090,13 @@ const LabTests = () => {
                     >
                       <option value="">Select Patient</option>
                       {patients.map((patient) => (
-                        <option key={patient.patient_id} value={patient.patient_id}>
-                          {patient.first_name} {patient.middle_name || ''} {patient.last_name} {patient.suffix || ''} ({patient.uic})
+                        <option
+                          key={patient.patient_id}
+                          value={patient.patient_id}
+                        >
+                          {patient.first_name} {patient.middle_name || ''}{' '}
+                          {patient.last_name} {patient.suffix || ''} (
+                          {patient.uic})
                         </option>
                       ))}
                     </select>
@@ -1835,7 +2121,9 @@ const LabTests = () => {
                       <option value="Kidney Function">Kidney Function</option>
                       <option value="Hepatitis B">Hepatitis B</option>
                       <option value="Hepatitis C">Hepatitis C</option>
-                      <option value="Complete Blood Count (CBC)">Complete Blood Count (CBC)</option>
+                      <option value="Complete Blood Count (CBC)">
+                        Complete Blood Count (CBC)
+                      </option>
                       <option value="Other">Other</option>
                     </select>
                   </div>
@@ -1987,24 +2275,42 @@ const LabTests = () => {
                     style={styles.cancelButton}
                     onClick={closeModal}
                     disabled={loading}
-                    onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
-                    onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
+                    onMouseEnter={(e) =>
+                      (e.target.style.background = '#F8F2DE')
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.background = '#ECDCBF')
+                    }
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="submit" 
-                    style={modalType === 'addResult' ? styles.submitButton : styles.updateButton}
+                  <button
+                    type="submit"
+                    style={
+                      modalType === 'addResult'
+                        ? styles.submitButton
+                        : styles.updateButton
+                    }
                     disabled={loading}
-                    onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
-                    onMouseLeave={(e) => (e.target.style.background = '#D84040')}
+                    onMouseEnter={(e) =>
+                      (e.target.style.background = '#A31D1D')
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.background = '#D84040')
+                    }
                   >
-                    {loading ? (modalType === 'addResult' ? 'Creating...' : 'Updating...') : (modalType === 'addResult' ? 'Add Test Result' : 'Update Result')}
+                    {loading
+                      ? modalType === 'addResult'
+                        ? 'Creating...'
+                        : 'Updating...'
+                      : modalType === 'addResult'
+                      ? 'Add Test Result'
+                      : 'Update Result'}
                   </button>
                 </div>
               </form>
             )}
-            
+
             {/* Add Order Form */}
             {modalType === 'addOrder' && (
               <form style={styles.form} onSubmit={handleSubmitOrder}>
@@ -2023,8 +2329,13 @@ const LabTests = () => {
                     >
                       <option value="">Select Patient</option>
                       {patients.map((patient) => (
-                        <option key={patient.patient_id} value={patient.patient_id}>
-                          {patient.first_name} {patient.middle_name || ''} {patient.last_name} {patient.suffix || ''} ({patient.uic})
+                        <option
+                          key={patient.patient_id}
+                          value={patient.patient_id}
+                        >
+                          {patient.first_name} {patient.middle_name || ''}{' '}
+                          {patient.last_name} {patient.suffix || ''} (
+                          {patient.uic})
                         </option>
                       ))}
                     </select>
@@ -2048,7 +2359,9 @@ const LabTests = () => {
                       <option value="Kidney Function">Kidney Function</option>
                       <option value="Hepatitis B">Hepatitis B</option>
                       <option value="Hepatitis C">Hepatitis C</option>
-                      <option value="Complete Blood Count (CBC)">Complete Blood Count (CBC)</option>
+                      <option value="Complete Blood Count (CBC)">
+                        Complete Blood Count (CBC)
+                      </option>
                       <option value="Other">Other</option>
                     </select>
                   </div>
@@ -2083,7 +2396,10 @@ const LabTests = () => {
                     >
                       <option value="">Select Facility</option>
                       {facilities.map((facility) => (
-                        <option key={facility.facility_id} value={facility.facility_id}>
+                        <option
+                          key={facility.facility_id}
+                          value={facility.facility_id}
+                        >
                           {facility.facility_name || facility.name}
                         </option>
                       ))}
@@ -2164,24 +2480,32 @@ const LabTests = () => {
                     style={styles.cancelButton}
                     onClick={closeModal}
                     disabled={loading}
-                    onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
-                    onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
+                    onMouseEnter={(e) =>
+                      (e.target.style.background = '#F8F2DE')
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.background = '#ECDCBF')
+                    }
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     style={styles.submitButton}
                     disabled={loading}
-                    onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
-                    onMouseLeave={(e) => (e.target.style.background = '#D84040')}
+                    onMouseEnter={(e) =>
+                      (e.target.style.background = '#A31D1D')
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.background = '#D84040')
+                    }
                   >
                     {loading ? 'Creating...' : 'Add Lab Order'}
                   </button>
                 </div>
               </form>
             )}
-            
+
             {/* View Result Modal */}
             {modalType === 'viewResult' && selectedItem && (
               <div style={styles.form}>
@@ -2205,7 +2529,7 @@ const LabTests = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div style={styles.formRow}>
                   <div style={styles.formGroup}>
                     <label style={styles.label}>Result</label>
@@ -2226,7 +2550,7 @@ const LabTests = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div style={styles.formRow}>
                   <div style={styles.formGroup}>
                     <label style={styles.label}>Status</label>
@@ -2247,7 +2571,7 @@ const LabTests = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div style={styles.formRow}>
                   <div style={styles.formGroup}>
                     <label style={styles.label}>Lab Code</label>
@@ -2268,7 +2592,7 @@ const LabTests = () => {
                     />
                   </div>
                 </div>
-                
+
                 {selectedItem.notes && (
                   <div style={styles.formGroup}>
                     <label style={styles.label}>Notes</label>
@@ -2279,21 +2603,25 @@ const LabTests = () => {
                     />
                   </div>
                 )}
-                
+
                 <div style={styles.modalActions}>
                   <button
                     type="button"
                     style={styles.cancelButton}
                     onClick={closeModal}
-                    onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
-                    onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
+                    onMouseEnter={(e) =>
+                      (e.target.style.background = '#F8F2DE')
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.background = '#ECDCBF')
+                    }
                   >
                     Close
                   </button>
                 </div>
               </div>
             )}
-            
+
             {/* View Order Modal */}
             {modalType === 'viewOrder' && selectedItem && (
               <div style={styles.form}>
@@ -2317,7 +2645,7 @@ const LabTests = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div style={styles.formRow}>
                   <div style={styles.formGroup}>
                     <label style={styles.label}>Date</label>
@@ -2338,7 +2666,7 @@ const LabTests = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div style={styles.formRow}>
                   <div style={styles.formGroup}>
                     <label style={styles.label}>Status</label>
@@ -2359,7 +2687,7 @@ const LabTests = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Ordered By</label>
                   <input
@@ -2369,7 +2697,7 @@ const LabTests = () => {
                     style={styles.input}
                   />
                 </div>
-                
+
                 {selectedItem.notes && (
                   <div style={styles.formGroup}>
                     <label style={styles.label}>Notes</label>
@@ -2380,21 +2708,25 @@ const LabTests = () => {
                     />
                   </div>
                 )}
-                
+
                 <div style={styles.modalActions}>
                   <button
                     type="button"
                     style={styles.cancelButton}
                     onClick={closeModal}
-                    onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
-                    onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
+                    onMouseEnter={(e) =>
+                      (e.target.style.background = '#F8F2DE')
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.background = '#ECDCBF')
+                    }
                   >
                     Close
                   </button>
                 </div>
               </div>
             )}
-            
+
             {/* Upload File Modal */}
             {modalType === 'uploadFile' && selectedItem && (
               <form style={styles.form} onSubmit={handleSubmitFile}>
@@ -2402,12 +2734,16 @@ const LabTests = () => {
                   <label style={styles.label}>Result</label>
                   <input
                     type="text"
-                    value={`${selectedItem.patient || 'Unknown'} - ${selectedItem.testName || selectedItem.test_name || 'Unknown Test'}`}
+                    value={`${selectedItem.patient || 'Unknown'} - ${
+                      selectedItem.testName ||
+                      selectedItem.test_name ||
+                      'Unknown Test'
+                    }`}
                     readOnly
                     style={styles.input}
                   />
                 </div>
-                
+
                 <div style={styles.formGroup}>
                   <label style={styles.label} htmlFor="file">
                     File *
@@ -2421,29 +2757,44 @@ const LabTests = () => {
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
                   />
                   {newFile.file && (
-                    <div style={{ marginTop: '8px', fontSize: '12px', color: '#6c757d' }}>
-                      Selected: {newFile.file.name} ({(newFile.file.size / 1024).toFixed(2)} KB)
+                    <div
+                      style={{
+                        marginTop: '8px',
+                        fontSize: '12px',
+                        color: '#6c757d',
+                      }}
+                    >
+                      Selected: {newFile.file.name} (
+                      {(newFile.file.size / 1024).toFixed(2)} KB)
                     </div>
                   )}
                 </div>
-                
+
                 <div style={styles.modalActions}>
                   <button
                     type="button"
                     style={styles.cancelButton}
                     onClick={closeModal}
                     disabled={loading}
-                    onMouseEnter={(e) => (e.target.style.background = '#F8F2DE')}
-                    onMouseLeave={(e) => (e.target.style.background = '#ECDCBF')}
+                    onMouseEnter={(e) =>
+                      (e.target.style.background = '#F8F2DE')
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.background = '#ECDCBF')
+                    }
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     style={styles.submitButton}
                     disabled={loading || !newFile.file}
-                    onMouseEnter={(e) => (e.target.style.background = '#A31D1D')}
-                    onMouseLeave={(e) => (e.target.style.background = '#D84040')}
+                    onMouseEnter={(e) =>
+                      (e.target.style.background = '#A31D1D')
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.background = '#D84040')
+                    }
                   >
                     {loading ? 'Uploading...' : 'Upload File'}
                   </button>

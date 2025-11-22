@@ -40,7 +40,8 @@ const MedicationAdherence = () => {
     special_instructions: '',
     prescription_id: null,
   });
-  const [notificationPermission, setNotificationPermission] = useState('default');
+  const [notificationPermission, setNotificationPermission] =
+    useState('default');
 
   // Get auth token
   const getAuthToken = () => {
@@ -61,7 +62,7 @@ const MedicationAdherence = () => {
         // Try to fetch user from API
         const response = await fetch(`${API_BASE_URL}/auth/me`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -70,11 +71,15 @@ const MedicationAdherence = () => {
           if (data.success && data.user) {
             const user = data.user;
             setCurrentUser(user);
-            
+
             // Get patient_id from nested patient object or direct property
-            const patientId = user.patient?.patient_id || user.patient_id || user.patientId;
-            
-            if ((user.role === 'patient' || user.role === 'admin') && patientId) {
+            const patientId =
+              user.patient?.patient_id || user.patient_id || user.patientId;
+
+            if (
+              (user.role === 'patient' || user.role === 'admin') &&
+              patientId
+            ) {
               loadReminders(patientId);
               loadPrescriptions();
               loadAdherenceRecords(patientId);
@@ -83,12 +88,15 @@ const MedicationAdherence = () => {
               }
             } else if (user.role === 'patient' && !patientId) {
               // Try to get patient profile
-              const profileResponse = await fetch(`${API_BASE_URL}/profile/me`, {
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                },
-              });
-              
+              const profileResponse = await fetch(
+                `${API_BASE_URL}/profile/me`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
+
               if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
                 if (profileData.success && profileData.patient) {
@@ -109,9 +117,13 @@ const MedicationAdherence = () => {
           if (userStr) {
             const user = JSON.parse(userStr);
             setCurrentUser(user);
-            
-            const patientId = user.patient?.patient_id || user.patient_id || user.patientId;
-            if ((user.role === 'patient' || user.role === 'admin') && patientId) {
+
+            const patientId =
+              user.patient?.patient_id || user.patient_id || user.patientId;
+            if (
+              (user.role === 'patient' || user.role === 'admin') &&
+              patientId
+            ) {
               loadReminders(patientId);
               loadPrescriptions();
               loadAdherenceRecords(patientId);
@@ -128,8 +140,9 @@ const MedicationAdherence = () => {
         if (userStr) {
           const user = JSON.parse(userStr);
           setCurrentUser(user);
-          
-          const patientId = user.patient?.patient_id || user.patient_id || user.patientId;
+
+          const patientId =
+            user.patient?.patient_id || user.patient_id || user.patientId;
           if ((user.role === 'patient' || user.role === 'admin') && patientId) {
             loadReminders(patientId);
             loadPrescriptions();
@@ -145,10 +158,10 @@ const MedicationAdherence = () => {
     };
 
     fetchCurrentUser();
-    
+
     // Request notification permission on mount
     if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission().then(permission => {
+      Notification.requestPermission().then((permission) => {
         setNotificationPermission(permission);
       });
     } else if ('Notification' in window) {
@@ -178,13 +191,16 @@ const MedicationAdherence = () => {
     try {
       setLoading(true);
       const token = getAuthToken();
-      
+
       // Load reminders from API endpoint
-      const response = await fetch(`${API_BASE_URL}/medication-adherence/reminders?patient_id=${patientId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/medication-adherence/reminders?patient_id=${patientId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -211,16 +227,22 @@ const MedicationAdherence = () => {
     try {
       const token = getAuthToken();
       if (!currentUser) return;
-      
+
       // Get patient_id from nested patient object or direct property
-      const patientId = currentUser.patient?.patient_id || currentUser.patient_id || currentUser.patientId;
+      const patientId =
+        currentUser.patient?.patient_id ||
+        currentUser.patient_id ||
+        currentUser.patientId;
       if (!patientId) return;
 
-      const response = await fetch(`${API_BASE_URL}/prescriptions?patient_id=${patientId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/prescriptions?patient_id=${patientId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -237,17 +259,20 @@ const MedicationAdherence = () => {
   const loadAdherenceRecords = async (patientId) => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_BASE_URL}/medication-adherence/patient/${patientId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/medication-adherence/patient/${patientId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
           setAdherenceRecords(data.data || []);
-          
+
           // Update adherence stats
           if (data.summary) {
             setAdherenceStats({
@@ -277,21 +302,31 @@ const MedicationAdherence = () => {
   };
 
   const checkReminders = () => {
-    if (!currentUser || (currentUser.role !== 'patient' && currentUser.role !== 'admin')) return;
+    if (
+      !currentUser ||
+      (currentUser.role !== 'patient' && currentUser.role !== 'admin')
+    )
+      return;
 
-    const activeReminders = reminders.filter(r => r.active);
+    const activeReminders = reminders.filter((r) => r.active);
 
     const now = new Date();
-    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(
+      now.getMinutes()
+    ).padStart(2, '0')}`;
 
-    activeReminders.forEach(reminder => {
+    activeReminders.forEach((reminder) => {
       const reminderTime = reminder.reminder_time || reminder.time;
       const timeStr = reminderTime ? reminderTime.substring(0, 5) : null;
-      const shouldNotify = reminder.browser_notifications !== false && reminder.enableNotifications !== false;
-      
+      const shouldNotify =
+        reminder.browser_notifications !== false &&
+        reminder.enableNotifications !== false;
+
       if (timeStr === currentTime && shouldNotify) {
         // Check if we've already shown notification for this reminder today
-        const notificationKey = `notification-${reminder.reminder_id || reminder.id}-${new Date().toDateString()}`;
+        const notificationKey = `notification-${
+          reminder.reminder_id || reminder.id
+        }-${new Date().toDateString()}`;
         if (!localStorage.getItem(notificationKey)) {
           showNotification(reminder);
           localStorage.setItem(notificationKey, 'true');
@@ -303,11 +338,13 @@ const MedicationAdherence = () => {
   const showNotification = (reminder) => {
     const medicationName = reminder.medication_name || reminder.drugName;
     const reminderTime = reminder.reminder_time || reminder.time;
-    
+
     // Show browser notification
     if ('Notification' in window && Notification.permission === 'granted') {
       const notification = new Notification('Medication Reminder', {
-        body: `Time to take ${medicationName}${reminder.dosage ? ` (${reminder.dosage})` : ''}`,
+        body: `Time to take ${medicationName}${
+          reminder.dosage ? ` (${reminder.dosage})` : ''
+        }`,
         icon: '/favicon.ico',
         tag: `reminder-${reminder.reminder_id || reminder.id}`,
         requireInteraction: true,
@@ -318,23 +355,27 @@ const MedicationAdherence = () => {
       setTimeout(() => notification.close(), 10000);
     }
 
-      // Show in-app pop-up notification
-      setToast({
-        message: `⏰ Reminder: Time to take ${medicationName}${reminder.dosage ? ` (${reminder.dosage})` : ''}`,
-        type: 'info',
-      });
+    // Show in-app pop-up notification
+    setToast({
+      message: `⏰ Reminder: Time to take ${medicationName}${
+        reminder.dosage ? ` (${reminder.dosage})` : ''
+      }`,
+      type: 'info',
+    });
 
     // Play sound if enabled
-    const shouldPlaySound = reminder.sound_preference !== 'none' || reminder.enableSound !== false;
+    const shouldPlaySound =
+      reminder.sound_preference !== 'none' || reminder.enableSound !== false;
     if (shouldPlaySound) {
       try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const audioContext = new (window.AudioContext ||
+          window.webkitAudioContext)();
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        
+
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
-        
+
         // Different frequencies based on sound preference
         if (reminder.sound_preference === 'urgent') {
           oscillator.frequency.value = 1000;
@@ -343,12 +384,15 @@ const MedicationAdherence = () => {
         } else {
           oscillator.frequency.value = 800;
         }
-        
+
         oscillator.type = 'sine';
-        
+
         gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-        
+        gainNode.gain.exponentialRampToValueAtTime(
+          0.01,
+          audioContext.currentTime + 0.5
+        );
+
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + 0.5);
       } catch (error) {
@@ -359,7 +403,7 @@ const MedicationAdherence = () => {
 
   const getTimeRemaining = (reminderTime) => {
     if (!reminderTime) return 'N/A';
-    
+
     const timeStr = reminderTime.substring(0, 5); // Get HH:MM format
     const now = new Date();
     const [hours, minutes] = timeStr.split(':').map(Number);
@@ -368,7 +412,9 @@ const MedicationAdherence = () => {
 
     const diff = reminderDate - now;
     const diffHours = Math.floor(Math.abs(diff) / (1000 * 60 * 60));
-    const diffMinutes = Math.floor((Math.abs(diff) % (1000 * 60 * 60)) / (1000 * 60));
+    const diffMinutes = Math.floor(
+      (Math.abs(diff) % (1000 * 60 * 60)) / (1000 * 60)
+    );
 
     if (diff < 0) {
       if (diffHours > 0) {
@@ -385,10 +431,10 @@ const MedicationAdherence = () => {
     }
   };
 
-  // Check if current time is near the reminder time (within 30 minutes before or after)
+  // Check if current time is near reminder time (within 30 minutes before or after)
   const isTimeNearReminder = (reminderTime, timeWindowMinutes = 30) => {
     if (!reminderTime) return false;
-    
+
     const timeStr = reminderTime.substring(0, 5); // Get HH:MM format
     const now = new Date();
     const [hours, minutes] = timeStr.split(':').map(Number);
@@ -397,7 +443,7 @@ const MedicationAdherence = () => {
 
     const diff = Math.abs(reminderDate - now);
     const diffMinutes = Math.floor(diff / (1000 * 60));
-    
+
     // Allow clicking within the time window (before or after the scheduled time)
     return diffMinutes <= timeWindowMinutes;
   };
@@ -411,7 +457,8 @@ const MedicationAdherence = () => {
       const reminderTime = reminder.reminder_time || reminder.time;
       if (!isTimeNearReminder(reminderTime)) {
         setToast({
-          message: 'Cannot record adherence: Time is not near the scheduled medication time (must be within 30 minutes)',
+          message:
+            'Cannot record adherence: Time is not near the scheduled medication time (must be within 30 minutes)',
           type: 'error',
         });
         setLoading(false);
@@ -420,19 +467,24 @@ const MedicationAdherence = () => {
 
       setLoading(true);
       const token = getAuthToken();
-      
+
       // For reminders without prescription_id, we'll save to localStorage only
       if (!reminder.prescription_id) {
-        const patientId = currentUser.patient?.patient_id || currentUser.patient_id || currentUser.patientId;
+        const patientId =
+          currentUser.patient?.patient_id ||
+          currentUser.patient_id ||
+          currentUser.patientId;
         const today = new Date().toISOString().split('T')[0];
-        
+
         // Save standalone reminder adherence to localStorage
-        const standaloneAdherence = JSON.parse(localStorage.getItem('standaloneAdherence')) || [];
+        const standaloneAdherence =
+          JSON.parse(localStorage.getItem('standaloneAdherence')) || [];
         const existingIndex = standaloneAdherence.findIndex(
-          record => record.reminder_id === (reminder.reminder_id || reminder.id) &&
-                    record.adherence_date === today
+          (record) =>
+            record.reminder_id === (reminder.reminder_id || reminder.id) &&
+            record.adherence_date === today
         );
-        
+
         const adherenceRecord = {
           reminder_id: reminder.reminder_id || reminder.id,
           patient_id: patientId,
@@ -441,30 +493,35 @@ const MedicationAdherence = () => {
           taken: taken,
           missed_reason: missedReason,
         };
-        
+
         if (existingIndex !== -1) {
           standaloneAdherence[existingIndex] = adherenceRecord;
         } else {
           standaloneAdherence.push(adherenceRecord);
         }
-        
-        localStorage.setItem('standaloneAdherence', JSON.stringify(standaloneAdherence));
-        
+
+        localStorage.setItem(
+          'standaloneAdherence',
+          JSON.stringify(standaloneAdherence)
+        );
+
         setToast({
-          message: `Medication ${taken ? 'marked as taken' : 'marked as missed'} successfully`,
+          message: `Medication ${
+            taken ? 'marked as taken' : 'marked as missed'
+          } successfully`,
           type: 'success',
         });
-        
+
         // Reload adherence records
         await loadAdherenceRecords(patientId);
         await loadReminders(patientId);
         setLoading(false);
         return;
       }
-      
+
       // Find the prescription for this reminder
-      const prescription = prescriptions.find(p => 
-        p.prescription_id === reminder.prescription_id
+      const prescription = prescriptions.find(
+        (p) => p.prescription_id === reminder.prescription_id
       );
 
       if (!prescription) {
@@ -479,7 +536,10 @@ const MedicationAdherence = () => {
       const adherenceDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
 
       // Get patient_id from nested patient object or direct property
-      const patientId = currentUser.patient?.patient_id || currentUser.patient_id || currentUser.patientId;
+      const patientId =
+        currentUser.patient?.patient_id ||
+        currentUser.patient_id ||
+        currentUser.patientId;
       if (!patientId) {
         setToast({
           message: 'Patient ID not found. Please log in again.',
@@ -493,7 +553,7 @@ const MedicationAdherence = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           prescription_id: reminder.prescription_id,
@@ -508,13 +568,18 @@ const MedicationAdherence = () => {
 
       if (data.success) {
         setToast({
-          message: `Medication ${taken ? 'marked as taken' : 'marked as missed'} successfully. Adherence: ${data.data.adherence_percentage}%`,
+          message: `Medication ${
+            taken ? 'marked as taken' : 'marked as missed'
+          } successfully. Adherence: ${data.data.adherence_percentage}%`,
           type: 'success',
         });
 
         // Step 5: Display updated → Progress rings and percentages updated
         // Get patient_id from nested patient object or direct property
-        const patientId = currentUser.patient?.patient_id || currentUser.patient_id || currentUser.patientId;
+        const patientId =
+          currentUser.patient?.patient_id ||
+          currentUser.patient_id ||
+          currentUser.patientId;
         if (patientId) {
           // Reload adherence records to update display
           await loadAdherenceRecords(patientId);
@@ -544,12 +609,15 @@ const MedicationAdherence = () => {
   const recalculateARPARiskScore = async (patientId) => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_BASE_URL}/profile/${patientId}/calculate-arpa`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/profile/${patientId}/calculate-arpa`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -568,7 +636,8 @@ const MedicationAdherence = () => {
     const reminderTime = reminder.reminder_time || reminder.time;
     if (!isTimeNearReminder(reminderTime)) {
       setToast({
-        message: 'You can only mark as taken when the time is near the scheduled medication time (within 30 minutes)',
+        message:
+          'You can only mark as taken when the time is near the scheduled medication time (within 30 minutes)',
         type: 'error',
       });
       return;
@@ -580,7 +649,8 @@ const MedicationAdherence = () => {
     const reminderTime = reminder.reminder_time || reminder.time;
     if (!isTimeNearReminder(reminderTime)) {
       setToast({
-        message: 'You can only mark as missed when the time is near the scheduled medication time (within 30 minutes)',
+        message:
+          'You can only mark as missed when the time is near the scheduled medication time (within 30 minutes)',
         type: 'error',
       });
       return;
@@ -592,7 +662,10 @@ const MedicationAdherence = () => {
   // Save reminder using API
   const saveReminder = async (reminderData, isEdit = false) => {
     try {
-      const patientId = currentUser.patient?.patient_id || currentUser.patient_id || currentUser.patientId;
+      const patientId =
+        currentUser.patient?.patient_id ||
+        currentUser.patient_id ||
+        currentUser.patientId;
       if (!patientId) {
         setToast({
           message: 'Patient ID not found',
@@ -602,12 +675,15 @@ const MedicationAdherence = () => {
       }
 
       const token = getAuthToken();
-      const url = isEdit && editingReminder
-        ? `${API_BASE_URL}/medication-adherence/reminders/${editingReminder.reminder_id || editingReminder.id}`
-        : `${API_BASE_URL}/medication-adherence/reminders`;
-      
+      const url =
+        isEdit && editingReminder
+          ? `${API_BASE_URL}/medication-adherence/reminders/${
+              editingReminder.reminder_id || editingReminder.id
+            }`
+          : `${API_BASE_URL}/medication-adherence/reminders`;
+
       const method = isEdit ? 'PUT' : 'POST';
-      
+
       const payload = {
         patient_id: patientId,
         medication_name: reminderData.medication_name,
@@ -635,7 +711,7 @@ const MedicationAdherence = () => {
       if (data.success) {
         // Reload reminders
         await loadReminders(patientId);
-        
+
         setShowAddModal(false);
         setShowEditModal(false);
         setEditingReminder(null);
@@ -650,7 +726,7 @@ const MedicationAdherence = () => {
           special_instructions: '',
           prescription_id: null,
         });
-        
+
         setToast({
           message: `Reminder ${isEdit ? 'updated' : 'created'} successfully`,
           type: 'success',
@@ -695,15 +771,21 @@ const MedicationAdherence = () => {
     }
 
     try {
-      const patientId = currentUser.patient?.patient_id || currentUser.patient_id || currentUser.patientId;
+      const patientId =
+        currentUser.patient?.patient_id ||
+        currentUser.patient_id ||
+        currentUser.patientId;
       const token = getAuthToken();
 
-      const response = await fetch(`${API_BASE_URL}/medication-adherence/reminders/${reminderId}`, {
-        method: 'DELETE',
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/medication-adherence/reminders/${reminderId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
 
       const data = await response.json();
 
@@ -711,7 +793,7 @@ const MedicationAdherence = () => {
         await loadReminders(patientId);
         setShowEditModal(false);
         setEditingReminder(null);
-        
+
         setToast({
           message: 'Reminder deleted successfully',
           type: 'success',
@@ -730,22 +812,30 @@ const MedicationAdherence = () => {
 
   const handleToggleReminder = async (reminderId) => {
     try {
-      const patientId = currentUser.patient?.patient_id || currentUser.patient_id || currentUser.patientId;
+      const patientId =
+        currentUser.patient?.patient_id ||
+        currentUser.patient_id ||
+        currentUser.patientId;
       const token = getAuthToken();
 
-      const response = await fetch(`${API_BASE_URL}/medication-adherence/reminders/${reminderId}/toggle`, {
-        method: 'PUT',
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/medication-adherence/reminders/${reminderId}/toggle`,
+        {
+          method: 'PUT',
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
 
       const data = await response.json();
 
       if (data.success) {
         await loadReminders(patientId);
         setToast({
-          message: `Reminder ${data.data?.active ? 'activated' : 'deactivated'} successfully`,
+          message: `Reminder ${
+            data.data?.active ? 'activated' : 'deactivated'
+          } successfully`,
           type: 'success',
         });
       } else {
@@ -765,10 +855,12 @@ const MedicationAdherence = () => {
     const medications = [];
     const seen = new Set();
 
-    prescriptions.forEach(prescription => {
+    prescriptions.forEach((prescription) => {
       if (prescription.items && prescription.items.length > 0) {
-        prescription.items.forEach(item => {
-          const key = `${item.medication_name}-${item.dosage || ''}-${item.frequency || ''}`;
+        prescription.items.forEach((item) => {
+          const key = `${item.medication_name}-${item.dosage || ''}-${
+            item.frequency || ''
+          }`;
           if (!seen.has(key) && item.medication_name) {
             seen.add(key);
             medications.push({
@@ -789,7 +881,9 @@ const MedicationAdherence = () => {
   // Handle medication selection - auto-fill dosage and frequency
   const handleMedicationSelect = (medicationName, isEdit = false) => {
     const medications = getPrescribedMedications();
-    const selectedMedication = medications.find(m => m.medication_name === medicationName);
+    const selectedMedication = medications.find(
+      (m) => m.medication_name === medicationName
+    );
 
     if (selectedMedication) {
       if (isEdit) {
@@ -828,16 +922,17 @@ const MedicationAdherence = () => {
   // Calculate adherence percentage for a specific reminder
   const getReminderAdherence = (reminder) => {
     if (!reminder.prescription_id) return null;
-    
+
     const prescriptionAdherence = adherenceRecords.filter(
-      record => record.prescription_id === reminder.prescription_id
+      (record) => record.prescription_id === reminder.prescription_id
     );
 
     if (prescriptionAdherence.length === 0) return null;
 
-    const takenCount = prescriptionAdherence.filter(r => r.taken).length;
+    const takenCount = prescriptionAdherence.filter((r) => r.taken).length;
     const totalCount = prescriptionAdherence.length;
-    const percentage = totalCount > 0 ? Math.round((takenCount / totalCount) * 100) : 0;
+    const percentage =
+      totalCount > 0 ? Math.round((takenCount / totalCount) * 100) : 0;
 
     return {
       percentage,
@@ -848,7 +943,7 @@ const MedicationAdherence = () => {
 
   // Step 5: Display updated → Progress rings and percentages updated
   const renderAdherenceCard = () => {
-    const activeReminders = reminders.filter(r => r.active);
+    const activeReminders = reminders.filter((r) => r.active);
     const overallAdherence = adherenceStats.overallAdherence;
 
     let adherenceClass = 'success';
@@ -856,23 +951,29 @@ const MedicationAdherence = () => {
     if (overallAdherence < 80) adherenceClass = 'danger';
 
     return (
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '20px',
-        marginBottom: '30px',
-      }}>
-        <div style={{
-          background: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '20px',
+          marginBottom: '30px',
+        }}
+      >
+        <div
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <div>
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#333' }}>
+            <div
+              style={{ fontSize: '28px', fontWeight: 'bold', color: '#333' }}
+            >
               {activeReminders.length}
             </div>
             <div style={{ fontSize: '14px', color: '#6c757d' }}>
@@ -884,39 +985,57 @@ const MedicationAdherence = () => {
           </div>
         </div>
 
-        <div style={{
-          background: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
+        <div
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <div>
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#333' }}>
+            <div
+              style={{ fontSize: '28px', fontWeight: 'bold', color: '#333' }}
+            >
               {overallAdherence.toFixed(1)}%
             </div>
             <div style={{ fontSize: '14px', color: '#6c757d' }}>
               Overall Adherence Rate
             </div>
           </div>
-          <div style={{ fontSize: '24px', color: adherenceClass === 'success' ? '#28a745' : adherenceClass === 'warning' ? '#ffc107' : '#dc3545' }}>
+          <div
+            style={{
+              fontSize: '24px',
+              color:
+                adherenceClass === 'success'
+                  ? '#28a745'
+                  : adherenceClass === 'warning'
+                  ? '#ffc107'
+                  : '#dc3545',
+            }}
+          >
             <Activity />
           </div>
         </div>
 
-        <div style={{
-          background: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
+        <div
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <div>
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#333' }}>
+            <div
+              style={{ fontSize: '28px', fontWeight: 'bold', color: '#333' }}
+            >
               {adherenceStats.takenRecords}
             </div>
             <div style={{ fontSize: '14px', color: '#6c757d' }}>
@@ -928,17 +1047,21 @@ const MedicationAdherence = () => {
           </div>
         </div>
 
-        <div style={{
-          background: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
+        <div
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <div>
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#333' }}>
+            <div
+              style={{ fontSize: '28px', fontWeight: 'bold', color: '#333' }}
+            >
               {adherenceStats.missedRecords}
             </div>
             <div style={{ fontSize: '14px', color: '#6c757d' }}>
@@ -962,7 +1085,7 @@ const MedicationAdherence = () => {
       );
     }
 
-    const activeReminders = reminders.filter(r => r.active);
+    const activeReminders = reminders.filter((r) => r.active);
     if (activeReminders.length === 0) {
       return (
         <p style={{ color: '#6c757d', textAlign: 'center', padding: '20px' }}>
@@ -971,7 +1094,7 @@ const MedicationAdherence = () => {
       );
     }
 
-    return activeReminders.map(reminder => {
+    return activeReminders.map((reminder) => {
       const reminderTime = reminder.reminder_time || reminder.time;
       const timeRemaining = getTimeRemaining(reminderTime);
       const isOverdue = timeRemaining.includes('ago');
@@ -981,19 +1104,22 @@ const MedicationAdherence = () => {
       // Check if today's dose was already recorded
       const today = new Date().toISOString().split('T')[0];
       let todayRecord = null;
-      
+
       if (reminder.prescription_id) {
         // Check by prescription_id from API records
         todayRecord = adherenceRecords.find(
-          record => record.prescription_id === reminder.prescription_id &&
-                    record.adherence_date === today
+          (record) =>
+            record.prescription_id === reminder.prescription_id &&
+            record.adherence_date === today
         );
       } else {
         // For standalone reminders, check localStorage
-        const standaloneAdherence = JSON.parse(localStorage.getItem('standaloneAdherence')) || [];
+        const standaloneAdherence =
+          JSON.parse(localStorage.getItem('standaloneAdherence')) || [];
         const record = standaloneAdherence.find(
-          record => (record.reminder_id === (reminder.reminder_id || reminder.id)) &&
-                    record.adherence_date === today
+          (record) =>
+            record.reminder_id === (reminder.reminder_id || reminder.id) &&
+            record.adherence_date === today
         );
         if (record) {
           todayRecord = {
@@ -1002,12 +1128,13 @@ const MedicationAdherence = () => {
           };
         }
       }
-      
+
       // Check if reminder is for daily frequency and if today's record exists
-      const isDaily = (reminder.frequency || '').toLowerCase().includes('daily') || 
-                     (reminder.frequency || '').toLowerCase().includes('once');
+      const isDaily =
+        (reminder.frequency || '').toLowerCase().includes('daily') ||
+        (reminder.frequency || '').toLowerCase().includes('once');
       const canRecordToday = !todayRecord && isDaily;
-      
+
       // Check if current time is near the reminder time
       const isNearTime = isTimeNearReminder(reminderTime);
       const canClickButtons = canRecordToday && isNearTime;
@@ -1027,35 +1154,84 @@ const MedicationAdherence = () => {
           }}
         >
           <div style={{ flex: 1 }}>
-            <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>{medicationName}</h4>
-            <p style={{ margin: '0 0 8px 0', color: '#6c757d', fontSize: '14px' }}>
+            <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>
+              {medicationName}
+            </h4>
+            <p
+              style={{
+                margin: '0 0 8px 0',
+                color: '#6c757d',
+                fontSize: '14px',
+              }}
+            >
               {reminder.dosage && `Dosage: ${reminder.dosage} | `}
-              Frequency: {reminder.frequency || 'daily'} at {reminderTime ? reminderTime.substring(0, 5) : 'N/A'}
+              Frequency: {reminder.frequency || 'daily'} at{' '}
+              {reminderTime ? reminderTime.substring(0, 5) : 'N/A'}
             </p>
             {adherence && (
-              <p style={{ margin: '0 0 8px 0', color: '#6c757d', fontSize: '12px' }}>
-                Adherence: {adherence.percentage}% ({adherence.takenCount}/{adherence.totalCount} doses)
+              <p
+                style={{
+                  margin: '0 0 8px 0',
+                  color: '#6c757d',
+                  fontSize: '12px',
+                }}
+              >
+                Adherence: {adherence.percentage}% ({adherence.takenCount}/
+                {adherence.totalCount} doses)
               </p>
             )}
             {reminder.missed_doses > 0 && (
-              <p style={{ margin: '0 0 8px 0', color: '#dc3545', fontSize: '12px' }}>
+              <p
+                style={{
+                  margin: '0 0 8px 0',
+                  color: '#dc3545',
+                  fontSize: '12px',
+                }}
+              >
                 Total missed doses: {reminder.missed_doses}
               </p>
             )}
             {todayRecord && (
-              <p style={{ margin: '0 0 8px 0', color: todayRecord.taken ? '#28a745' : '#dc3545', fontSize: '12px', fontWeight: 'bold' }}>
+              <p
+                style={{
+                  margin: '0 0 8px 0',
+                  color: todayRecord.taken ? '#28a745' : '#dc3545',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                }}
+              >
                 Today: {todayRecord.taken ? '✓ Taken' : '✗ Missed'}
               </p>
             )}
           </div>
           <div style={{ textAlign: 'right', marginLeft: '16px' }}>
-            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#333', marginBottom: '8px' }}>
+            <div
+              style={{
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: '#333',
+                marginBottom: '8px',
+              }}
+            >
               {reminderTime ? reminderTime.substring(0, 5) : 'N/A'}
             </div>
-            <div style={{ fontSize: '14px', color: isOverdue ? '#dc3545' : '#28a745', marginBottom: '12px' }}>
+            <div
+              style={{
+                fontSize: '14px',
+                color: isOverdue ? '#dc3545' : '#28a745',
+                marginBottom: '12px',
+              }}
+            >
               {timeRemaining}
             </div>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+            <div
+              style={{
+                display: 'flex',
+                gap: '8px',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+              }}
+            >
               {!todayRecord && canRecordToday && (
                 <>
                   <button
@@ -1067,14 +1243,19 @@ const MedicationAdherence = () => {
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
-                      cursor: (loading || !isNearTime) ? 'not-allowed' : 'pointer',
+                      cursor:
+                        loading || !isNearTime ? 'not-allowed' : 'pointer',
                       fontSize: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '4px',
-                      opacity: (loading || !isNearTime) ? 0.6 : 1,
+                      opacity: loading || !isNearTime ? 0.6 : 1,
                     }}
-                    title={!isNearTime ? 'You can only mark as taken when the time is near the scheduled medication time (within 30 minutes)' : ''}
+                    title={
+                      !isNearTime
+                        ? 'You can only mark as taken when the time is near the scheduled medication time (within 30 minutes)'
+                        : ''
+                    }
                   >
                     <Check size={12} />
                     Taken
@@ -1088,14 +1269,19 @@ const MedicationAdherence = () => {
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
-                      cursor: (loading || !isNearTime) ? 'not-allowed' : 'pointer',
+                      cursor:
+                        loading || !isNearTime ? 'not-allowed' : 'pointer',
                       fontSize: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '4px',
-                      opacity: (loading || !isNearTime) ? 0.6 : 1,
+                      opacity: loading || !isNearTime ? 0.6 : 1,
                     }}
-                    title={!isNearTime ? 'You can only mark as missed when the time is near the scheduled medication time (within 30 minutes)' : ''}
+                    title={
+                      !isNearTime
+                        ? 'You can only mark as missed when the time is near the scheduled medication time (within 30 minutes)'
+                        : ''
+                    }
                   >
                     <AlertCircle size={12} />
                     Missed
@@ -1103,36 +1289,42 @@ const MedicationAdherence = () => {
                 </>
               )}
               {todayRecord && (
-                <div style={{
-                  padding: '6px 12px',
-                  background: todayRecord.taken ? '#28a745' : '#dc3545',
-                  color: 'white',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                }}>
+                <div
+                  style={{
+                    padding: '6px 12px',
+                    background: todayRecord.taken ? '#28a745' : '#dc3545',
+                    color: 'white',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                  }}
+                >
                   {todayRecord.taken ? '✓ Recorded Today' : '✗ Missed Today'}
                 </div>
               )}
               {!canRecordToday && !todayRecord && (
-                <div style={{
-                  padding: '6px 12px',
-                  background: '#6c757d',
-                  color: 'white',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                }}>
+                <div
+                  style={{
+                    padding: '6px 12px',
+                    background: '#6c757d',
+                    color: 'white',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                  }}
+                >
                   Not due today
                 </div>
               )}
               {canRecordToday && !todayRecord && !isNearTime && (
-                <div style={{
-                  padding: '6px 12px',
-                  background: '#ffc107',
-                  color: '#856404',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  fontWeight: '500',
-                }}>
+                <div
+                  style={{
+                    padding: '6px 12px',
+                    background: '#ffc107',
+                    color: '#856404',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                  }}
+                >
                   Wait until near scheduled time (within 30 min)
                 </div>
               )}
@@ -1168,14 +1360,16 @@ const MedicationAdherence = () => {
   if (loading && !currentUser) {
     return (
       <div style={{ padding: '20px', paddingTop: '80px' }}>
-        <div style={{
-          padding: '15px',
-          backgroundColor: '#d1ecf1',
-          color: '#0c5460',
-          borderRadius: '4px',
-          marginBottom: '20px',
-          textAlign: 'center'
-        }}>
+        <div
+          style={{
+            padding: '15px',
+            backgroundColor: '#d1ecf1',
+            color: '#0c5460',
+            borderRadius: '4px',
+            marginBottom: '20px',
+            textAlign: 'center',
+          }}
+        >
           Loading...
         </div>
       </div>
@@ -1186,13 +1380,15 @@ const MedicationAdherence = () => {
   if (!currentUser) {
     return (
       <div style={{ padding: '20px', paddingTop: '80px' }}>
-        <div style={{
-          padding: '15px',
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          borderRadius: '4px',
-          marginBottom: '20px'
-        }}>
+        <div
+          style={{
+            padding: '15px',
+            backgroundColor: '#f8d7da',
+            color: '#721c24',
+            borderRadius: '4px',
+            marginBottom: '20px',
+          }}
+        >
           Please log in to view your medication adherence
         </div>
       </div>
@@ -1200,18 +1396,23 @@ const MedicationAdherence = () => {
   }
 
   // Get patient_id to check if user has patient data
-  const patientId = currentUser.patient?.patient_id || currentUser.patient_id || currentUser.patientId;
-  
+  const patientId =
+    currentUser.patient?.patient_id ||
+    currentUser.patient_id ||
+    currentUser.patientId;
+
   if (currentUser.role !== 'patient' && currentUser.role !== 'admin') {
     return (
       <div style={{ padding: '20px', paddingTop: '80px' }}>
-        <div style={{
-          padding: '15px',
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          borderRadius: '4px',
-          marginBottom: '20px'
-        }}>
+        <div
+          style={{
+            padding: '15px',
+            backgroundColor: '#f8d7da',
+            color: '#721c24',
+            borderRadius: '4px',
+            marginBottom: '20px',
+          }}
+        >
           This page is only available for patients and administrators
         </div>
       </div>
@@ -1221,13 +1422,15 @@ const MedicationAdherence = () => {
   if (!patientId && currentUser.role === 'patient') {
     return (
       <div style={{ padding: '20px', paddingTop: '80px' }}>
-        <div style={{
-          padding: '15px',
-          backgroundColor: '#fff3cd',
-          color: '#856404',
-          borderRadius: '4px',
-          marginBottom: '20px'
-        }}>
+        <div
+          style={{
+            padding: '15px',
+            backgroundColor: '#fff3cd',
+            color: '#856404',
+            borderRadius: '4px',
+            marginBottom: '20px',
+          }}
+        >
           Patient profile not found. Please contact your administrator.
         </div>
       </div>
@@ -1236,41 +1439,66 @@ const MedicationAdherence = () => {
 
   return (
     <div style={{ padding: '20px', paddingTop: '80px' }}>
-      {/* Header */}
+      {/* Header - Updated to match Dashboard style exactly */}
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
           marginBottom: '30px',
+          background: 'linear-gradient(to right, #D84040, #A31D1D)',
+          padding: '30px',
+          borderRadius: '12px',
+          boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)',
         }}
       >
-        <div>
-          <h2 style={{ margin: 0, color: '#333', fontSize: '24px' }}>
-            Medication Adherence
-          </h2>
-          <p style={{ margin: '5px 0 0 0', color: '#6c757d', fontSize: '14px' }}>
-            Track your medication adherence and view your progress
-          </p>
-        </div>
-        <button
-          onClick={() => setShowAddModal(true)}
+        <div
           style={{
-            padding: '10px 16px',
-            background: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
             display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
-            gap: '6px',
           }}
         >
-          <Plus size={16} />
-          Add Reminder
-        </button>
+          <div>
+            <h2
+              style={{
+                margin: '0 0 5px 0',
+                color: 'white',
+                fontSize: '24px',
+                fontWeight: 'bold',
+              }}
+            >
+              Medication Adherence
+            </h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>
+              Track your medication adherence and view your progress
+            </p>
+          </div>
+          <button
+            onClick={() => setShowAddModal(true)}
+            style={{
+              padding: '10px 16px',
+              background: '#ECDCBF',
+              color: '#A31D1D',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#F8F2DE';
+              e.target.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = '#ECDCBF';
+              e.target.style.transform = 'translateY(0)';
+            }}
+          >
+            <Plus size={16} />
+            Add Reminder
+          </button>
+        </div>
       </div>
 
       {/* Adherence Card - Step 5: Display updated → Progress rings and percentages updated */}
@@ -1286,18 +1514,22 @@ const MedicationAdherence = () => {
           marginBottom: '30px',
         }}
       >
-        <div style={{
-          padding: '16px 20px',
-          borderBottom: '1px solid #dee2e6',
-          background: '#f8f9fa',
-        }}>
+        <div
+          style={{
+            padding: '16px 20px',
+            borderBottom: '1px solid #dee2e6',
+            background: '#f8f9fa',
+          }}
+        >
           <h3 style={{ margin: 0, fontSize: '18px', color: '#333' }}>
             Medication Reminders
           </h3>
         </div>
         <div style={{ padding: '20px' }}>
           {loading ? (
-            <p style={{ color: '#6c757d', textAlign: 'center', padding: '20px' }}>
+            <p
+              style={{ color: '#6c757d', textAlign: 'center', padding: '20px' }}
+            >
               Loading...
             </p>
           ) : (
@@ -1370,7 +1602,14 @@ const MedicationAdherence = () => {
               boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '20px',
+              }}
+            >
               <h2 style={{ margin: 0 }}>Add Medication Reminder</h2>
               <button
                 onClick={() => {
@@ -1399,7 +1638,13 @@ const MedicationAdherence = () => {
             </div>
 
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <label
+                style={{
+                  display: 'block',
+                  marginBottom: '5px',
+                  fontWeight: 'bold',
+                }}
+              >
                 Medication Name <span style={{ color: 'red' }}>*</span>
               </label>
               <input
@@ -1419,17 +1664,31 @@ const MedicationAdherence = () => {
               <datalist id="medicationSuggestions">
                 {getPrescribedMedications().map((med, index) => (
                   <option key={index} value={med.medication_name}>
-                    {med.medication_name} {med.dosage ? `(${med.dosage})` : ''} - {med.frequency || 'daily'}
+                    {med.medication_name} {med.dosage ? `(${med.dosage})` : ''}{' '}
+                    - {med.frequency || 'daily'}
                   </option>
                 ))}
               </datalist>
               {getPrescribedMedications().length === 0 && (
-                <p style={{ marginTop: '5px', fontSize: '12px', color: '#6c757d' }}>
-                  No prescriptions found. You can type a medication name manually.
+                <p
+                  style={{
+                    marginTop: '5px',
+                    fontSize: '12px',
+                    color: '#6c757d',
+                  }}
+                >
+                  No prescriptions found. You can type a medication name
+                  manually.
                 </p>
               )}
               {getPrescribedMedications().length > 0 && (
-                <p style={{ marginTop: '5px', fontSize: '12px', color: '#6c757d' }}>
+                <p
+                  style={{
+                    marginTop: '5px',
+                    fontSize: '12px',
+                    color: '#6c757d',
+                  }}
+                >
                   Select from your prescribed medications or type manually
                 </p>
               )}
@@ -1437,13 +1696,21 @@ const MedicationAdherence = () => {
 
             <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
               <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '5px',
+                    fontWeight: 'bold',
+                  }}
+                >
                   Dosage
                 </label>
                 <input
                   type="text"
                   value={newReminder.dosage}
-                  onChange={(e) => setNewReminder({...newReminder, dosage: e.target.value})}
+                  onChange={(e) =>
+                    setNewReminder({ ...newReminder, dosage: e.target.value })
+                  }
                   placeholder="e.g., 500mg"
                   style={{
                     width: '100%',
@@ -1454,12 +1721,23 @@ const MedicationAdherence = () => {
                 />
               </div>
               <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '5px',
+                    fontWeight: 'bold',
+                  }}
+                >
                   Frequency <span style={{ color: 'red' }}>*</span>
                 </label>
                 <select
                   value={newReminder.frequency}
-                  onChange={(e) => setNewReminder({...newReminder, frequency: e.target.value})}
+                  onChange={(e) =>
+                    setNewReminder({
+                      ...newReminder,
+                      frequency: e.target.value,
+                    })
+                  }
                   style={{
                     width: '100%',
                     padding: '8px 12px',
@@ -1477,13 +1755,24 @@ const MedicationAdherence = () => {
             </div>
 
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <label
+                style={{
+                  display: 'block',
+                  marginBottom: '5px',
+                  fontWeight: 'bold',
+                }}
+              >
                 Reminder Time <span style={{ color: 'red' }}>*</span>
               </label>
               <input
                 type="time"
                 value={newReminder.reminder_time}
-                onChange={(e) => setNewReminder({...newReminder, reminder_time: e.target.value})}
+                onChange={(e) =>
+                  setNewReminder({
+                    ...newReminder,
+                    reminder_time: e.target.value,
+                  })
+                }
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -1495,12 +1784,23 @@ const MedicationAdherence = () => {
             </div>
 
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <label
+                style={{
+                  display: 'block',
+                  marginBottom: '5px',
+                  fontWeight: 'bold',
+                }}
+              >
                 Sound Preference
               </label>
               <select
                 value={newReminder.sound_preference}
-                onChange={(e) => setNewReminder({...newReminder, sound_preference: e.target.value})}
+                onChange={(e) =>
+                  setNewReminder({
+                    ...newReminder,
+                    sound_preference: e.target.value,
+                  })
+                }
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -1515,11 +1815,23 @@ const MedicationAdherence = () => {
             </div>
 
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  cursor: 'pointer',
+                }}
+              >
                 <input
                   type="checkbox"
                   checked={newReminder.browser_notifications}
-                  onChange={(e) => setNewReminder({...newReminder, browser_notifications: e.target.checked})}
+                  onChange={(e) =>
+                    setNewReminder({
+                      ...newReminder,
+                      browser_notifications: e.target.checked,
+                    })
+                  }
                   style={{ cursor: 'pointer' }}
                 />
                 <span>Enable browser notifications</span>
@@ -1527,11 +1839,20 @@ const MedicationAdherence = () => {
             </div>
 
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  cursor: 'pointer',
+                }}
+              >
                 <input
                   type="checkbox"
                   checked={newReminder.active}
-                  onChange={(e) => setNewReminder({...newReminder, active: e.target.checked})}
+                  onChange={(e) =>
+                    setNewReminder({ ...newReminder, active: e.target.checked })
+                  }
                   style={{ cursor: 'pointer' }}
                 />
                 <span>Active</span>
@@ -1539,12 +1860,23 @@ const MedicationAdherence = () => {
             </div>
 
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <label
+                style={{
+                  display: 'block',
+                  marginBottom: '5px',
+                  fontWeight: 'bold',
+                }}
+              >
                 Special Instructions (Optional)
               </label>
               <textarea
                 value={newReminder.special_instructions}
-                onChange={(e) => setNewReminder({...newReminder, special_instructions: e.target.value})}
+                onChange={(e) =>
+                  setNewReminder({
+                    ...newReminder,
+                    special_instructions: e.target.value,
+                  })
+                }
                 rows="3"
                 style={{
                   width: '100%',
@@ -1555,7 +1887,13 @@ const MedicationAdherence = () => {
               />
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '10px',
+              }}
+            >
               <button
                 onClick={() => {
                   setShowAddModal(false);
@@ -1629,7 +1967,14 @@ const MedicationAdherence = () => {
               boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '20px',
+              }}
+            >
               <h2 style={{ margin: 0 }}>Edit Reminder</h2>
               <button
                 onClick={() => {
@@ -1648,13 +1993,23 @@ const MedicationAdherence = () => {
             </div>
 
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <label
+                style={{
+                  display: 'block',
+                  marginBottom: '5px',
+                  fontWeight: 'bold',
+                }}
+              >
                 Medication Name <span style={{ color: 'red' }}>*</span>
               </label>
               <input
                 type="text"
                 list="medicationSuggestionsEdit"
-                value={editingReminder.medication_name || editingReminder.drugName || ''}
+                value={
+                  editingReminder.medication_name ||
+                  editingReminder.drugName ||
+                  ''
+                }
                 onChange={(e) => handleMedicationSelect(e.target.value, true)}
                 placeholder="Select or type medication name"
                 style={{
@@ -1668,17 +2023,31 @@ const MedicationAdherence = () => {
               <datalist id="medicationSuggestionsEdit">
                 {getPrescribedMedications().map((med, index) => (
                   <option key={index} value={med.medication_name}>
-                    {med.medication_name} {med.dosage ? `(${med.dosage})` : ''} - {med.frequency || 'daily'}
+                    {med.medication_name} {med.dosage ? `(${med.dosage})` : ''}{' '}
+                    - {med.frequency || 'daily'}
                   </option>
                 ))}
               </datalist>
               {getPrescribedMedications().length === 0 && (
-                <p style={{ marginTop: '5px', fontSize: '12px', color: '#6c757d' }}>
-                  No prescriptions found. You can type a medication name manually.
+                <p
+                  style={{
+                    marginTop: '5px',
+                    fontSize: '12px',
+                    color: '#6c757d',
+                  }}
+                >
+                  No prescriptions found. You can type a medication name
+                  manually.
                 </p>
               )}
               {getPrescribedMedications().length > 0 && (
-                <p style={{ marginTop: '5px', fontSize: '12px', color: '#6c757d' }}>
+                <p
+                  style={{
+                    marginTop: '5px',
+                    fontSize: '12px',
+                    color: '#6c757d',
+                  }}
+                >
                   Select from your prescribed medications or type manually
                 </p>
               )}
@@ -1686,13 +2055,24 @@ const MedicationAdherence = () => {
 
             <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
               <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '5px',
+                    fontWeight: 'bold',
+                  }}
+                >
                   Dosage
                 </label>
                 <input
                   type="text"
                   value={editingReminder.dosage || ''}
-                  onChange={(e) => setEditingReminder({...editingReminder, dosage: e.target.value})}
+                  onChange={(e) =>
+                    setEditingReminder({
+                      ...editingReminder,
+                      dosage: e.target.value,
+                    })
+                  }
                   style={{
                     width: '100%',
                     padding: '8px 12px',
@@ -1702,12 +2082,23 @@ const MedicationAdherence = () => {
                 />
               </div>
               <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '5px',
+                    fontWeight: 'bold',
+                  }}
+                >
                   Frequency <span style={{ color: 'red' }}>*</span>
                 </label>
                 <select
                   value={editingReminder.frequency || 'daily'}
-                  onChange={(e) => setEditingReminder({...editingReminder, frequency: e.target.value})}
+                  onChange={(e) =>
+                    setEditingReminder({
+                      ...editingReminder,
+                      frequency: e.target.value,
+                    })
+                  }
                   style={{
                     width: '100%',
                     padding: '8px 12px',
@@ -1725,13 +2116,31 @@ const MedicationAdherence = () => {
             </div>
 
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              <label
+                style={{
+                  display: 'block',
+                  marginBottom: '5px',
+                  fontWeight: 'bold',
+                }}
+              >
                 Reminder Time <span style={{ color: 'red' }}>*</span>
               </label>
               <input
                 type="time"
-                value={editingReminder.reminder_time ? editingReminder.reminder_time.substring(0, 5) : editingReminder.time ? editingReminder.time.substring(0, 5) : '09:00'}
-                onChange={(e) => setEditingReminder({...editingReminder, reminder_time: e.target.value + ':00', time: e.target.value})}
+                value={
+                  editingReminder.reminder_time
+                    ? editingReminder.reminder_time.substring(0, 5)
+                    : editingReminder.time
+                    ? editingReminder.time.substring(0, 5)
+                    : '09:00'
+                }
+                onChange={(e) =>
+                  setEditingReminder({
+                    ...editingReminder,
+                    reminder_time: e.target.value + ':00',
+                    time: e.target.value,
+                  })
+                }
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -1743,20 +2152,42 @@ const MedicationAdherence = () => {
             </div>
 
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  cursor: 'pointer',
+                }}
+              >
                 <input
                   type="checkbox"
                   checked={editingReminder.active !== false}
-                  onChange={(e) => setEditingReminder({...editingReminder, active: e.target.checked})}
+                  onChange={(e) =>
+                    setEditingReminder({
+                      ...editingReminder,
+                      active: e.target.checked,
+                    })
+                  }
                   style={{ cursor: 'pointer' }}
                 />
                 <span>Active</span>
               </label>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '10px',
+              }}
+            >
               <button
-                onClick={() => handleDeleteReminder(editingReminder.reminder_id || editingReminder.id)}
+                onClick={() =>
+                  handleDeleteReminder(
+                    editingReminder.reminder_id || editingReminder.id
+                  )
+                }
                 style={{
                   padding: '8px 16px',
                   background: '#dc3545',

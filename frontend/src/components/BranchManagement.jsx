@@ -896,10 +896,27 @@ const BranchManagement = () => {
           boxShadow: '0 4px 15px rgba(216, 64, 64, 0.2)',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <div>
-            <h2 style={{ margin: '0 0 5px 0', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>🏢 MyHubCares Branch Management</h2>
-            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>Manage MyHubCares clinic branches and locations</p>
+            <h2
+              style={{
+                margin: '0 0 5px 0',
+                color: 'white',
+                fontSize: '24px',
+                fontWeight: 'bold',
+              }}
+            >
+              MyHubCares Branch Management
+            </h2>
+            <p style={{ margin: 0, color: '#F8F2DE', fontSize: '16px' }}>
+              Manage MyHubCares clinic branches and locations
+            </p>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
