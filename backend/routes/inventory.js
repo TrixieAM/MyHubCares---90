@@ -379,17 +379,25 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Restock inventory item (P4.4)
-router.post('/:id/restock', async (req, res) => {
+// Restock inventory item (P4.4) - Updated to create transaction record
+router.post('/:id/restock', authenticateToken, async (req, res) => {
   let userInfo = null;
 
   try {
     const { id } = req.params;
-    const { quantity, batch_number, cost_per_unit } = req.body;
+    const { quantity, batch_number, cost_per_unit, transaction_reason, reference_id, reference_type } = req.body;
 
     // Get user info for audit logging
     if (req.user?.user_id) {
       userInfo = await getUserInfoForAudit(req.user.user_id);
+    }
+
+    const performed_by = req.user?.user_id;
+    if (!performed_by) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated',
+      });
     }
 
     // Check if inventory item exists (D4)
@@ -411,8 +419,10 @@ router.post('/:id/restock', async (req, res) => {
 
     const inventoryItem = check[0];
     const currentQuantity = inventoryItem.quantity_on_hand;
-    const newQuantity = currentQuantity + parseInt(quantity);
+    const quantityChange = parseInt(quantity);
+    const newQuantity = currentQuantity + quantityChange;
 
+    // Update inventory
     let query = `
       UPDATE medication_inventory SET
         quantity_on_hand = ?, last_restocked = CURDATE()
@@ -434,6 +444,50 @@ router.post('/:id/restock', async (req, res) => {
     params.push(id);
 
     await db.query(query, params);
+
+    // Create transaction record (Module 14.2)
+    try {
+      const transaction_id = uuidv4();
+      const transactionQuery = `
+        INSERT INTO inventory_transactions (
+          transaction_id, inventory_id, transaction_type, quantity_change,
+          quantity_before, quantity_after, batch_number, transaction_reason,
+          performed_by, facility_id, transaction_date, reference_id, reference_type
+        ) VALUES (?, ?, 'restock', ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?)
+      `;
+
+      await db.query(transactionQuery, [
+        transaction_id,
+        id,
+        quantityChange,
+        currentQuantity,
+        newQuantity,
+        batch_number || null,
+        transaction_reason || 'Manual restock',
+        performed_by,
+        inventoryItem.facility_id,
+        reference_id || null,
+        reference_type || null,
+      ]);
+    } catch (transactionError) {
+      console.warn('Failed to create transaction record (table may not exist yet):', transactionError.message);
+      // Continue even if transaction table doesn't exist yet
+    }
+
+    // Check and resolve low stock alerts
+    try {
+      if (newQuantity > inventoryItem.reorder_level) {
+        // Resolve low stock alerts if quantity is now above reorder level
+        await db.query(
+          `UPDATE inventory_alerts 
+           SET acknowledged = 1, acknowledged_by = ?, acknowledged_at = NOW()
+           WHERE inventory_id = ? AND alert_type = 'low_stock' AND acknowledged = 0`,
+          [performed_by, id]
+        );
+      }
+    } catch (alertError) {
+      console.warn('Failed to update alerts (table may not exist yet):', alertError.message);
+    }
 
     // Check alerts after restock
     const alerts = [];
@@ -473,7 +527,7 @@ router.post('/:id/restock', async (req, res) => {
       message: 'Inventory item restocked successfully',
       data: {
         previousQuantity: currentQuantity,
-        quantityAdded: parseInt(quantity),
+        quantityAdded: quantityChange,
         newQuantity,
       },
       alerts: alerts.length > 0 ? alerts : undefined,

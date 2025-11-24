@@ -17,6 +17,10 @@ import MainLayout from './components/Main.jsx';
 import Appointments from './components/Appointment.jsx';
 import ClinicalVisits from './components/ClinicalVisit.jsx';
 import Inventory from './components/Inventory.jsx';
+import InventoryTransactions from './components/InventoryTransactions.jsx';
+import InventoryAlerts from './components/InventoryAlerts.jsx';
+import InventorySuppliers from './components/InventorySuppliers.jsx';
+import InventoryOrders from './components/InventoryOrders.jsx';
 import Prescriptions from './components/Prescriptions.jsx';
 import ARTRegimenManagement from './components/ArtRegimentManagement.jsx';
 import LabTests from './components/LabTest.jsx';
@@ -34,6 +38,8 @@ import CareTasks from './components/CareTasks.jsx';
 import Reports from './components/Reports.jsx';
 import AuditTrail from './components/AuditTrail.jsx';
 import Education from './components/Education.jsx';
+import PatientSurvey from './components/PatientSurvey.jsx';
+import SurveyMetrics from './components/SurveyMetrics.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import { SOCKET_URL } from './config/api';
 
@@ -136,6 +142,39 @@ export default function App() {
             element={
               <MainLayout socket={socket}>
                 <ClinicalVisits socket={socket} />
+              </MainLayout>
+            }
+          />
+          {/* Inventory routes - specific routes first to avoid matching conflicts */}
+          <Route
+            path="/inventory/transactions"
+            element={
+              <MainLayout socket={socket}>
+                <InventoryTransactions socket={socket} />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/inventory/alerts"
+            element={
+              <MainLayout socket={socket}>
+                <InventoryAlerts socket={socket} />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/inventory/suppliers"
+            element={
+              <MainLayout socket={socket}>
+                <InventorySuppliers socket={socket} />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/inventory/orders"
+            element={
+              <MainLayout socket={socket}>
+                <InventoryOrders socket={socket} />
               </MainLayout>
             }
           />
@@ -278,6 +317,22 @@ export default function App() {
             element={
               <MainLayout socket={socket}>
                 <Education socket={socket} />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/patient-survey"
+            element={
+              <MainLayout socket={socket}>
+                <PatientSurvey socket={socket} />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/survey-metrics"
+            element={
+              <MainLayout socket={socket}>
+                <SurveyMetrics socket={socket} />
               </MainLayout>
             }
           />

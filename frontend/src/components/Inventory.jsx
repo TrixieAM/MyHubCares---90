@@ -117,10 +117,12 @@ const Inventory = () => {
 
   const handleUpdateItem = async (itemData) => {
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/inventory/${editingItem.inventory_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify(itemData),
       });
@@ -154,10 +156,12 @@ const Inventory = () => {
 
   const handleRestock = async (quantity) => {
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/inventory/${restockingItem.inventory_id}/restock`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({ quantity: parseInt(quantity) }),
       });
@@ -187,8 +191,12 @@ const Inventory = () => {
   const handleDeleteItem = async (itemId) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
+        const token = localStorage.getItem('token');
         const response = await fetch(`${API_BASE_URL}/inventory/${itemId}`, {
           method: 'DELETE',
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
         });
 
         const data = await response.json();

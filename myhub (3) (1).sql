@@ -1940,60 +1940,41 @@ CREATE TABLE `suppliers` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `surveys`
---
-
-CREATE TABLE `surveys` (
-  `survey_id` char(36) NOT NULL,
-  `title` varchar(200) NOT NULL,
-  `description` text DEFAULT NULL,
-  `target_audience` enum('patients','staff','all') DEFAULT 'all',
-  `is_active` tinyint(1) DEFAULT 1,
-  `start_date` date DEFAULT NULL,
-  `end_date` date DEFAULT NULL,
-  `created_by` char(36) DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `survey_answers`
---
-
-CREATE TABLE `survey_answers` (
-  `answer_id` char(36) NOT NULL,
-  `response_id` char(36) NOT NULL,
-  `question_id` char(36) NOT NULL,
-  `answer_text` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `survey_questions`
---
-
-CREATE TABLE `survey_questions` (
-  `question_id` char(36) NOT NULL,
-  `survey_id` char(36) NOT NULL,
-  `question_text` text NOT NULL,
-  `question_type` enum('text','multiple_choice','rating','boolean') NOT NULL,
-  `options` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`options`)),
-  `position` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `survey_responses`
+-- Table structure for table `survey_responses` (Module 11: Patient Feedback & Surveys)
 --
 
 CREATE TABLE `survey_responses` (
-  `response_id` char(36) NOT NULL,
   `survey_id` char(36) NOT NULL,
-  `respondent_id` char(36) DEFAULT NULL,
+  `patient_id` char(36) NOT NULL,
+  `facility_id` char(36) DEFAULT NULL,
+  `overall_satisfaction` enum('very_happy','happy','neutral','unhappy','very_unhappy') NOT NULL,
+  `staff_friendliness` int(11) NOT NULL CHECK (`staff_friendliness` >= 1 AND `staff_friendliness` <= 5),
+  `wait_time` int(11) NOT NULL CHECK (`wait_time` >= 1 AND `wait_time` <= 5),
+  `facility_cleanliness` int(11) NOT NULL CHECK (`facility_cleanliness` >= 1 AND `facility_cleanliness` <= 5),
+  `would_recommend` enum('yes','maybe','no') NOT NULL,
+  `comments` text DEFAULT NULL,
+  `average_score` decimal(3,2) DEFAULT NULL,
   `submitted_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `survey_metrics` (Module 11: Patient Feedback & Surveys)
+--
+
+CREATE TABLE `survey_metrics` (
+  `metric_id` char(36) NOT NULL,
+  `facility_id` char(36) DEFAULT NULL,
+  `period_start` date NOT NULL,
+  `period_end` date NOT NULL,
+  `total_responses` int(11) DEFAULT 0,
+  `average_overall` decimal(3,2) DEFAULT NULL,
+  `average_staff` decimal(3,2) DEFAULT NULL,
+  `average_wait` decimal(3,2) DEFAULT NULL,
+  `average_cleanliness` decimal(3,2) DEFAULT NULL,
+  `recommendation_rate` decimal(5,2) DEFAULT NULL,
+  `calculated_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -2680,34 +2661,21 @@ ALTER TABLE `suppliers`
   ADD PRIMARY KEY (`supplier_id`);
 
 --
--- Indexes for table `surveys`
---
-ALTER TABLE `surveys`
-  ADD PRIMARY KEY (`survey_id`),
-  ADD KEY `created_by` (`created_by`);
-
---
--- Indexes for table `survey_answers`
---
-ALTER TABLE `survey_answers`
-  ADD PRIMARY KEY (`answer_id`),
-  ADD KEY `response_id` (`response_id`),
-  ADD KEY `question_id` (`question_id`);
-
---
--- Indexes for table `survey_questions`
---
-ALTER TABLE `survey_questions`
-  ADD PRIMARY KEY (`question_id`),
-  ADD KEY `survey_id` (`survey_id`);
-
---
--- Indexes for table `survey_responses`
+-- Indexes for table `survey_responses` (Module 11)
 --
 ALTER TABLE `survey_responses`
-  ADD PRIMARY KEY (`response_id`),
-  ADD KEY `survey_id` (`survey_id`),
-  ADD KEY `respondent_id` (`respondent_id`);
+  ADD PRIMARY KEY (`survey_id`),
+  ADD KEY `idx_survey_responses_patient_id` (`patient_id`),
+  ADD KEY `idx_survey_responses_facility_id` (`facility_id`),
+  ADD KEY `idx_survey_responses_submitted_at` (`submitted_at`);
+
+--
+-- Indexes for table `survey_metrics` (Module 11)
+--
+ALTER TABLE `survey_metrics`
+  ADD PRIMARY KEY (`metric_id`),
+  ADD KEY `idx_survey_metrics_facility_id` (`facility_id`),
+  ADD KEY `idx_survey_metrics_period` (`period_start`,`period_end`);
 
 --
 -- Indexes for table `system_settings`
@@ -2799,6 +2767,19 @@ ALTER TABLE `appointments`
   ADD CONSTRAINT `appointments_ibfk_3` FOREIGN KEY (`facility_id`) REFERENCES `facilities` (`facility_id`),
   ADD CONSTRAINT `appointments_ibfk_4` FOREIGN KEY (`booked_by`) REFERENCES `users` (`user_id`),
   ADD CONSTRAINT `appointments_ibfk_5` FOREIGN KEY (`cancelled_by`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `survey_responses` (Module 11)
+--
+ALTER TABLE `survey_responses`
+  ADD CONSTRAINT `survey_responses_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`),
+  ADD CONSTRAINT `survey_responses_ibfk_2` FOREIGN KEY (`facility_id`) REFERENCES `facilities` (`facility_id`);
+
+--
+-- Constraints for table `survey_metrics` (Module 11)
+--
+ALTER TABLE `survey_metrics`
+  ADD CONSTRAINT `survey_metrics_ibfk_1` FOREIGN KEY (`facility_id`) REFERENCES `facilities` (`facility_id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

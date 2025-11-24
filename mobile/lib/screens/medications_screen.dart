@@ -918,79 +918,78 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
               // Form content
               Expanded(
                 child: ListView(
-                    padding: EdgeInsets.all(20),
-                    children: [
-                      // Medication Name
-                      _buildMedicationNameField(),
-                      SizedBox(height: 16),
-                      
-                      // Dosage and Frequency Row
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildDosageField(),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: _buildFrequencyField(),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-                      
-                      // Reminder Time
-                      _buildTimeField(),
-                      SizedBox(height: 16),
-                      
-                      // Sound Preference
-                      _buildSoundPreferenceField(),
-                      SizedBox(height: 16),
-                      
-                      // Checkboxes
-                      _buildCheckboxes(),
-                      SizedBox(height: 16),
-                      
-                      // Special Instructions
-                      _buildSpecialInstructionsField(),
-                      SizedBox(height: 30),
-                      
-                      // Submit button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isMarking ? null : _handleAddReminder,
-                          style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: Color(0xFFA31D1D),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: _isMarking
-                              ? SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                  ),
-                                )
-                              : Text(
-                                  'Create Reminder',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                  padding: EdgeInsets.all(20),
+                  children: [
+                    // Medication Name
+                    _buildMedicationNameField(),
+                    SizedBox(height: 16),
+                    
+                    // Dosage and Frequency Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDosageField(),
                         ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: _buildFrequencyField(),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+                    
+                    // Reminder Time
+                    _buildTimeField(),
+                    SizedBox(height: 16),
+                    
+                    // Sound Preference
+                    _buildSoundPreferenceField(),
+                    SizedBox(height: 16),
+                    
+                    // Checkboxes
+                    _buildCheckboxes(),
+                    SizedBox(height: 16),
+                    
+                    // Special Instructions
+                    _buildSpecialInstructionsField(),
+                    SizedBox(height: 30),
+                    
+                    // Submit button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isMarking ? null : _handleAddReminder,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Color(0xFFA31D1D),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: _isMarking
+                            ? SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : Text(
+                                'Create Reminder',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

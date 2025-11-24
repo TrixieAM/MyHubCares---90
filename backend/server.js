@@ -14,6 +14,10 @@ import arpaRoutes from './routes/arpa.js';
 import facilityRoutes from './routes/facilities.js';
 import regionRoutes from './routes/regions.js';
 import inventoryRoutes from './routes/inventory.js';
+import inventoryTransactionsRoutes from './routes/inventory-transactions.js';
+import inventoryAlertsRoutes from './routes/inventory-alerts.js';
+import inventorySuppliersRoutes from './routes/inventory-suppliers.js';
+import inventoryOrdersRoutes from './routes/inventory-orders.js';
 import prescriptionsRoutes from './routes/prescriptions.js';
 import medicationsRoutes from './routes/medications.js';
 import clinicalRoutes from './routes/clinical-visits.js';
@@ -37,6 +41,8 @@ import systemSettingsRoutes from './routes/system-settings.js';
 import clientTypesRoutes from './routes/client-types.js';
 import userFacilityAssignmentsRoutes from './routes/user-facility-assignments.js';
 import auditLogsRoutes from './routes/audit-logs.js';
+import surveyResponsesRoutes from './routes/survey-responses.js';
+import surveyMetricsRoutes from './routes/survey-metrics.js';
 import { processAppointmentReminders } from './services/reminderService.js';
 
 const app = express();
@@ -83,6 +89,11 @@ app.use('/api/patient-documents', patientDocumentsRoutes);
 app.use('/api/arpa', arpaRoutes);
 app.use('/api/facilities', facilityRoutes);
 app.use('/api/regions', regionRoutes);
+// Register specific inventory routes BEFORE the general inventory route to avoid route conflicts
+app.use('/api/inventory/transactions', inventoryTransactionsRoutes);
+app.use('/api/inventory/alerts', inventoryAlertsRoutes);
+app.use('/api/inventory/suppliers', inventorySuppliersRoutes);
+app.use('/api/inventory/orders', inventoryOrdersRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/prescriptions', prescriptionsRoutes);
 app.use('/api/medications', medicationsRoutes);
@@ -107,6 +118,8 @@ app.use('/api/system-settings', systemSettingsRoutes);
 app.use('/api/client-types', clientTypesRoutes);
 app.use('/api/user-facility-assignments', userFacilityAssignmentsRoutes);
 app.use('/api/audit-logs', auditLogsRoutes);
+app.use('/api/survey-responses', surveyResponsesRoutes);
+app.use('/api/survey-metrics', surveyMetricsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -33,8 +33,16 @@ import {
   Assessment as AssessmentIcon,
   History as HistoryIcon,
   School as SchoolIcon,
-  
+  RateReview as RateReviewIcon,
+  BarChart as BarChartIcon,
+  ExpandLess,
+  ExpandMore,
+  SwapHoriz as TransactionsIcon,
+  Warning as AlertsIcon,
+  LocalShipping as SuppliersIcon,
+  ShoppingCart as OrdersIcon,
 } from '@mui/icons-material';
+import { Collapse } from '@mui/material';
 import { PillIcon } from 'lucide-react';
 
 const drawerWidth = 240;
@@ -47,12 +55,13 @@ const allMenuItems = [
   { text: 'My Appointments', icon: <CalendarIcon />, path: '/my-appointments', roles: ['patient'] },
   { text: 'Profile', icon: <PersonIcon />, path: '/profile', roles: ['patient'] },
   { text: 'Clinical Visit', icon: <MedicalServicesIcon />, path: '/clinical-visit', roles: ['admin', 'physician', 'nurse', 'case_manager'] },
-  { text: 'Inventory', icon: <InventoryIcon />, path: '/inventory', roles: ['admin', 'nurse', 'lab_personnel'] },
   { text: 'Medications', icon: <PillIcon />, path: '/medications', roles: ['admin', 'physician', 'nurse', 'case_manager'] },
   { text: 'Prescriptions', icon: <DescriptionIcon />, path: '/prescriptions', roles: ['admin', 'physician', 'nurse', 'case_manager'] },
   { text: 'Medication Reminder', icon: <MedicationIcon />, path: '/medication-adherence', roles: ['admin', 'physician', 'nurse', 'case_manager', 'patient'] },
   { text: 'ART Regimens', icon: <MedicationIcon />, path: '/art-regimen', roles: ['admin', 'physician', 'nurse', 'case_manager'] },
   { text: 'Education', icon: <SchoolIcon />, path: '/education', roles: ['admin', 'physician', 'nurse', 'case_manager', 'patient'] },
+  { text: 'Patient Survey', icon: <RateReviewIcon />, path: '/patient-survey', roles: ['patient'] },
+  { text: 'Survey Metrics', icon: <BarChartIcon />, path: '/survey-metrics', roles: ['admin', 'physician', 'case_manager'] },
   { text: 'Lab Test', icon: <ScienceIcon />, path: '/lab-test', roles: ['admin', 'physician', 'nurse', 'lab_personnel'] },
   { text: 'HTS Sessions', icon: <AssignmentIcon />, path: '/hts-sessions', roles: ['admin', 'physician', 'nurse', 'case_manager'] },
   { text: 'Counseling Sessions', icon: <PeopleIcon />, path: '/counseling', roles: ['admin', 'physician', 'nurse', 'case_manager'] },
@@ -68,6 +77,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [userRole, setUserRole] = React.useState(null);
+  const [inventoryOpen, setInventoryOpen] = React.useState(false);
 
   React.useEffect(() => {
     // Get user role from localStorage or API
@@ -101,10 +111,32 @@ const Sidebar = () => {
     getUserRole();
   }, []);
 
-  // Filter menu items based on user role
+  // Filter menu items based on user role (exclude patient for inventory dropdown)
   const menuItems = userRole
     ? allMenuItems.filter((item) => item.roles.includes(userRole))
     : [];
+
+  // Check if inventory dropdown should be shown (all roles except patient)
+  const showInventoryDropdown = userRole && userRole !== 'patient';
+
+  // Inventory submenu items
+  const inventorySubItems = [
+    { text: 'Inventory', icon: <InventoryIcon />, path: '/inventory' },
+    { text: 'Transactions', icon: <TransactionsIcon />, path: '/inventory/transactions' },
+    { text: 'Alerts', icon: <AlertsIcon />, path: '/inventory/alerts' },
+    { text: 'Suppliers', icon: <SuppliersIcon />, path: '/inventory/suppliers' },
+    { text: 'Purchase Orders', icon: <OrdersIcon />, path: '/inventory/orders' },
+  ];
+
+  // Check if any inventory submenu item is active
+  const isInventoryActive = inventorySubItems.some(item => location.pathname === item.path);
+
+  // Auto-open inventory dropdown if on inventory page
+  React.useEffect(() => {
+    if (isInventoryActive) {
+      setInventoryOpen(true);
+    }
+  }, [isInventoryActive]);
 
   const handleLogout = () => {
     // Clear any authentication tokens and user data
@@ -148,70 +180,206 @@ const Sidebar = () => {
               <ListItemText primary="Loading..." />
             </ListItem>
           ) : (
-            menuItems.map((item) => (
-            <ListItem
-              button
-              key={item.text}
-              onClick={() => navigate(item.path)}
-              selected={location.pathname === item.path}
-              sx={{
-                borderRadius: 1,
-                mx: 1,
-                my: 0.5,
-                borderLeft:
-                  location.pathname === item.path
-                    ? '4px solid #B82132'
-                    : '4px solid transparent',
-                transition: 'all 0.2s ease-in-out',
-                '&.Mui-selected': {
-                  backgroundColor: 'rgba(184, 33, 50, 0.1)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(184, 33, 50, 0.15)',
-                  },
-                  '& .MuiListItemIcon-root': {
-                    color: '#B82132',
-                  },
-                  '& .MuiListItemText-primary': {
-                    color: '#B82132',
-                    fontWeight: 500,
-                  },
-                },
-                '&:hover': {
-                  backgroundColor: 'rgba(184, 33, 50, 0.05)',
-                  borderLeft: '4px solid #B82132',
-                  '& .MuiListItemIcon-root': {
-                    color: '#B82132',
-                  },
-                  '& .MuiListItemText-primary': {
-                    color: '#B82132',
-                  },
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  color:
-                    location.pathname === item.path ? '#B82132' : '#64748b',
-                  minWidth: 40,
-                  transition: 'color 0.2s ease-in-out',
-                }}
-              >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText
-                primary={item.text}
-                sx={{
-                  '& .MuiListItemText-primary': {
-                    color:
-                      location.pathname === item.path ? '#B82132' : '#333333',
-                    fontWeight: location.pathname === item.path ? 500 : 400,
-                    transition: 'color 0.2s ease-in-out',
-                    fontSize: '0.875rem', // Reduced font size
-                  },
-                }}
-              />
-            </ListItem>
-            ))
+            <>
+              {menuItems.map((item) => {
+                // Skip the inventory item if we're showing the dropdown
+                if (showInventoryDropdown && item.text === 'Inventory') {
+                  return null;
+                }
+                
+                return (
+                  <ListItem
+                    button
+                    key={item.text}
+                    onClick={() => navigate(item.path)}
+                    selected={location.pathname === item.path}
+                    sx={{
+                      borderRadius: 1,
+                      mx: 1,
+                      my: 0.5,
+                      borderLeft:
+                        location.pathname === item.path
+                          ? '4px solid #B82132'
+                          : '4px solid transparent',
+                      transition: 'all 0.2s ease-in-out',
+                      '&.Mui-selected': {
+                        backgroundColor: 'rgba(184, 33, 50, 0.1)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(184, 33, 50, 0.15)',
+                        },
+                        '& .MuiListItemIcon-root': {
+                          color: '#B82132',
+                        },
+                        '& .MuiListItemText-primary': {
+                          color: '#B82132',
+                          fontWeight: 500,
+                        },
+                      },
+                      '&:hover': {
+                        backgroundColor: 'rgba(184, 33, 50, 0.05)',
+                        borderLeft: '4px solid #B82132',
+                        '& .MuiListItemIcon-root': {
+                          color: '#B82132',
+                        },
+                        '& .MuiListItemText-primary': {
+                          color: '#B82132',
+                        },
+                      },
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        color:
+                          location.pathname === item.path ? '#B82132' : '#64748b',
+                        minWidth: 40,
+                        transition: 'color 0.2s ease-in-out',
+                      }}
+                    >
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={item.text}
+                      sx={{
+                        '& .MuiListItemText-primary': {
+                          color:
+                            location.pathname === item.path ? '#B82132' : '#333333',
+                          fontWeight: location.pathname === item.path ? 500 : 400,
+                          transition: 'color 0.2s ease-in-out',
+                          fontSize: '0.875rem',
+                        },
+                      }}
+                    />
+                  </ListItem>
+                );
+              })}
+              
+              {/* Inventory Dropdown Menu */}
+              {showInventoryDropdown && (
+                <>
+                  <ListItem
+                    button
+                    onClick={() => setInventoryOpen(!inventoryOpen)}
+                    sx={{
+                      borderRadius: 1,
+                      mx: 1,
+                      my: 0.5,
+                      borderLeft: isInventoryActive
+                        ? '4px solid #B82132'
+                        : '4px solid transparent',
+                      backgroundColor: isInventoryActive
+                        ? 'rgba(184, 33, 50, 0.1)'
+                        : 'transparent',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        backgroundColor: 'rgba(184, 33, 50, 0.05)',
+                        borderLeft: '4px solid #B82132',
+                        '& .MuiListItemIcon-root': {
+                          color: '#B82132',
+                        },
+                        '& .MuiListItemText-primary': {
+                          color: '#B82132',
+                        },
+                      },
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        color: isInventoryActive ? '#B82132' : '#64748b',
+                        minWidth: 40,
+                        transition: 'color 0.2s ease-in-out',
+                      }}
+                    >
+                      <InventoryIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Inventory Management"
+                      sx={{
+                        '& .MuiListItemText-primary': {
+                          color: isInventoryActive ? '#B82132' : '#333333',
+                          fontWeight: isInventoryActive ? 500 : 400,
+                          transition: 'color 0.2s ease-in-out',
+                          fontSize: '0.875rem',
+                        },
+                      }}
+                    />
+                    {inventoryOpen ? (
+                      <ExpandLess sx={{ color: isInventoryActive ? '#B82132' : '#64748b' }} />
+                    ) : (
+                      <ExpandMore sx={{ color: isInventoryActive ? '#B82132' : '#64748b' }} />
+                    )}
+                  </ListItem>
+                  <Collapse in={inventoryOpen} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding>
+                      {inventorySubItems.map((subItem) => (
+                        <ListItem
+                          button
+                          key={subItem.text}
+                          onClick={() => navigate(subItem.path)}
+                          selected={location.pathname === subItem.path}
+                          sx={{
+                            pl: 4,
+                            borderRadius: 1,
+                            mx: 1,
+                            my: 0.25,
+                            borderLeft:
+                              location.pathname === subItem.path
+                                ? '4px solid #B82132'
+                                : '4px solid transparent',
+                            transition: 'all 0.2s ease-in-out',
+                            '&.Mui-selected': {
+                              backgroundColor: 'rgba(184, 33, 50, 0.1)',
+                              '&:hover': {
+                                backgroundColor: 'rgba(184, 33, 50, 0.15)',
+                              },
+                              '& .MuiListItemIcon-root': {
+                                color: '#B82132',
+                              },
+                              '& .MuiListItemText-primary': {
+                                color: '#B82132',
+                                fontWeight: 500,
+                              },
+                            },
+                            '&:hover': {
+                              backgroundColor: 'rgba(184, 33, 50, 0.05)',
+                              borderLeft: '4px solid #B82132',
+                              '& .MuiListItemIcon-root': {
+                                color: '#B82132',
+                              },
+                              '& .MuiListItemText-primary': {
+                                color: '#B82132',
+                              },
+                            },
+                          }}
+                        >
+                          <ListItemIcon
+                            sx={{
+                              color:
+                                location.pathname === subItem.path ? '#B82132' : '#64748b',
+                              minWidth: 40,
+                              transition: 'color 0.2s ease-in-out',
+                            }}
+                          >
+                            {subItem.icon}
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={subItem.text}
+                            sx={{
+                              '& .MuiListItemText-primary': {
+                                color:
+                                  location.pathname === subItem.path ? '#B82132' : '#333333',
+                                fontWeight: location.pathname === subItem.path ? 500 : 400,
+                                transition: 'color 0.2s ease-in-out',
+                                fontSize: '0.875rem',
+                              },
+                            }}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Collapse>
+                </>
+              )}
+            </>
           )}
         </List>
       </Box>
